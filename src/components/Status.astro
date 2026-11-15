@@ -1,0 +1,13 @@
+---
+// A state: a lamp and a word. The lamp's shape changes with the state as well as its colour, and
+// the word is always there, so colour never carries the meaning alone.
+interface Props {
+  /** `on` lights the lamp in the brand colour; `off` is an unlit ring. */
+  state?: 'on' | 'off' | 'success' | 'warning' | 'danger';
+}
+const { state = 'on' } = Astro.props;
+---
+
+<span class:list={['ncode-status', 'not-content', state === 'off' && 'ncode-status--off']}>
+  <span class:list={['ncode-lamp', `ncode-lamp--${state}`]} aria-hidden="true"></span><slot />
+</span>

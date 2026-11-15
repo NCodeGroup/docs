@@ -1,0 +1,37 @@
+---
+// A page's head: where it is (its group in the navigation, engraved), its title, and its
+// description as the lede. An override because Starlight renders the title alone; the description
+// would otherwise only reach search engines. The heading keeps the id Starlight's "back to top"
+// links name.
+const { entry, sidebar } = Astro.locals.starlightRoute;
+const { title, description, numbered } = entry.data;
+
+// The labels of the groups that lead to the current page.
+type Entry = (typeof sidebar)[number];
+function trail(entries: Entry[]): string[] | undefined {
+  for (const item of entries) {
+    if (item.type === 'link') {
+      if (item.isCurrent) return [];
+    } else {
+      const below = trail(item.entries);
+      if (below) return [item.label, ...below];
+    }
+  }
+  return undefined;
+}
+const groups = trail(sidebar) ?? [];
+---
+
+{groups.length > 0 && (
+  <p class="ncode-crumbs ncode-label" data-pagefind-ignore>
+    {groups.map((label) => (
+      <>
+        <span>{label}</span>
+        <span aria-hidden="true">/</span>
+      </>
+    ))}
+    <span class="ncode-crumbs__page">{title}</span>
+  </p>
+)}
+<h1 id="_top" data-numbered={numbered ? '' : undefined}>{title}</h1>
+{description && <p class="ncode-lead">{description}</p>}

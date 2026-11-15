@@ -31,3 +31,15 @@ ANALYSIS.md
 node_modules/
 dist/
 coverage/
+
+# A library's content folder, mounted here for a build (scripts/site.mjs). Nothing of a library is committed.
+/src/content/docs/
+
+# Astro's generated types and caches
+/.astro/
+
+# The libraries and built sites the tests make
+/.work/
+
+# Screenshots from scripts/screenshots.mjs
+/.shots/

@@ -5,6 +5,9 @@ offers. Every document in `docs/` has a line here.
 
 ## What Lives Where
 
+- [../CONTRACT.md](../CONTRACT.md): the content contract, what a library holds for its documentation site and what
+  the build does with it. It is at the repository root, beside the README that links to it, where a page's author
+  looks first.
 - [decisions/](decisions/README.md): architecture decision records, one short file per decision, with the project
   template's own decisions in [decisions/project-template/](decisions/project-template/README.md).
 - [designs/](designs/_template.md): design documents for work bigger than one plan, started from

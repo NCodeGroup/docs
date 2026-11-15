@@ -1,0 +1,32 @@
+---
+title: How sealing works
+description: What a vault does between Rent and Dispose, and why each step is there.
+---
+
+import { Status } from '@ncode/docs/components';
+import ByteGrid from '@site/components/ByteGrid.astro';
+import lifecycle from '@site/assets/lifecycle.svg';
+
+A vault has three moments: it is rented, used, and disposed.
+
+![A vault is rented, used, then disposed](../_assets/lifecycle.png)
+
+## Pinning
+
+The buffer is allocated where the garbage collector never moves it, so no stale copy of it is left behind.
+
+<img src={lifecycle.src} width="360" height="80" alt="The same three moments, as a vector drawing" />
+
+## Zeroing
+
+`Dispose` overwrites every byte. Halfway through, the buffer looks like this:
+
+<ByteGrid bytes="D0 17 6B F4 28 A9 4E 73" zeroed={4} label="Eight bytes, the first four zeroed" />
+
+| Step | What happens | Sealed |
+| --- | --- | --- |
+| Rent | A pinned buffer leaves the pool | <Status state="success">Yes</Status> |
+| Use | The caller writes the secret into it | <Status state="success">Yes</Status> |
+| Dispose | Every byte is overwritten, then the buffer returns to the pool | <Status state="off">No</Status> |
+
+Back to the [quick start](/quick-start/).

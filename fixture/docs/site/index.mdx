@@ -1,0 +1,47 @@
+---
+title: NCode.Fixture
+description: A stand-in library that seals a secret in a pinned buffer and zeroes it on dispose.
+template: splash
+hero:
+  title: Secrets that clean up after themselves.
+  tagline: A stand-in library for the documentation toolchain. It seals a secret in a pinned buffer and zeroes it on dispose.
+  actions:
+    - text: Get started
+      link: /quick-start/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/NCodeGroup/Fixture
+      icon: external
+      variant: secondary
+---
+
+import { Braces, Card, CardGrid, LinkCard } from '@ncode/docs/components';
+import ByteGrid from '@site/components/ByteGrid.astro';
+
+```sh
+dotnet add package NCode.Fixture
+```
+
+<ByteGrid bytes="D0 17 6B F4 28 A9 4E 73 71 0B E2 5D 86 3C 9A 11" zeroed={6} label="Sixteen bytes of a key, the first six already zeroed" />
+
+<CardGrid>
+  <Card title="Pinned." icon="star">
+    The garbage collector never moves a sealed buffer, so it never leaves a stale copy of a key behind.
+  </Card>
+  <Card title="Zeroed." icon="approve-check">
+    Disposing a vault overwrites all of it. Read [how sealing works](/concepts/how-sealing-works/).
+  </Card>
+  <Card title="Pooled." icon="rocket">
+    A vault rents its buffer from a pool and returns it on dispose.
+  </Card>
+</CardGrid>
+
+## Where to go next
+
+The value a vault holds sits between braces, as the letter of the NCode mark does: <Braces>32 bytes</Braces>.
+
+<CardGrid>
+  <LinkCard title="Quick start" description="Seal a secret in five lines." href="/quick-start/" />
+  <LinkCard title="Derive a key" description="From a password, with PBKDF2." href="/guides/derive-a-key/" />
+</CardGrid>

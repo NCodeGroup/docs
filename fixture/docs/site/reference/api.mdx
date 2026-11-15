@@ -1,0 +1,30 @@
+---
+title: API at a glance
+description: Every public member of the fixture library, on one page.
+next:
+  link: /quick-start/
+  label: Back to the quick start
+---
+
+`Vault` is the only public type.
+
+| Member | Returns | Notes |
+| --- | --- | --- |
+| `Vault.Rent(int, out Span<byte>)` | `Vault` | Pinned and pooled |
+| `Vault.Wrap(Span<byte>)` | `Vault` | Zeroes memory the caller owns |
+| `IsSealed` | `bool` | `false` after `Dispose` |
+| `Dispose()` | | Zeroes, then returns the buffer |
+
+## Signatures
+
+```cs title="Vault.cs" {3-4}
+public sealed class Vault : IDisposable
+{
+    public static Vault Rent(int length, out Span<byte> span);
+    public static Vault Wrap(Span<byte> span);
+    public bool IsSealed { get; }
+    public void Dispose();
+}
+```
+
+Start with the [quick start](/quick-start/), or see the [extension members](/guides/extension-members/).

@@ -1,0 +1,33 @@
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+*.swp
+.vs/
+.idea/
+
+# Plan worktrees, for every tool
+.claude/worktrees/
+
+# Claude Code: personal settings
+.claude/settings.local.json
+CLAUDE.local.md
+
+# Leftovers from `copier update --conflict rej`
+*.rej
+
+# The plan in progress: a local working file, never committed
+PLAN.md
+
+# The analysis in progress: a local working file, never committed
+ANALYSIS.md
+
+# Secrets
+.env
+.env.*
+!.env.example
+/secrets/
+
+# Node.js
+node_modules/
+dist/
+coverage/

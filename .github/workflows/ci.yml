@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  # A required check must also report in a merge queue.
+  merge_group:
+    types: [checks_requested]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to a pull request or a topic branch cancels the run it supersedes. A run for a default-branch commit or
+# a merge queue entry is never cancelled: its group holds its commit SHA, because cancel-in-progress: false alone still
+# lets a newer run in the same group cancel a pending one, which would leave that commit without a verdict.
+concurrency:
+  group: ci-${{ github.ref }}-${{ (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.event_name == 'merge_group') && github.sha || 'latest' }}
+  cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) && github.event_name != 'merge_group' }}
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The decision index check compares the records with the default branch, so it needs every branch's history.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+      - name: Install dependencies
+        if: hashFiles('package-lock.json') != ''
+        run: npm ci
+      - name: Check the decision index
+        run: ./.template/Test-AdrIndex.ps1
+      - name: Build
+        if: hashFiles('package.json') != ''
+        run: |
+          npm run build
+      - name: Test
+        if: hashFiles('package.json') != ''
+        run: |
+          npm run test

@@ -65,3 +65,8 @@ records are indexed in [project-template/](project-template/README.md).
 
 | ADR | Decision | Status |
 | --- | --- | --- |
+| [ADR-1000](1000-library-sites-are-built-with-astro-starlight-core-only.md) | Library sites are built with Astro Starlight, core only | Accepted |
+| [ADR-1001](1001-the-toolchain-lives-in-this-repository-and-a-library-calls-it-by-one-pinned-commit.md) | The toolchain lives in this repository, and a library calls it by one pinned commit | Accepted |
+| [ADR-1002](1002-a-page-includes-a-compiled-sample-by-its-key-when-the-site-is-built.md) | A page includes a compiled sample by its key when the site is built | Accepted |
+| [ADR-1003](1003-links-are-written-from-the-site-root-and-the-build-proves-none-leaves-the-base-path.md) | Links are written from the site root, and the build proves none leaves the base path | Accepted |
+| [ADR-1004](1004-the-csharp-grammar-is-patched-at-build-time-for-extension-blocks.md) | The C# grammar is patched at build time for extension blocks | Accepted |

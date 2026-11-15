@@ -36,16 +36,29 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .node-version
+      # npm ci installs exactly what package-lock.json names and fails when package.json disagrees with it, and
+      # --ignore-scripts runs no package's install script: a package's code runs only when the build or a test loads it.
+      # .npmrc's engine-strict stops an npm older than the one package.json asks for.
       - name: Install dependencies
         if: hashFiles('package-lock.json') != ''
-        run: npm ci
+        run: npm ci --ignore-scripts
       - name: Check the decision index
         run: ./.template/Test-AdrIndex.ps1
       - name: Build
         if: hashFiles('package.json') != ''
         run: |
           npm run build
+      # The browser check loads the built site in headless Chromium. playwright-core is locked like every other package
+      # and names the one Chromium build it drives: this runs its own command from node_modules, never a package npx
+      # would fetch, to download that build, and --with-deps installs the system libraries the build needs from the
+      # runner's Ubuntu archive. Nothing is cached, so each run downloads the build the locked playwright-core names.
+      - name: Install the browser the tests use
+        if: hashFiles('package.json') != ''
+        run: npm run browser -- --with-deps
       - name: Test
         if: hashFiles('package.json') != ''
+        env:
+          # Without it the browser check is skipped where the browser does not start; with it that is a failure.
+          DOCS_REQUIRE_BROWSER: '1'
         run: |
           npm run test

@@ -1,0 +1,155 @@
+name: Documentation site (reusable)
+
+# Builds one library's documentation site with this repository's toolchain and, when asked, publishes it to that
+# library's GitHub Pages. A library calls it from a short workflow of its own, pinned to a commit of this repository
+# (README.md, "The caller workflow"); the library holds its pages and no npm manifest or lockfile.
+#
+# Two jobs, so the job that runs the site's packages and the library's pages never holds a publishing permission:
+#   - build checks out the calling repository and this repository, installs exactly what package-lock.json locks,
+#     builds the site and uploads it. Its token only reads: the two repositories, and the Pages settings that name the
+#     site's URL. A pull request, from a fork too, runs this job and nothing else;
+#   - deploy runs only when the caller asks for it and only on the caller's default branch, in the github-pages
+#     environment, and hands the uploaded artifact to GitHub Pages. It checks out nothing and runs no code of the
+#     library or of the toolchain.
+#
+# The toolchain is checked out at the commit of this file that the caller pinned: job.workflow_repository and
+# job.workflow_sha name the repository and commit of the workflow file that defines the running job, which for a
+# called workflow is this file, not the caller's. So one pin in the caller, which Dependabot moves, selects the
+# workflow, the packages and the theme together. Both properties exist on github.com and not on GitHub Enterprise
+# Server: where they are missing, toolchain-ref names the commit and the repository is NCodeGroup/docs, and a run that
+# has neither commit stops at its first step instead of checking out the calling repository in the toolchain's place.
+#
+# No job restores or saves a cache (cache-mode: none, and no package cache in setup-node): nothing an earlier run left
+# behind reaches a published site, and nothing the packages run can leave a cache for the library's other workflows.
+# The install takes seconds without one. The build is a full build every time for the same reason: a sample lives in
+# another file than the page that shows it.
+#
+# The caller grants what the jobs here ask for, because a called workflow can only keep or reduce its caller's
+# permissions: contents: read, pages: write and id-token: write on the job that calls this file.
+#
+# A workflow linter released before cache-mode and the job.workflow_* properties reports them as unknown.
+# docs/decisions/1001 names the documentation that defines both, and records these choices.
+on:
+  workflow_call:
+    inputs:
+      content-path:
+        description: The library's content folder, relative to its repository root. It holds the pages and site.config.json.
+        type: string
+        default: docs/site
+      deploy:
+        description: Whether to publish the built site to the calling repository's GitHub Pages. Only a run on the default branch publishes, whatever this says.
+        type: boolean
+        default: false
+      toolchain-ref:
+        description: The commit of this repository to build with. Leave it out, the commit the caller pinned this workflow to is used; set it only where job.workflow_sha is not available.
+        type: string
+        default: ''
+    outputs:
+      page-url:
+        description: The URL of the published site; empty when the run did not deploy.
+        value: ${{ jobs.deploy.outputs.page-url }}
+
+permissions: {}
+
+cache-mode: none
+
+jobs:
+  build:
+    name: Build the site
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      # Checks out the calling repository, and this one, which is public.
+      contents: read
+      # Reads the Pages settings, which name the site's URL.
+      pages: read
+    steps:
+      # Without a commit the toolchain checkout below would take a default branch, and the site would be built with
+      # packages nobody pinned. job.workflow_sha is empty only where the job context has no workflow_* properties.
+      - name: Check that the toolchain's commit is known
+        if: inputs.toolchain-ref == '' && !job.workflow_sha
+        run: |
+          echo "::error::This run does not know which commit of the documentation toolchain it was pinned to (job.workflow_sha is empty). Pass that commit as the toolchain-ref input of the calling workflow."
+          exit 1
+      # The library. In a called workflow the github context is the caller's, so this is the calling repository at the
+      # commit that started the run. Full history: each page's "last updated" date is the date of the last commit that
+      # changed it, and a shallow clone gives every page the date of its one commit.
+      - name: Check out the library
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: library
+          fetch-depth: 0
+          persist-credentials: false
+      # The toolchain, at the commit of this file that the caller pinned. With an empty repository or ref, checkout
+      # would take the calling repository or a default branch, so both always have a value here.
+      - name: Check out the toolchain
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ job.workflow_repository || 'NCodeGroup/docs' }}
+          ref: ${{ inputs.toolchain-ref || job.workflow_sha }}
+          path: toolchain
+          persist-credentials: false
+      # The Node.js the toolchain's .node-version names, with the npm it ships; no package cache, as the header says.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: toolchain/.node-version
+          package-manager-cache: false
+      # The site's URL as GitHub Pages serves it, so a custom domain set later needs no change in the library or here.
+      # Only a deploying run reads it: a pull request builds with site.url of the library's site.config.json, and so
+      # needs neither the Pages API nor Pages to be enabled.
+      - name: Read the site's URL from the Pages settings
+        id: pages
+        if: inputs.deploy && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      # Fails when package.json and the lockfile disagree, installs nothing the lockfile doesn't name, and runs no
+      # package's install script. --omit=dev leaves out the packages only the toolchain's own tests use.
+      - name: Install the locked packages
+        working-directory: toolchain
+        run: npm ci --ignore-scripts --omit=dev
+      # Values reach the script through the environment, never through text pasted into the command.
+      - name: Build
+        working-directory: toolchain
+        env:
+          DOCS_LIBRARY: ${{ github.workspace }}/library
+          DOCS_CONTENT: ${{ inputs.content-path }}
+          DOCS_OUT: ${{ github.workspace }}/site
+          # Such as https://ncodegroup.github.io/Buffers; empty unless this run deploys.
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
+        run: node scripts/site.mjs build
+      # The site as GitHub Pages takes it: one tar file, in an artifact named github-pages. Kept a week, so a pull
+      # request's build can be downloaded and browsed while it is reviewed.
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site/
+          retention-days: 7
+
+  # Publishes the artifact the build job uploaded. A pull request's ref is refs/pull/<number>/merge, so only a push to
+  # the caller's default branch, or a run started by hand on it, gets here; the github-pages environment, which an
+  # administrator limits to that branch, refuses any other.
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    if: inputs.deploy && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # One deployment at a time in the calling repository, whatever concurrency its own workflow states: a newer
+    # deployment waits for the one in progress, which is never cancelled, and takes the place of an older one still
+    # waiting, so the site ends on the newest commit.
+    concurrency:
+      group: docs-deploy-pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      # Creates the Pages deployment.
+      pages: write
+      # The OIDC token that proves to GitHub Pages which repository, branch and environment the deployment comes from.
+      id-token: write
+    outputs:
+      page-url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

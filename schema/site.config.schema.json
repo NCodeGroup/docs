@@ -87,7 +87,7 @@
       }
     },
     "samples": {
-      "description": "Globs, relative to the repository root, of the source files that hold sample regions. Each file a glob matches is checked by its real path, with every symbolic link followed, against the root's real path: a file outside the repository stops the build, whether a pattern or a link leads there, and a link that stays inside is read like any file. Folders named bin, obj, node_modules, TestResults and .git are never read, also where a link leads into one. Default: [\"tests/**/*.cs\"].",
+      "description": "Globs, relative to the repository root, of the source files that hold sample regions. Each file a glob matches is checked by its real path, with every symbolic link on its path followed: a file that a pattern or a symbolic link puts outside the repository stops the build, as does a symbolic link that leads nowhere or around in a loop, and a file reached through symbolic links that stay inside is read like any file. * and ** never descend into a folder that is a symbolic link, so such a folder is read only where a glob writes out its path, such as tests/shared/*.cs. Only symbolic links are followed: a hard link or a mounted folder is read where it appears, and a git checkout holds neither. Folders named bin, obj, node_modules, TestResults and .git are never read, also where a symbolic link leads into one. Default: [\"tests/**/*.cs\"].",
       "type": "array",
       "minItems": 1,
       "items": {

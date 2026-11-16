@@ -86,11 +86,27 @@ export function resolveLibrary(environment = process.env) {
         throw new Error(`${configName}: the samples glob "${glob}" matches ${posix(file)}, which is outside the library. A glob names files under the repository root, such as ${DEFAULT_SAMPLES}.`);
       }
       // exclude is given a folder a glob names literally as a path, such as "tests/bin", not as a name.
-      if (isNeverRead(inLibrary) || !statSync(path).isFile()) continue;
+      // Before anything follows a link: nothing in a folder that is never read stops the build.
+      if (isNeverRead(inLibrary)) continue;
+      let stats;
+      let realPath;
+      try {
+        stats = statSync(path);
+        realPath = stats.isFile() ? realpathSync(path) : undefined;
+      } catch (error) {
+        // Both follow every symbolic link on the path, and Node's error for a link that leads
+        // nowhere or around in a loop names neither this file nor the glob.
+        throw new Error(`${configName}: the samples glob "${glob}" matches ${posix(file)}, which could not be read: ${error.message}`, { cause: error });
+      }
+      if (!stats.isFile()) continue;
       // A path under the root still leads out of it when the file, or a folder on its path, is a
       // symbolic link to a place outside, so a file is read only where it really is: inside the
-      // library, and in no folder that is never read.
-      const realPath = realpathSync(path);
+      // library, and in no folder that is never read. A hard link or a mounted folder is no
+      // symbolic link, so it is read where it appears; a git checkout holds neither.
+      // This checks the checkout as it is when the build starts, as committed. A process that
+      // changes files while the build runs could put a link in place of a checked file before
+      // readSnippets reads it, but such a process could as well add a page whose code reads that
+      // file, because a library's pages run in the build.
       const reallyInLibrary = posix(relative(realRoot, realPath));
       if (isOutside(reallyInLibrary)) {
         throw new Error(`${configName}: the samples glob "${glob}" matches ${posix(file)}, which is outside the library through a symbolic link: its real path is ${realPath}. A sample file is under the repository root once every link on its path is followed.`);

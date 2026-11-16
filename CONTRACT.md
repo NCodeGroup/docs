@@ -142,12 +142,18 @@ using var keyOwner = BufferFactory.Rent(32, isSensitive: true, out Span<byte> ke
 - A tab in a sample is shown as two spaces; indent sample files with spaces, as `.editorconfig` says.
 - `#region` is not a sample marker.
 - A `samples` glob names files under the repository root. Each file it matches is checked by its real path, with
-  every symbolic link followed, whether the link is the file or a folder above it, against the root's real path: a
-  file outside the repository stops the build, whether `..`, another pattern or a link leads there, naming the glob
-  and the file. A link that stays inside the repository is read like any file, and a root reached through a link,
-  such as a checkout under a linked folder, builds.
+  every symbolic link on its path followed, against the root's real path: a file that `..`, another pattern or a
+  symbolic link puts outside the repository stops the build, naming the glob and the file, and so does a symbolic
+  link that leads nowhere or around in a loop. A file reached through symbolic links that stay inside the repository
+  is read like any file, and a root reached through a symbolic link, such as a checkout under a linked folder,
+  builds.
+- `*` and `**` never descend into a folder that is a symbolic link, so such a folder is read only where a glob
+  writes out its path, such as `tests/shared/*.cs` or `tests/shared/**/*.cs`.
+- Only symbolic links are followed: a hard link, or a folder mounted inside the repository, is read where it
+  appears. A git checkout holds neither.
 - Folders named `bin`, `obj`, `node_modules`, `TestResults` and `.git` are never read, whatever the globs say: a file
-  in one is left out, also where a link leads to it.
+  in one is left out, also where a symbolic link leads into the folder, and a symbolic link in one is never
+  followed, so it cannot stop the build.
 
 To show the marker syntax itself on a page, put it in an ordinary fenced block: only the `snippet=` attribute makes a
 block a sample.
@@ -236,8 +242,9 @@ client-side script that loads from another origin.
 Each of these stops the build, in a pull request as on the default branch, with a message that names the file and
 the key or the link:
 
-1. `site.config.json` missing, not JSON, or not matching the schema; a `samples` glob that matches a file outside the
-   repository, whether a pattern or a symbolic link leads there (section 4).
+1. `site.config.json` missing, not JSON, or not matching the schema; a `samples` glob that matches a file that a
+   pattern or a symbolic link puts outside the repository, or a symbolic link that leads nowhere or around in a loop
+   (section 4).
 2. A sample region that is never closed, a key defined twice, a malformed marker line, a key that is not a key, an
    empty region: named by sample file and line.
 3. A page that uses `snippet=Key` for a key no sample file defines (the message lists the keys that exist), that puts

@@ -178,6 +178,18 @@ describe('the site configuration', () => {
     });
   });
 
+  it('stops at a chain of symbolic links whose first link stays inside the library', withLinks, () => {
+    const outside = outsideFolder('config-link-chain-outside');
+    const library = copyOfFixture('config-link-chain');
+    // Chain.cs leads to hop/Hop.cs, inside the library and matched by no glob, and that link leads out.
+    mkdirSync(join(library, 'hop'));
+    symlinkSync('../../hop/Hop.cs', join(library, 'tests', 'NCode.Fixture.Tests', 'Chain.cs'));
+    symlinkSync('../../config-link-chain-outside/Outside.cs', join(library, 'hop', 'Hop.cs'));
+    assert.throws(() => resolveLibrary({ DOCS_LIBRARY: library }), {
+      message: linkedOutside('tests/**/*.cs', 'tests/NCode.Fixture.Tests/Chain.cs', realpathSync(join(outside, 'Outside.cs'))),
+    });
+  });
+
   it('stops at a folder a glob names that is a symbolic link out of the library', withLinks, () => {
     const outside = outsideFolder('config-link-folder-outside');
     const library = changedCopy('config-link-folder', (config) => { config.samples = ['tests/link/*.cs']; });
@@ -187,20 +199,51 @@ describe('the site configuration', () => {
     });
   });
 
+  it('stops at a sample file whose symbolic link leads nowhere or around in a loop, naming the glob and the file', withLinks, () => {
+    for (const [name, target, code] of [['Dangling.cs', 'Missing.cs', 'ENOENT'], ['Loop.cs', 'Loop.cs', 'ELOOP']]) {
+      const library = copyOfFixture(`config-link-${code.toLowerCase()}`);
+      symlinkSync(target, join(library, 'tests', 'NCode.Fixture.Tests', name));
+      assert.throws(() => resolveLibrary({ DOCS_LIBRARY: library }), (error) => {
+        assert.equal(error.cause?.code, code);
+        assert.equal(
+          error.message,
+          `${CONFIG}: the samples glob "tests/**/*.cs" matches tests/NCode.Fixture.Tests/${name}, which could not be read: ${error.cause.message}`,
+        );
+        return true;
+      });
+    }
+  });
+
   it('follows a symbolic link that stays inside the library, and names the file as the glob matched it', withLinks, () => {
-    const library = changedCopy('config-link-inside', (config) => { config.samples = ['tests/**/*.cs', 'tests/more/*.cs']; });
+    const library = copyOfFixture('config-link-inside');
     const shared = join(library, 'shared');
     mkdirSync(join(shared, 'more'), { recursive: true });
     writeFileSync(join(shared, 'Linked.cs'), '// begin-snippet: Linked\nvar linked = 1;\n// end-snippet\n');
     writeFileSync(join(shared, 'more', 'More.cs'), '// begin-snippet: More\nvar more = 1;\n// end-snippet\n');
     symlinkSync('../../shared/Linked.cs', join(library, 'tests', 'NCode.Fixture.Tests', 'Linked.cs'));
     symlinkSync('../shared/more', join(library, 'tests', 'more'));
-    assert.deepEqual(resolveLibrary({ DOCS_LIBRARY: library }).sampleFiles.map(relativeTo(library)), [
-      'tests/NCode.Fixture.Tests/ExtensionSamples.cs',
-      'tests/NCode.Fixture.Tests/Linked.cs',
-      'tests/NCode.Fixture.Tests/QuickStartSamples.cs',
-      'tests/more/More.cs',
-    ]);
+    const sampleFiles = (samples) => {
+      const file = join(library, CONFIG);
+      writeFileSync(file, JSON.stringify({ ...JSON.parse(readFileSync(file, 'utf8')), samples }, null, 2));
+      return resolveLibrary({ DOCS_LIBRARY: library }).sampleFiles.map(relativeTo(library));
+    };
+    const projectFiles = ['tests/NCode.Fixture.Tests/ExtensionSamples.cs', 'tests/NCode.Fixture.Tests/Linked.cs', 'tests/NCode.Fixture.Tests/QuickStartSamples.cs'];
+    // * and ** never descend into a folder that is a symbolic link: a glob reaches it only by writing out its path.
+    assert.deepEqual(sampleFiles(['tests/**/*.cs', 'tests/*/*.cs', 'tests/m*/*.cs']), projectFiles);
+    assert.deepEqual(sampleFiles(['tests/**/*.cs', 'tests/more/*.cs']), [...projectFiles, 'tests/more/More.cs']);
+  });
+
+  it('never follows a symbolic link in a folder that is never read, even one that leads outside the library or nowhere', withLinks, () => {
+    outsideFolder('config-link-in-obj-outside');
+    const library = changedCopy('config-link-in-obj', (config) => { config.samples = ['tests/**/*.cs', 'tests/NCode.Fixture.Tests/obj/*.cs']; });
+    const obj = join(library, 'tests', 'NCode.Fixture.Tests', 'obj');
+    mkdirSync(obj, { recursive: true });
+    symlinkSync('../../../../config-link-in-obj-outside/Outside.cs', join(obj, 'Outside.cs'));
+    symlinkSync('Missing.cs', join(obj, 'Dangling.cs'));
+    assert.deepEqual(
+      resolveLibrary({ DOCS_LIBRARY: library }).sampleFiles.map(relativeTo(library)),
+      ['tests/NCode.Fixture.Tests/ExtensionSamples.cs', 'tests/NCode.Fixture.Tests/QuickStartSamples.cs'],
+    );
   });
 
   it('never reads from bin and obj through a symbolic link', withLinks, () => {

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="160" viewBox="0 0 720 160" role="img" aria-label="Rent, use, dispose">
+  <title>Rent, use, dispose</title>
+  <rect width="720" height="160" rx="10" fill="#0A1F5C"/>
+  <g fill="none" stroke="#809FFF" stroke-width="2">
+    <rect x="40" y="48" width="160" height="64" rx="6"/>
+    <rect x="280" y="48" width="160" height="64" rx="6"/>
+    <rect x="520" y="48" width="160" height="64" rx="6"/>
+    <path d="M200 80h80M440 80h80"/>
+    <path d="M270 72l10 8-10 8M510 72l10 8-10 8"/>
+  </g>
+  <g fill="#FFFFFF" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="18" text-anchor="middle">
+    <text x="120" y="86">Rent</text>
+    <text x="360" y="86">Use</text>
+    <text x="600" y="86">Dispose</text>
+  </g>
+</svg>

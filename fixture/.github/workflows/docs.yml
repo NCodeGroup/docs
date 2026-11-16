@@ -1,0 +1,33 @@
+name: Documentation site
+
+# Builds this library's documentation site from docs/site/ with the shared toolchain in NCodeGroup/docs, and publishes
+# it to GitHub Pages from the default branch. A pull request builds the site and keeps it as the github-pages artifact;
+# nothing is deployed for one. The toolchain is pinned by commit: Dependabot moves the pin.
+#
+# Set up once, by a repository administrator: Settings > Pages > Source: GitHub Actions, with Enforce HTTPS checked;
+# then Settings > Environments > github-pages, with deployment limited to the default branch.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions: {}
+
+# A newer push to a pull request cancels the run it supersedes. A run on the default branch is never cancelled once
+# it has started, so a deployment always completes, and a newer one waits its turn.
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+
+jobs:
+  site:
+    permissions:
+      contents: read # checks out this repository
+      pages: write # reads the site's URL, and creates the deployment
+      id-token: write # proves to GitHub Pages where the deployment comes from
+    uses: NCodeGroup/docs/.github/workflows/site.yml@0000000000000000000000000000000000000000 # v0.0.0, replace with a release's commit
+    with:
+      content-path: docs/site
+      deploy: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}

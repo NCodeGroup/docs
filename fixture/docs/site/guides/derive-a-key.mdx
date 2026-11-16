@@ -1,0 +1,24 @@
+---
+title: Derive a key from a password
+description: Derive a 32-byte key with PBKDF2 into a vault, so the key is zeroed when you are done with it.
+sidebar:
+  order: 1
+---
+
+import { LinkButton } from '@ncodegroup/docs/components';
+
+A derived key is as sensitive as the password it came from. Derive it straight into a vault, never into an array of
+your own.
+
+```cs snippet=DeriveKey
+```
+
+The salt is not a secret, so it lives on the stack without a vault. The same key, sealed behind a method, is the
+[quick start](/quick-start/#seal-a-secret)'s sample.
+
+:::tip[Iterations]
+600,000 iterations of PBKDF2 with SHA-256 is the figure OWASP recommends; see the
+[password storage cheat sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
+:::
+
+<LinkButton href="/guides/extension-members/" variant="secondary" icon="right-arrow" iconPlacement="end">Next: extension members</LinkButton>

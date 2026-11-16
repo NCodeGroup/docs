@@ -1,0 +1,31 @@
+{
+  "$schema": "../../../schema/site.config.schema.json",
+  "title": "NCode.Fixture",
+  "description": "A stand-in library that seals a secret in a pinned buffer and zeroes it on dispose.",
+  "product": "Fixture",
+  "mark": "ncode",
+  "version": "v1",
+  "repository": {
+    "url": "https://github.com/NCodeGroup/Fixture",
+    "branch": "main"
+  },
+  "site": {
+    "url": "https://ncodegroup.github.io/Fixture"
+  },
+  "sidebar": [
+    { "label": "Start here", "items": ["quick-start"] },
+    { "label": "Guides", "items": [{ "autogenerate": { "directory": "guides" } }] },
+    { "label": "Concepts", "items": ["concepts/how-sealing-works"] },
+    {
+      "label": "Reference",
+      "items": [
+        "reference/api",
+        { "label": "Changelog", "link": "https://github.com/NCodeGroup/Fixture/blob/main/CHANGELOG.md" }
+      ]
+    }
+  ],
+  "social": [
+    { "label": "GitHub", "href": "https://github.com/NCodeGroup/Fixture" }
+  ],
+  "samples": ["tests/**/*.cs"]
+}

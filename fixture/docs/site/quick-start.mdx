@@ -1,0 +1,69 @@
+---
+title: Quick start
+description: This page installs the package, seals a derived key in a vault, and shows that the key is zeroed when the method returns.
+numbered: true
+---
+
+import { Steps, TabItem, Tabs } from '@ncodegroup/docs/components';
+
+## Install
+
+<Tabs syncKey="install">
+  <TabItem label=".NET CLI">
+
+    ```sh
+    dotnet add package NCode.Fixture
+    ```
+
+  </TabItem>
+  <TabItem label="Project file">
+
+    ```xml title="App.csproj"
+    <PackageReference Include="NCode.Fixture" />
+    ```
+
+  </TabItem>
+</Tabs>
+
+## Seal a secret
+
+`Vault.Rent` hands back a pinned buffer and its owner. Disposing the owner zeroes the whole buffer, so the key never
+outlives the method.
+
+```cs snippet=QuickStart title="QuickStart.cs" {4}
+```
+
+:::note
+`Rent` hands back a span sliced to exactly the length you asked for, even when the buffer behind it is larger.
+:::
+
+:::caution
+There is no finalizer. A vault that is never disposed is never zeroed, so always use `using`. The
+[guide to deriving a key](/guides/derive-a-key/) shows the whole pattern.
+:::
+
+## Check your work
+
+<Steps>
+
+1. Build the project.
+
+   ```sh
+   dotnet build
+   ```
+
+2. Run the tests. The sample above is one of them: every sample on this site is a region of a compiled test.
+
+3. Read [how sealing works](/concepts/how-sealing-works/#zeroing) to see what `Dispose` does.
+
+</Steps>
+
+## Choosing an API
+
+Every row is a member of `Vault`.
+
+| API | Use it when | Pooled |
+| --- | --- | --- |
+| `Rent` | You need a temporary buffer for a key or a password | Yes |
+| `RentKey` | You need exactly 32 bytes | Yes |
+| `Wrap` | You already have the memory, usually `stackalloc` | No |

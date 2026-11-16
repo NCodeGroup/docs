@@ -1,0 +1,27 @@
+---
+title: Extension members
+description: The library's helpers are C# 14 extension members, declared in extension blocks.
+sidebar:
+  order: 2
+---
+
+`NCode.Fixture` declares its helpers in C# 14 extension blocks: an instance property, an instance method and a
+static method, all on `Vault`.
+
+```cs snippet=VaultExtensions title="VaultExtensions.cs"
+```
+
+A caller sees them as members of the type:
+
+```cs title="Program.cs" {1} ins={3}
+using var vault = Vault.RentKey();
+
+if (vault.HoldsSecret)
+{
+    vault.CopyTo(destination);
+}
+```
+
+:::danger
+`CopyTo` makes a second copy of the secret. The destination is yours to zero.
+:::

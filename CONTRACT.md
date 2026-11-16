@@ -58,7 +58,10 @@ The "last updated" date comes from the library's git history: `git log` for the 
 once its file is committed, and the date is that of the newest commit that changed the file. A page that is not
 committed yet shows none, an edit that is not committed does not move the date, and a library folder that is not a
 git repository shows no dates. The workflow checks out the library's full history for this; a shallow clone would
-give every page the date of its one commit.
+give every page the date of its one commit. When the folder is in a repository but `git log` fails, because git is
+not installed, the repository belongs to another user, or its `.git` file points to a folder that is gone, no page
+shows a date and the build prints a warning with the folder and git's message, as an annotation in GitHub Actions.
+The build still passes.
 
 `site.url` is a fallback. The workflow sets the `SITE_URL` environment variable from the repository's Pages settings
 on a deploying run, and that value wins; a pull request build and a local build use `site.url`. The base path is the

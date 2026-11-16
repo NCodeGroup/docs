@@ -2,11 +2,12 @@
 // right: the samples are in the pages, no marker line is, and nothing links outside the base.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
-import { lockFile } from '../src/library.mjs';
-import { build, copyOfFixture, pages, siteAbsoluteUrls } from './helpers.mjs';
+import { lockFile, readLastUpdated } from '../src/library.mjs';
+import { build, copyOfFixture, pages, siteAbsoluteUrls, work } from './helpers.mjs';
 
 const EXPECTED_PAGES = [
   '404.html',
@@ -213,5 +214,42 @@ describe('a library that keeps its content in another folder, in a git repositor
     const quickStart = readFileSync(join(result.out, 'quick-start/index.html'), 'utf8');
     assert.match(quickStart, /href="https:\/\/github\.com\/NCodeGroup\/Fixture\/edit\/main\/website\/quick-start\.mdx"/);
     assert.match(quickStart, /<time datetime="2026-01-02T03:04:05\.000Z">/);
+  });
+});
+
+describe('a library whose history git cannot read', () => {
+  const library = copyOfFixture('unreadable-history');
+  // A .git file that points to a folder that is gone. git refuses it, as it refuses a repository
+  // another user owns, with the "not a git repository" it also prints for a folder in none.
+  writeFileSync(join(library, '.git'), `gitdir: ${join(library, 'gone', '.git')}\n`);
+  const result = build('unreadable-history', { library, env: { GITHUB_ACTIONS: 'true' } });
+  const warning = /No page shows a "last updated" date: git could not read the history of .+unreadable-history: /;
+
+  it('builds without dates in a repository git refuses, and warns with git\'s message, as an annotation in GitHub Actions', () => {
+    assert.equal(result.code, 0, result.output);
+    assert.match(result.output, new RegExp(`^::warning::${warning.source}`, 'm'));
+    for (const { file, html } of pages(result.out)) assert.doesNotMatch(html, /<time\b/, `${file} shows a date`);
+    const quickStart = readFileSync(join(result.out, 'quick-start/index.html'), 'utf8');
+    assert.match(quickStart, /href="https:\/\/github\.com\/NCodeGroup\/Fixture\/edit\/main\/docs\/site\/quick-start\.mdx"/);
+  });
+
+  it('warns, as a plain line outside GitHub Actions, where git is not installed', (t) => {
+    const warn = t.mock.method(console, 'warn', () => {});
+    const noGit = join(work, 'no-git');
+    mkdirSync(noGit, { recursive: true });
+    assert.deepEqual(readLastUpdated({ root: library, contentPath: 'docs/site' }, { PATH: noGit }), {});
+    assert.equal(warn.mock.callCount(), 1);
+    assert.match(warn.mock.calls[0].arguments[0], new RegExp(`^${warning.source}spawnSync git ENOENT$`));
+  });
+
+  it('says nothing for a folder in no repository, which has no dates by design', (t) => {
+    const warn = t.mock.method(console, 'warn', () => {});
+    const folder = mkdtempSync(join(tmpdir(), 'ncode-docs-'));
+    try {
+      assert.deepEqual(readLastUpdated({ root: folder, contentPath: 'docs/site' }), {});
+      assert.equal(warn.mock.callCount(), 0);
+    } finally {
+      rmSync(folder, { recursive: true, force: true });
+    }
   });
 });

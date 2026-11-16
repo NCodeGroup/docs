@@ -6,7 +6,7 @@
 //   DOCS_CONTENT   the content folder inside it, relative, with forward slashes (default docs/site)
 import { spawnSync } from 'node:child_process';
 import { existsSync, globSync, readFileSync, statSync } from 'node:fs';
-import { isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validate } from './json-schema.mjs';
 
@@ -119,16 +119,33 @@ export function libraryPath(library, file) {
  * The time of the newest commit that changed each file of the content folder, in milliseconds, by
  * the file's path under that folder. Empty when the library is not in a git repository. A shallow
  * clone gives every file the date of its one commit, which is why the workflow fetches all history.
+ * Empty too, with a warning that names the folder and git's message (an annotation in GitHub
+ * Actions), when the library is in a repository whose history git cannot read: git is not
+ * installed, another user owns the repository, or its .git file points to a folder that is gone.
+ * The build goes on, because a missing date is not worth stopping a build or a dev server for.
+ * @param {{ root: string, contentPath: string }} library
+ * @param {Record<string, string | undefined>} [environment]
  * @returns {Record<string, number>}
  */
-export function readLastUpdated(library) {
+export function readLastUpdated(library, environment = process.env) {
   // One "git log" for the folder, as Starlight does it: a commit's time, then the files it changed.
   const log = spawnSync('git', ['log', '--format=t:%ct', '--name-only', '--relative', '-z', '--', library.contentPath], {
     cwd: library.root,
+    env: environment,
     encoding: 'utf8',
     maxBuffer: 64 * 1024 * 1024,
   });
-  if (log.error || log.status !== 0) return {};
+  if (log.error || log.status !== 0) {
+    // A folder in no repository has no dates, and that needs no word. git's message cannot tell it
+    // from a repository git refuses: a .git file that points nowhere also says "not a git
+    // repository", and the message is translated. So the folders above the library decide.
+    if (!inRepository(library.root)) return {};
+    const reason = log.error?.message ?? (log.stderr.trim().split(/\r?\n/)[0] || `git exited with code ${log.status}`);
+    const message = `No page shows a "last updated" date: git could not read the history of ${library.root}: ${reason}`;
+    // A workflow command's data escapes "%" (and line breaks, which a first line has none of).
+    console.warn(environment.GITHUB_ACTIONS === 'true' ? `::warning::${message.replaceAll('%', '%25')}` : message);
+    return {};
+  }
   const dates = {};
   let time = 0;
   for (const raw of log.stdout.split('\0')) {
@@ -142,4 +159,12 @@ export function readLastUpdated(library) {
     }
   }
   return dates;
+}
+
+/** Whether `folder` or a folder above it holds a .git folder or file, where git looks for a repository. */
+function inRepository(folder) {
+  for (let current = resolve(folder); ; current = dirname(current)) {
+    if (existsSync(join(current, '.git'))) return true;
+    if (dirname(current) === current) return false;
+  }
 }

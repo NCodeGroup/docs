@@ -16,10 +16,10 @@ export const work = join(root, '.work');
 /**
  * Runs `node scripts/site.mjs build` for a library.
  * @param {string} name The output goes to .work/out/<name>.
- * @param {{ library?: string, args?: string[] }} [options]
+ * @param {{ library?: string, args?: string[], env?: Record<string, string> }} [options] `env` adds to the environment.
  * @returns {{ code: number, output: string, out: string }} The exit code, everything printed, the output folder.
  */
-export function build(name, { library = fixture, args = [] } = {}) {
+export function build(name, { library = fixture, args = [], env = {} } = {}) {
   const out = join(work, 'out', name);
   rmSync(out, { recursive: true, force: true });
   const environment = { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0' };
@@ -27,7 +27,7 @@ export function build(name, { library = fixture, args = [] } = {}) {
   for (const key of ['SITE_URL', 'DOCS_LIBRARY', 'DOCS_CONTENT', 'DOCS_OUT', 'INIT_CWD']) delete environment[key];
   const result = spawnSync(process.execPath, [join(root, 'scripts', 'site.mjs'), 'build', library, '--out', out, ...args], {
     cwd: root,
-    env: environment,
+    env: { ...environment, ...env },
     encoding: 'utf8',
     timeout: 180_000,
   });

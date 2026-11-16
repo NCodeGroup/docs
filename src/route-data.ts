@@ -11,7 +11,6 @@ import { site } from 'virtual:ncode-docs/site';
 import { addBase, withBase } from './links/base-links.mjs';
 
 const base = import.meta.env.BASE_URL;
-const MOUNT = 'src/content/docs/';
 /** Frontmatter links that already have the base: the dev server renders a page, and so runs this, more than once. */
 const fixedLinks = new WeakSet<object>();
 
@@ -19,8 +18,10 @@ export const onRequest = defineRouteMiddleware((context) => {
   const route = context.locals.starlightRoute;
   const { entry, pagination, head } = route;
 
-  // The page's file under the content folder, such as guides/derive-a-key.mdx.
-  const file = entry.filePath?.replaceAll('\\', '/').split(MOUNT)[1];
+  // The page's file under the content folder, such as guides/derive-a-key.mdx. Astro names it from
+  // the toolchain's folder, src/content/docs/guides/derive-a-key.mdx: site.mount is that prefix.
+  const filePath = entry.filePath?.replaceAll('\\', '/');
+  const file = filePath?.startsWith(site.mount) ? filePath.slice(site.mount.length) : undefined;
 
   // A hero action, and a `prev` or `next` the frontmatter gives a link, is exactly what its author
   // wrote, so one with the base path already on it is an error, as it is in a page's body. The base

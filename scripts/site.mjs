@@ -20,7 +20,7 @@ import { spawn } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, utimesSync, watch, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { CONFIG_FILE, lockFile, mountDirectory, resolveLibrary, toolchainRoot } from '../src/library.mjs';
+import { CONFIG_FILE, lockFile, mountDirectory, mountPath, resolveLibrary, toolchainRoot } from '../src/library.mjs';
 import { readSnippets } from '../src/snippets/catalog.mjs';
 
 const COMMANDS = ['build', 'dev', 'preview', 'prepare'];
@@ -223,7 +223,7 @@ async function main() {
   const built = await finished(runAstro(['build', '--force'], environment));
   if (built !== 0) {
     // Astro and its plugins name the file they read, which is the mounted copy.
-    console.error(`\nThe build of ${library.root} failed. In the messages above, a path under src/content/docs/ is the same path under ${library.contentPath}/ in the library.`);
+    console.error(`\nThe build of ${library.root} failed. In the messages above, a path under ${mountPath}/ is the same path under ${library.contentPath}/ in the library.`);
   }
   if (built !== 0 || command === 'build') return built;
   return finished(runAstro(['preview', '--ignore-lock', ...port], environment));

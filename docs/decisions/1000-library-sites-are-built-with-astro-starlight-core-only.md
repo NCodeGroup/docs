@@ -25,7 +25,7 @@ Next.js. The figures are from those prototypes, built on 2026-11-15 with the new
 | Build of the five pages | 1.6 to 3 s | 8.9 to 14.2 s |
 | Advisories against the framework underneath, 2026 up to 2026-11-15 | Astro: 35 ([its advisories](https://github.com/withastro/astro/security/advisories)) | Next.js: 44, five of them critical ([OSV](https://osv.dev)) |
 | Releases | Astro: about 2.4 a week and two major versions in 2026; Starlight: a minor version that may break about every two months (npm registry) | Fumadocs: one every 2.1 days over 90 days, besides Next.js and React (npm registry) |
-| What the project owns | Configuration, one stylesheet and about 200 lines of plugin code | A React application: about 25 TypeScript files before any content |
+| What the project owns | Configuration, one stylesheet and about 600 lines of plugin code, comments included (this repository, counted 2026-11-15) | A React application: about 25 TypeScript files before any content |
 | Including a named region of a C# file | Not built in | Built in |
 | A site under a base path | Documented; a link an author writes gets no base path | Works; the framework's documentation does not cover it |
 
@@ -78,9 +78,9 @@ the link validator.**
 
 - A documentation page loads about a tenth of the JavaScript the measured alternative does, and no application
   framework.
-- The project owns its plugin code and its theme: about 600 lines in `src/snippets/`, `src/links/`,
-  `src/highlighting/` and `src/route-data.ts` (counted 2026-11-15), and one stylesheet. A Starlight minor version
-  may change the markup the theme styles, so an update is checked with the tests and with screenshots
+- The project owns its plugin code and its theme: about 600 lines, comments included, in `src/snippets/`,
+  `src/links/`, `src/highlighting/` and `src/route-data.ts` (counted 2026-11-15), and one stylesheet. A Starlight
+  minor version may change the markup the theme styles, so an update is checked with the tests and with screenshots
   (`scripts/screenshots.mjs`).
 - Astro sets the Node.js floor and raises it in patch releases: `astro` 7.4.11 requires Node.js 22.23.4 or later
   (its `package.json`, read 2026-11-15). `.node-version` is the one place the version is set (project-template

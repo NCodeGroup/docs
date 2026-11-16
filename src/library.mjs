@@ -14,10 +14,14 @@ export const CONFIG_FILE = 'site.config.json';
 export const DEFAULT_CONTENT = 'docs/site';
 const DEFAULT_SAMPLES = 'tests/**/*.cs';
 
+const posix = (path) => path.split(sep).join('/');
+
 /** The toolchain's own folder. */
 export const toolchainRoot = fileURLToPath(new URL('..', import.meta.url));
 /** Where scripts/site.mjs mounts a library's content folder: the folder Starlight reads pages from. */
 export const mountDirectory = join(toolchainRoot, 'src', 'content', 'docs');
+/** The mount from the toolchain's folder, with forward slashes, as Astro names a page's file: src/content/docs. */
+export const mountPath = posix(relative(toolchainRoot, mountDirectory));
 /** Names the process that holds the mount, while scripts/site.mjs runs; in a folder git ignores. */
 export const lockFile = join(toolchainRoot, 'node_modules', '.ncode-docs-site.lock');
 
@@ -25,8 +29,6 @@ const schema = JSON.parse(readFileSync(join(toolchainRoot, 'schema', 'site.confi
 
 /** Folders a sample glob never reads from: build output and packages, which hold copies of sources. */
 const NEVER_READ = new Set(['bin', 'obj', 'node_modules', 'TestResults', '.git']);
-
-const posix = (path) => path.split(sep).join('/');
 
 /**
  * Resolves and checks the library the environment names. Throws an error that says what to fix.

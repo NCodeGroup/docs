@@ -51,6 +51,10 @@ describe('the fixture under the base path /Fixture/', () => {
     assert.ok(existsSync(join(result.out, 'pagefind', 'pagefind.js')), 'the search index was built');
   });
 
+  it('gives Starlight its collection of UI strings, so Astro does not warn that it is empty', () => {
+    assert.doesNotMatch(result.output, /collection "i18n" does not exist or is empty/);
+  });
+
   it('includes the samples and never a marker line', () => checkSamples(result.out));
 
   it('links nowhere outside the base', () => {

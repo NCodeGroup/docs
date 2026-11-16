@@ -1,6 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
-import { docsSchema } from '@astrojs/starlight/schema';
+import { i18nLoader } from '@astrojs/starlight/loaders';
+import { docsSchema, i18nSchema } from '@astrojs/starlight/schema';
 import { z } from 'astro/zod';
 
 // The pages of the library the build is for: scripts/site.mjs mounts its content folder at
@@ -17,4 +18,8 @@ export const collections = {
       }),
     }),
   }),
+  // Starlight's UI strings, configured as its i18n guide does it. src/content/i18n/en.json changes
+  // none of the English ones: Starlight reads this collection in every build, and Astro warns about
+  // a collection with no entry.
+  i18n: defineCollection({ loader: i18nLoader(), schema: i18nSchema() }),
 };

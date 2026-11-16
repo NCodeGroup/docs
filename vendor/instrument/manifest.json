@@ -1,7 +1,7 @@
 {
   "name": "instrument",
   "description": "The NCode design system's tokens, fonts and marks, as a documentation site needs them.",
-  "source": "The Instrument direction draft of 2026-11-15 (brand/directions/wildcard: tokens.css, fonts.css, fonts/, assets/), and the favicons of the logo kit in NCodeGroup/project-template at 706a905 (brand/favicon). To be replaced by the released design system.",
+  "source": "A draft of the NCode design system's Instrument direction, taken on 2026-11-15 before any repository held it, so no commit names it: the SHA-256 of each file below records what was taken. tokens.css, fonts.css and fonts/ are the draft's files; logos/ holds its three marks in their blue variants, renamed. The fonts are from @fontsource-variable/instrument-sans and @fontsource-variable/martian-mono 5.3.0, as fonts.css says. The favicons in public/ are from the logo kit in NCodeGroup/project-template at 706a905 (brand/favicon). To be replaced by the design system's first release from NCodeGroup/brand.",
   "version": "0.0.0-draft.20261115",
   "files": {
     "fonts/OFL-Instrument-Sans.txt": "c27a3c53c3beed7f5c26853afa15991478ff7145d3754a36b0382f84e10c0d03",

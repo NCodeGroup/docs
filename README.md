@@ -183,12 +183,12 @@ could not put the base path on each fail the build, in a page, in its frontmatte
 ### Components
 
 ```mdx
-import { Steps, Tabs, TabItem, Status } from '@ncode/docs/components';
+import { Steps, Tabs, TabItem, Status } from '@ncodegroup/docs/components';
 import Diagram from '@site/components/Diagram.astro';
 import lifecycle from '@site/assets/lifecycle.png';
 ```
 
-`@ncode/docs/components` is Starlight's components and this toolchain's own; `@site/…` is the library's
+`@ncodegroup/docs/components` is Starlight's components and this toolchain's own; `@site/…` is the library's
 `_components/` and `_assets/`. A page imports from nowhere else.
 
 ## Local preview

@@ -212,16 +212,16 @@ The favicons are the toolchain's.
 
 | Import | What it is |
 | --- | --- |
-| `@ncode/docs/components` | The shared components (below) |
+| `@ncodegroup/docs/components` | The shared components (below) |
 | `@site/components/<file>` | The library's own component, `_components/<file>` |
 | `@site/assets/<file>` | The library's own image, `_assets/<file>` |
 | `astro:assets` | Astro's `Image` and `Picture` |
 
 Nothing else. A page cannot import an npm package of the library's choosing, because the library has no manifest; a
 library that needs one asks for it in this repository. `@astrojs/starlight/components` resolves too, but pages name
-`@ncode/docs/components`, which re-exports it.
+`@ncodegroup/docs/components`, which re-exports it.
 
-`@ncode/docs/components` exports Starlight's `Aside`, `Badge`, `Card`, `CardGrid`, `Code`, `FileTree`, `Icon`,
+`@ncodegroup/docs/components` exports Starlight's `Aside`, `Badge`, `Card`, `CardGrid`, `Code`, `FileTree`, `Icon`,
 `LinkButton`, `LinkCard`, `Steps`, `TabItem` and `Tabs`, and three of this toolchain's own:
 
 | Component | Use |

@@ -2,7 +2,7 @@
 // their import aliases:
 //
 //   virtual:ncode-docs/site     the settings components and the route middleware read
-//   @ncode/docs/components      the components every NCode site shares (src/components/index.ts)
+//   @ncodegroup/docs/components      the components every NCode site shares (src/components/index.ts)
 //   @site/components/<file>     the library's own components, <content folder>/_components/
 //   @site/assets/<file>         the library's own images, <content folder>/_assets/
 import { join } from 'node:path';
@@ -25,7 +25,7 @@ export function ncodeSite(site) {
           vite: {
             resolve: {
               alias: [
-                { find: '@ncode/docs/components', replacement: join(toolchainRoot, 'src', 'components', 'index.ts') },
+                { find: '@ncodegroup/docs/components', replacement: join(toolchainRoot, 'src', 'components', 'index.ts') },
                 { find: /^@site\/components\//, replacement: join(mountDirectory, '_components') + '/' },
                 { find: /^@site\/assets\//, replacement: join(mountDirectory, '_assets') + '/' },
               ],

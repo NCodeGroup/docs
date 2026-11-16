@@ -50,7 +50,7 @@ wrong value stops the build with a message that names the key. For editor suppor
 | `mark` | No | `ncode` (default) or `ncode-identity`: which lockup the header shows |
 | `version` | No | The label on the header's readout, such as `v5`; at most 16 characters |
 | `social` | No | The header's links, each `{ "label", "href" }`. Default: one, `GitHub`, to the repository |
-| `samples` | No | Globs of the files that hold sample regions. Default `["tests/**/*.cs"]` |
+| `samples` | No | Globs of the files that hold sample regions, under the repository root. Default `["tests/**/*.cs"]` |
 | `editLinks` | No | Whether each page links to its source. Default `true` |
 | `lastUpdated` | No | Whether each page shows the date of the last commit that changed it. Default `true` |
 
@@ -138,6 +138,8 @@ using var keyOwner = BufferFactory.Rent(32, isSensitive: true, out Span<byte> ke
   a malformed marker. The same text inside a line of code, such as in a string, is left alone.
 - A tab in a sample is shown as two spaces; indent sample files with spaces, as `.editorconfig` says.
 - `#region` is not a sample marker.
+- A `samples` glob names files under the repository root. A glob that matches a file outside it, through `..` or
+  any other pattern, stops the build, naming the glob and the file.
 - Folders named `bin`, `obj`, `node_modules`, `TestResults` and `.git` are never read, whatever the globs say.
 
 To show the marker syntax itself on a page, put it in an ordinary fenced block: only the `snippet=` attribute makes a
@@ -227,7 +229,8 @@ client-side script that loads from another origin.
 Each of these stops the build, in a pull request as on the default branch, with a message that names the file and
 the key or the link:
 
-1. `site.config.json` missing, not JSON, or not matching the schema.
+1. `site.config.json` missing, not JSON, or not matching the schema; a `samples` glob that matches a file outside the
+   repository.
 2. A sample region that is never closed, a key defined twice, a malformed marker line, a key that is not a key, an
    empty region: named by sample file and line.
 3. A page that uses `snippet=Key` for a key no sample file defines (the message lists the keys that exist), that puts

@@ -1,23 +1,32 @@
 // A library's site.config.json is checked against schema/site.config.schema.json before anything is
 // built, and a wrong one is reported by key.
 import assert from 'node:assert/strict';
-import { readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { resolveLibrary } from '../src/library.mjs';
-import { build, copyOfFixture, fixture } from './helpers.mjs';
+import { build, copyOfFixture, fixture, work } from './helpers.mjs';
 
 const CONFIG = 'docs/site/site.config.json';
 
-/** Resolves a copy of the fixture whose configuration `change` has edited. */
-function resolveChanged(name, change) {
+/** A copy of the fixture whose configuration `change` has edited. */
+function changedCopy(name, change) {
   const library = copyOfFixture(name);
   const file = join(library, CONFIG);
   const config = JSON.parse(readFileSync(file, 'utf8'));
   change(config);
   writeFileSync(file, JSON.stringify(config, null, 2));
+  return library;
+}
+
+/** Resolves a copy of the fixture whose configuration `change` has edited. */
+function resolveChanged(name, change) {
+  const library = changedCopy(name, change);
   return () => resolveLibrary({ DOCS_LIBRARY: library });
 }
+
+/** A sample file's path relative to the library, with forward slashes. */
+const relativeTo = (library) => (file) => file.slice(library.length + 1).replaceAll('\\', '/');
 
 describe('the site configuration', () => {
   it('of the fixture is valid, and its defaults are filled in', () => {
@@ -27,7 +36,7 @@ describe('the site configuration', () => {
     assert.equal(library.config.repository.branch, 'main');
     assert.equal(library.config.editLinks, true);
     assert.deepEqual(
-      library.sampleFiles.map((file) => file.slice(fixture.length + 1).replaceAll('\\', '/')),
+      library.sampleFiles.map(relativeTo(fixture)),
       ['tests/NCode.Fixture.Tests/ExtensionSamples.cs', 'tests/NCode.Fixture.Tests/QuickStartSamples.cs'],
     );
   });
@@ -92,6 +101,39 @@ describe('the site configuration', () => {
   it('is read from the content folder the caller names', () => {
     assert.throws(() => resolveLibrary({ DOCS_LIBRARY: fixture, DOCS_CONTENT: 'website' }), /website\/site\.config\.json was not found/);
     assert.throws(() => resolveLibrary({ DOCS_LIBRARY: fixture, DOCS_CONTENT: '../elsewhere' }), /must be a folder inside the library/);
+  });
+
+  it('stops at a samples glob that matches a file outside the library, however the glob gets there', () => {
+    // A folder beside the copy, with a marked region in it.
+    const outside = join(work, 'libraries', 'config-outside-files');
+    rmSync(outside, { recursive: true, force: true });
+    mkdirSync(outside, { recursive: true });
+    writeFileSync(join(outside, 'Secret.cs'), '// begin-snippet: Secret\nvar secret = 1;\n// end-snippet\n');
+    for (const glob of ['tests/../../config-outside-files/*.cs', '[.][.]/config-outside-files/*.cs', '{..,tests}/config-outside-files/*.cs']) {
+      const resolve = resolveChanged('config-outside', (config) => { config.samples = ['tests/**/*.cs', glob]; });
+      assert.throws(resolve, (error) => {
+        assert.equal(
+          error.message,
+          `${CONFIG}: the samples glob "${glob}" matches ../config-outside-files/Secret.cs, which is outside the library. A glob names files under the repository root, such as tests/**/*.cs.`,
+        );
+        return true;
+      });
+    }
+  });
+
+  it('never reads from bin and obj, even where a glob names the folder', () => {
+    const library = changedCopy('config-build-output', (config) => {
+      config.samples = ['tests/**/*.cs', 'tests/NCode.Fixture.Tests/bin/**/*.cs', 'tests/NCode.Fixture.Tests/obj/*.cs'];
+    });
+    for (const folder of ['bin/Debug', 'obj']) {
+      const copies = join(library, 'tests', 'NCode.Fixture.Tests', ...folder.split('/'));
+      mkdirSync(copies, { recursive: true });
+      writeFileSync(join(copies, 'Copy.cs'), '// begin-snippet: Copy\nvar copy = 1;\n// end-snippet\n');
+    }
+    assert.deepEqual(
+      resolveLibrary({ DOCS_LIBRARY: library }).sampleFiles.map(relativeTo(library)),
+      ['tests/NCode.Fixture.Tests/ExtensionSamples.cs', 'tests/NCode.Fixture.Tests/QuickStartSamples.cs'],
+    );
   });
 
   it('stops the build with its message, before Astro starts', () => {

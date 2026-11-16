@@ -12,6 +12,7 @@ import { validate } from './json-schema.mjs';
 
 export const CONFIG_FILE = 'site.config.json';
 export const DEFAULT_CONTENT = 'docs/site';
+const DEFAULT_SAMPLES = 'tests/**/*.cs';
 
 /** The toolchain's own folder. */
 export const toolchainRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -22,7 +23,7 @@ export const lockFile = join(toolchainRoot, 'node_modules', '.ncode-docs-site.lo
 
 const schema = JSON.parse(readFileSync(join(toolchainRoot, 'schema', 'site.config.schema.json'), 'utf8'));
 
-/** Folders a sample glob never descends into: build output and packages, which hold copies of sources. */
+/** Folders a sample glob never reads from: build output and packages, which hold copies of sources. */
 const NEVER_READ = new Set(['bin', 'obj', 'node_modules', 'TestResults', '.git']);
 
 const posix = (path) => path.split(sep).join('/');
@@ -60,12 +61,22 @@ export function resolveLibrary(environment = process.env) {
   if (problems.length > 0) throw new Error(`${configName} is not a valid site configuration:\n  ${problems.join('\n  ')}`);
 
   const repository = { url: config.repository.url, branch: config.repository.branch ?? 'main' };
-  const globs = config.samples ?? ['tests/**/*.cs'];
+  const globs = config.samples ?? [DEFAULT_SAMPLES];
   const sampleFiles = [];
   for (const glob of globs) {
+    // The exclude callback keeps a wildcard out of those folders; the check below is the rule.
     const found = globSync(glob, { cwd: root, exclude: (name) => NEVER_READ.has(typeof name === 'string' ? name : name.name) });
     for (const file of found) {
-      const path = join(root, file);
+      // Each match is checked as a path, not the glob as text: "[.][.]/x" and "{..,tests}/x" reach
+      // the folder above the root as "tests/../../x" does. resolve, not join, so that an absolute
+      // match, which a brace pattern can give, is checked as the path it is.
+      const path = resolve(root, file);
+      const inLibrary = posix(relative(root, path));
+      if (inLibrary === '..' || inLibrary.startsWith('../') || isAbsolute(inLibrary)) {
+        throw new Error(`${configName}: the samples glob "${glob}" matches ${posix(file)}, which is outside the library. A glob names files under the repository root, such as ${DEFAULT_SAMPLES}.`);
+      }
+      // exclude is given a folder a glob names literally as a path, such as "tests/bin", not as a name.
+      if (inLibrary.split('/').some((segment) => NEVER_READ.has(segment))) continue;
       if (statSync(path).isFile()) sampleFiles.push(path);
     }
   }

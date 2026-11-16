@@ -81,7 +81,7 @@ before anything is built:
 | `mark` | No | `ncode` (default) or `ncode-identity` |
 | `version` | No | The label on the header's readout |
 | `social` | No | The header's links. Default: GitHub |
-| `samples` | No | Globs of the sample files. Default `["tests/**/*.cs"]` |
+| `samples` | No | Globs of the sample files, under the repository root. Default `["tests/**/*.cs"]` |
 | `editLinks` | No | Default `true` |
 | `lastUpdated` | No | Default `true` |
 

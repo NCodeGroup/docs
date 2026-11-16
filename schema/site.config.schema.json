@@ -87,7 +87,7 @@
       }
     },
     "samples": {
-      "description": "Globs, relative to the repository root, of the source files that hold sample regions. A glob that matches a file outside the repository stops the build. Folders named bin, obj, node_modules, TestResults and .git are never read. Default: [\"tests/**/*.cs\"].",
+      "description": "Globs, relative to the repository root, of the source files that hold sample regions. Each file a glob matches is checked by its real path, with every symbolic link followed, against the root's real path: a file outside the repository stops the build, whether a pattern or a link leads there, and a link that stays inside is read like any file. Folders named bin, obj, node_modules, TestResults and .git are never read, also where a link leads into one. Default: [\"tests/**/*.cs\"].",
       "type": "array",
       "minItems": 1,
       "items": {

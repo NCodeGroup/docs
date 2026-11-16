@@ -5,7 +5,7 @@
 //   DOCS_LIBRARY   the library's repository folder (required)
 //   DOCS_CONTENT   the content folder inside it, relative, with forward slashes (default docs/site)
 import { spawnSync } from 'node:child_process';
-import { existsSync, globSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, globSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validate } from './json-schema.mjs';
@@ -29,6 +29,11 @@ const schema = JSON.parse(readFileSync(join(toolchainRoot, 'schema', 'site.confi
 
 /** Folders a sample glob never reads from: build output and packages, which hold copies of sources. */
 const NEVER_READ = new Set(['bin', 'obj', 'node_modules', 'TestResults', '.git']);
+
+/** Whether a path relative to the library's root, with forward slashes, leads out of the library. */
+const isOutside = (inLibrary) => inLibrary === '..' || inLibrary.startsWith('../') || isAbsolute(inLibrary);
+/** Whether a path relative to the library's root, with forward slashes, is in a folder never read. */
+const isNeverRead = (inLibrary) => inLibrary.split('/').some((segment) => NEVER_READ.has(segment));
 
 /**
  * Resolves and checks the library the environment names. Throws an error that says what to fix.
@@ -64,6 +69,9 @@ export function resolveLibrary(environment = process.env) {
 
   const repository = { url: config.repository.url, branch: config.repository.branch ?? 'main' };
   const globs = config.samples ?? [DEFAULT_SAMPLES];
+  // A file's real path is compared with the root's real path, not with the root as given: a library
+  // checked out under a linked folder, such as macOS's /tmp, would otherwise be outside itself.
+  const realRoot = realpathSync(root);
   const sampleFiles = [];
   for (const glob of globs) {
     // The exclude callback keeps a wildcard out of those folders; the check below is the rule.
@@ -74,12 +82,22 @@ export function resolveLibrary(environment = process.env) {
       // match, which a brace pattern can give, is checked as the path it is.
       const path = resolve(root, file);
       const inLibrary = posix(relative(root, path));
-      if (inLibrary === '..' || inLibrary.startsWith('../') || isAbsolute(inLibrary)) {
+      if (isOutside(inLibrary)) {
         throw new Error(`${configName}: the samples glob "${glob}" matches ${posix(file)}, which is outside the library. A glob names files under the repository root, such as ${DEFAULT_SAMPLES}.`);
       }
       // exclude is given a folder a glob names literally as a path, such as "tests/bin", not as a name.
-      if (inLibrary.split('/').some((segment) => NEVER_READ.has(segment))) continue;
-      if (statSync(path).isFile()) sampleFiles.push(path);
+      if (isNeverRead(inLibrary) || !statSync(path).isFile()) continue;
+      // A path under the root still leads out of it when the file, or a folder on its path, is a
+      // symbolic link to a place outside, so a file is read only where it really is: inside the
+      // library, and in no folder that is never read.
+      const realPath = realpathSync(path);
+      const reallyInLibrary = posix(relative(realRoot, realPath));
+      if (isOutside(reallyInLibrary)) {
+        throw new Error(`${configName}: the samples glob "${glob}" matches ${posix(file)}, which is outside the library through a symbolic link: its real path is ${realPath}. A sample file is under the repository root once every link on its path is followed.`);
+      }
+      // Kept as the path the glob matched, not the real path: a message names a sample file as its
+      // author knows it.
+      if (!isNeverRead(reallyInLibrary)) sampleFiles.push(path);
     }
   }
 

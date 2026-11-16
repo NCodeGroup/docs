@@ -17,7 +17,7 @@
 // environment. Nothing is written to the library, and nothing of the library stays in this
 // repository: the mount is ignored by git and replaced by the next run.
 import { spawn } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, utimesSync, watch, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, utimesSync, watch, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { CONFIG_FILE, lockFile, mountDirectory, mountPath, resolveLibrary, toolchainRoot } from '../src/library.mjs';
@@ -28,6 +28,25 @@ const COMMANDS = ['build', 'dev', 'preview', 'prepare'];
 function usage(problem) {
   console.error(`${problem}\n\nUsage: node scripts/site.mjs <${COMMANDS.join('|')}> <library folder> [--content <path>] [--site-url <url>] [--out <folder>] [--port <number>]`);
   process.exit(2);
+}
+
+/**
+ * Why Astro cannot build into the folder `out`, or undefined. Astro (getOutDirWithinCwd in
+ * astro/dist/core/build/common.js, 7.4.11) takes the output folder for one inside its working
+ * folder, the toolchain, when the folder's path starts with the toolchain's as text, and then
+ * builds the prerendered pages in `<out>/.prerender`, where they cannot find the toolchain's
+ * packages: `../docs-site` beside a toolchain at `../docs` fails with "Cannot find package".
+ * Astro's working folder can be the toolchain's real path, which differs from the path this script
+ * has where a symbolic link leads to the toolchain, so both are checked.
+ */
+function outFolderProblem(out) {
+  for (const toolchain of new Set([toolchainRoot, realpathSync(toolchainRoot)].map((path) => path.replace(/[\\/]+$/, '')))) {
+    const rest = out.slice(toolchain.length);
+    if (out.startsWith(toolchain) && rest !== '' && !/^[\\/]/.test(rest)) {
+      return `The output folder ${out} is outside the toolchain, but its path starts with the toolchain's, ${toolchain}: Astro takes it for a folder inside the toolchain, and the build then cannot find the toolchain's packages. Name a folder whose path does not start with ${toolchain}.`;
+    }
+  }
+  return undefined;
 }
 
 /** Entries of a content folder that are never mounted. */
@@ -180,6 +199,9 @@ async function main() {
   if (parsed.values.out) environment.DOCS_OUT = resolve(from, parsed.values.out);
   else if (environment.DOCS_OUT) environment.DOCS_OUT = resolve(from, environment.DOCS_OUT);
   if (environment.SITE_URL && !URL.canParse(environment.SITE_URL)) usage(`"${environment.SITE_URL}" is not a URL.`);
+  // dev and prepare build nothing, so they leave the output folder alone.
+  const outProblem = environment.DOCS_OUT && (command === 'build' || command === 'preview') ? outFolderProblem(environment.DOCS_OUT) : undefined;
+  if (outProblem) usage(outProblem);
   const port = parsed.values.port ? ['--port', parsed.values.port] : [];
 
   let library;

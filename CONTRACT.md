@@ -271,3 +271,8 @@ argument wins. The script copies the content folder into this toolchain at `src/
 replaced by the next run), so one checkout of the toolchain builds one library at a time: a second command started
 while a build or a dev server runs in the same checkout stops with a message that names the first. It writes nothing
 to the library.
+
+The built site goes to `dist/` in this toolchain unless `--out` names another folder. A folder outside the toolchain
+whose path starts with the toolchain's, such as `../docs-site` beside a toolchain at `../docs`, stops `build` and
+`preview` before anything is built: Astro would take it for a folder inside the toolchain, and that build could not
+find the toolchain's packages.

@@ -14,6 +14,7 @@ import { build, copyOfFixture, fixture } from './helpers.mjs';
 const warnings = (output) =>
   output.split('\n').filter((line) => line.includes('[WARN]') && !line.includes('data store cleared (force)'));
 
+// Its hero action's icon is an inline <svg>: the toolchain's own page covers an icon name.
 const OWN_PAGE = [
   '---',
   'title: Lost',
@@ -23,7 +24,7 @@ const OWN_PAGE = [
   '  actions:',
   '    - text: Start over',
   '      link: /quick-start/',
-  '      icon: right-arrow',
+  '      icon: \'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 12h16"/></svg>\'',
   '---',
   '',
   "import { Braces } from '@ncodegroup/docs/components';",
@@ -92,6 +93,7 @@ describe('a library with its own 404.mdx', () => {
     assert.match(html, /Nothing lives at/);
     assert.match(html, /ncode-braces/);
     assert.match(html, /<a[^>]+class="sl-link-button[^"]*"[^>]*href="\/Fixture\/quick-start\/"/);
+    assert.match(html, /<path d="M4 12h16"/);
     assert.doesNotMatch(html, /Page not found/);
     assert.ok(!existsSync(join(result.out, '404', 'index.html')), 'no /404/ page is built');
   });

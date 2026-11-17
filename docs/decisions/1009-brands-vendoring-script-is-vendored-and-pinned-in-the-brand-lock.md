@@ -12,7 +12,7 @@ archive, has `gh attestation verify` prove it, and checks the vendored files aga
 `.template/Test-FileHeaders.ps1` fails every tracked JavaScript file without the `Copyright © NCode Group` and
 `SPDX-License-Identifier: Apache-2.0` lines (project-template ADR-0027). From NCode Brand 0.10.0, read 2026-11-17,
 brand's script starts with those lines, and the release's `manifest.json` lists it with its SHA-256, so a lock can
-name it like any other released file (NCodeGroup/brand#28).
+name it like any other released file ([NCodeGroup/brand#28](https://github.com/NCodeGroup/brand/issues/28)).
 
 ## Decision
 

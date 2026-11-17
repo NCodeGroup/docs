@@ -19,8 +19,12 @@ Once in each clone, run `git config core.hooksPath .githooks`. It turns on `.git
 | Build | `npm run build` |
 | Install the test browser | `npm run browser` |
 | Test | `npm run test` |
+| Lint and check the formatting | `npm run lint` |
+| Format, with Biome's safe fixes | `npm run format` |
 
 `npm run build` builds the stand-in library in `fixture/`. `npm run test` builds it under a base path and at the root of a domain, breaks a copy of it in each way a sample or a link can be wrong, and loads the built site in a browser. The browser check needs `npm run browser` once for each version of `playwright-core`, and is skipped without it. CI runs the same commands on every pull request, with the browser check required.
+
+Biome formats and lints the JavaScript and TypeScript and lints the Astro components, with the rules in `biome.json` ([the template's decision](docs/decisions/project-template/0201-biome-lints-and-formats-javascript-and-typescript.md), and [ADR-1005](docs/decisions/1005-biome-lints-astro-components-without-formatting-them.md) for the Astro components). `package.json` pins it exactly and holds its `lint` and `format` scripts, and the lock file holds its binary for each platform. After a large change, run `npm run format` twice: the second pass formats what the first pass's fixes left. CI runs `npm run lint` before the build, and so does the Landing `gate` in `AGENTS.md`.
 
 To see a change on a real site, build or serve a library that is cloned beside this repository: `npm run dev -- ../Buffers`. [README.md](README.md) has the details.
 

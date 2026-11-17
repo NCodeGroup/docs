@@ -98,13 +98,10 @@ mobile-starlight-toc .toggle,
 .pagination-links a > span,
 .sl-markdown-content table.ncode-stacked td[data-label]:not(:where(.not-content *))::before,
 .sl-markdown-content th:not(:where(.not-content *)) {
-  font-family: var(--nc-font-sans);
-  font-size: var(--nc-text-2xs);
-  font-stretch: var(--nc-width-label);
-  font-weight: var(--nc-weight-semibold);
-  letter-spacing: var(--nc-tracking-label);
-  line-height: 1.2;
-  text-transform: uppercase;
+  font: var(--nc-type-label);
+  font-stretch: var(--nc-type-label-stretch);
+  letter-spacing: var(--nc-type-label-tracking);
+  text-transform: var(--nc-type-label-case);
   color: var(--nc-color-text-muted);
 }
 
@@ -114,7 +111,7 @@ kbd,
 samp,
 pre {
   font-family: var(--nc-font-mono);
-  font-stretch: var(--nc-width-code);
+  font-stretch: var(--nc-type-code-stretch);
   font-variant-ligatures: none;
   font-feature-settings: 'zero' 1;
 }
@@ -151,8 +148,12 @@ site-search kbd > kbd {
   background: var(--nc-color-control);
   box-shadow: 0 1px 0 var(--nc-color-lip);
   color: var(--nc-color-text-secondary);
+  font: var(--nc-type-value);
   font-size: 0.625rem;
-  font-weight: var(--nc-weight-medium);
+  font-stretch: var(--nc-type-value-stretch);
+  font-variant-ligatures: none;
+  font-feature-settings: 'zero' 1;
+  letter-spacing: var(--nc-type-value-tracking);
   line-height: 1;
 }
 
@@ -202,12 +203,10 @@ site-search kbd > kbd {
   background: var(--nc-color-screen);
   box-shadow: inset 0 var(--nc-travel) 0 rgb(0 0 0 / 0.3);
   color: var(--nc-color-on-screen);
-  font-family: var(--nc-font-mono);
-  font-stretch: var(--nc-width-readout);
-  font-size: var(--nc-text-xs);
-  font-weight: var(--nc-weight-medium);
+  font: var(--nc-type-readout);
+  font-stretch: var(--nc-type-readout-stretch);
   font-variant-numeric: tabular-nums;
-  line-height: 1;
+  letter-spacing: var(--nc-type-readout-tracking);
   white-space: nowrap;
 }
 
@@ -257,7 +256,7 @@ starlight-theme-select label,
 /* A value between the mark's own braces. */
 .ncode-braces { display: inline-flex; align-items: center; gap: 0.3em; vertical-align: middle; white-space: nowrap; }
 .ncode-braces__brace { height: 1.6em; width: 0.4em; flex: none; fill: var(--nc-color-logo); }
-.ncode-braces__value { font-family: var(--nc-font-mono); font-stretch: var(--nc-width-code); font-size: 0.9em; font-weight: var(--nc-weight-medium); }
+.ncode-braces__value { font: var(--nc-type-value); font-size: 0.9em; font-stretch: var(--nc-type-value-stretch); letter-spacing: var(--nc-type-value-tracking); }
 
 /* ================================================================== 4. The site bar */
 
@@ -279,10 +278,9 @@ starlight-theme-select label,
 .ncode-brand__product {
   padding-inline-start: var(--nc-space-4);
   border-inline-start: var(--nc-border-hair) solid var(--nc-color-border-strong);
-  font-size: var(--nc-text-xl);
-  font-stretch: var(--nc-width-display);
-  font-weight: var(--nc-weight-semibold);
-  letter-spacing: var(--nc-tracking-heading);
+  font: var(--nc-type-subheading);
+  font-stretch: var(--nc-type-subheading-stretch);
+  letter-spacing: var(--nc-type-subheading-tracking);
   line-height: 1.15;
 }
 
@@ -489,10 +487,10 @@ main:has(h1[data-numbered]) .sl-markdown-content > .sl-heading-wrapper.level-h2:
   display: block;
   margin-bottom: var(--nc-space-3);
   color: var(--nc-color-text-muted);
-  font-family: var(--nc-font-mono);
-  font-stretch: var(--nc-width-code);
-  font-size: var(--nc-text-2xs);
-  font-weight: var(--nc-weight-medium);
+  font: var(--nc-type-value);
+  font-size: var(--sl-text-2xs);
+  font-stretch: var(--nc-type-value-stretch);
+  letter-spacing: var(--nc-type-value-tracking);
   line-height: 1;
 }
 @media (min-width: 50rem) {
@@ -611,10 +609,12 @@ main:has(h1[data-numbered]) .sl-markdown-content > .sl-heading-wrapper.level-h2:
   background: var(--nc-color-surface-sunken);
   box-shadow: inset 0 0 0 1px var(--nc-color-border);
   color: var(--nc-color-text-secondary);
-  font-family: var(--nc-font-mono);
-  font-stretch: var(--nc-width-code);
-  font-size: var(--nc-text-xs);
-  font-weight: var(--nc-weight-medium);
+  font: var(--nc-type-value);
+  font-size: var(--sl-text-2xs);
+  font-stretch: var(--nc-type-value-stretch);
+  letter-spacing: var(--nc-type-value-tracking);
+  /* The bullet's height, as Starlight sizes it, so the number stays centred in it. */
+  line-height: calc(var(--sl-line-height) * 1rem);
 }
 .sl-steps > li::after { background: var(--nc-color-border); }
 .sl-steps > li:last-child::after { content: none; }
@@ -763,7 +763,7 @@ mobile-starlight-toc .dropdown { border: var(--nc-border-hair) solid var(--nc-co
   border-radius: var(--nc-radius-panel);
   box-shadow: inset 0 var(--nc-travel) 0 rgb(0 0 0 / 0.3);
 }
-.expressive-code pre { font-stretch: var(--nc-width-code); }
+.expressive-code pre { font-stretch: var(--nc-type-code-stretch); }
 .expressive-code .frame.has-title:not(.is-terminal) .header { border: 0; background: var(--nc-color-screen); }
 .expressive-code .frame .header {
   min-height: var(--ncode-screen-head);
@@ -780,7 +780,7 @@ mobile-starlight-toc .dropdown { border: var(--nc-border-hair) solid var(--nc-co
   padding: 2px 1rem 0;
   border: 0;
   color: var(--nc-color-on-screen);
-  font-stretch: var(--nc-width-code);
+  font-stretch: var(--nc-type-code-stretch);
 }
 .expressive-code .frame.has-title:not(.is-terminal) .title::before {
   content: '';
@@ -830,12 +830,10 @@ mobile-starlight-toc .dropdown { border: var(--nc-border-hair) solid var(--nc-co
   display: flex;
   align-items: center;
   color: var(--nc-color-screen-lit);
-  font-family: var(--nc-font-sans);
-  font-size: var(--nc-text-2xs);
-  font-stretch: var(--nc-width-label);
-  font-weight: var(--nc-weight-semibold);
-  letter-spacing: var(--nc-tracking-label);
-  text-transform: uppercase;
+  font: var(--nc-type-label);
+  font-stretch: var(--nc-type-label-stretch);
+  letter-spacing: var(--nc-type-label-tracking);
+  text-transform: var(--nc-type-label-case);
   pointer-events: none;
   /* Above the head of the screen, which Expressive Code stacks over the code. */
   z-index: 2;
@@ -875,9 +873,10 @@ mobile-starlight-toc .dropdown { border: var(--nc-border-hair) solid var(--nc-co
 .hero .copy > * { max-width: 40rem; }
 .hero h1 {
   color: var(--nc-color-text);
-  font-size: clamp(var(--nc-text-4xl), 2rem + 4.2vw, var(--nc-text-6xl));
-  line-height: var(--nc-leading-flat);
-  letter-spacing: -0.028em;
+  font: var(--nc-type-headline);
+  font-size: clamp(var(--sl-text-4xl), 2rem + 4.2vw, var(--sl-text-6xl));
+  font-stretch: var(--nc-type-headline-stretch);
+  letter-spacing: var(--nc-type-headline-tracking);
 }
 .hero .tagline { max-width: 33rem; color: var(--nc-color-text-secondary); font-size: 1.25rem; line-height: 1.5; text-wrap: pretty; }
 .hero .actions { justify-content: flex-start; gap: var(--nc-space-4); }

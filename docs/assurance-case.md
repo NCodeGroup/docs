@@ -98,13 +98,20 @@ Each input from a library or a caller, and the check it gets before the build us
 
 ## Evidence
 
-[//]: # "Maintainers: add the tests and the coverage the project keeps."
-
-- **Gate:** CI runs the project's commands on every pull request.
+- **Gate:** CI runs Biome's format and lint check (`npm run lint`), the tests and the coverage check below on every
+  pull request (`.github/workflows/ci.yml`).
 - **Tests and coverage:** `npm run test` builds the fixture library and broken copies of it, and CI fails when the
   tests cover less than 90% of the statements or 80% of the branches of the toolchain's code;
   `.github/workflows/tag-release.yml` runs CI again on each release's commit before it tags it
   ([ADR-0026](decisions/project-template/0026-tests-gate-coverage-at-the-gold-thresholds-and-a-release-waits-for-them.md)).
+- **Requirements under test:** `test/config.test.mjs` checks R4, a content path, a samples glob, a symbolic link or a
+  `bin` folder that leads out of the library, and the schema check of R5; `test/samples.test.mjs` breaks a copy of the
+  fixture in each way a sample or a link can be wrong (R5); `test/build.test.mjs` and `test/links.test.mjs` check the
+  base path on the built pages (R5); `test/build.test.mjs` and `test/browser.test.mjs` check that a built page, and the
+  browser that loads it, ask no other origin for anything (R6); `test/vendor.test.mjs` runs the vendored files' check.
+  `test/workflow.test.mjs` reads `.github/workflows/site.yml` and `.npmrc` for R1 to R3: each job's permissions, the
+  checkouts that keep no credentials, the deploy job that checks out and runs nothing on any branch but the default
+  one, the actions pinned by commit, the install without scripts or a cache, and npm's three-day minimum release age.
 - **Static analysis:** with CodeQL's default setup configured, the repository ruleset blocks a pull request that adds a
   CodeQL alert at warning level or above, or a security alert of any severity
   ([ADR-0005](decisions/project-template/0005-the-default-branch-accepts-changes-only-through-pull-requests.md)).

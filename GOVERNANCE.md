@@ -26,10 +26,10 @@ a maintainer; the existing maintainers decide, and the change is recorded in thi
 
 ## Releases
 
-Versions follow Semantic Versioning. Releases are tagged once `AGENTS.md`'s Landing section sets `release: tag`, and published too with
-`tag+release`, as
+Versions follow Semantic Versioning. `AGENTS.md`'s Landing section sets `release: tag+release`, so each release is tagged
+and published as its pull request merges, as
 [ADR-0016](docs/decisions/project-template/0016-releases-are-tagged-and-published-when-their-pull-request-merges.md)
-records; it starts with `release: none`.
+records.
 
 ## Continuity
 

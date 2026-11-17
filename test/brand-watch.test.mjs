@@ -5,7 +5,7 @@
 // v<x.y.z> counts.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { chooseAction, issueText, newestRelease, runBrandWatch } from '../scripts/brand-watch.mjs';
@@ -90,6 +90,11 @@ describe('chooseAction', () => {
     assert.deepEqual(chooseAction(issues, text), { kind: 'edit', number: 5 });
   });
 
+  it('edits the issue when only its body differs', () => {
+    const issue = marked(5, { body: '<!-- brand-watch -->\nAn older body.\n' });
+    assert.deepEqual(chooseAction([issue], text), { kind: 'edit', number: 5 });
+  });
+
   it('leaves an issue whose body differs only by line endings and trailing spaces', () => {
     const issue = marked(5, { body: `${text.body.replace(/\n/g, '\r\n')}  ` });
     assert.deepEqual(chooseAction([issue], text), { kind: 'none', number: 5 });
@@ -97,9 +102,9 @@ describe('chooseAction', () => {
 });
 
 describe('runBrandWatch', () => {
-  const root = join(work, 'brand-watch');
-  mkdirSync(join(root, 'vendor', 'brand'), { recursive: true });
-  writeFileSync(join(root, 'vendor', 'brand', 'brand.lock.json'), JSON.stringify({ version: '0.9.0', files: {} }));
+  const watchRoot = join(work, 'brand-watch');
+  mkdirSync(join(watchRoot, 'vendor', 'brand'), { recursive: true });
+  writeFileSync(join(watchRoot, 'vendor', 'brand', 'brand.lock.json'), JSON.stringify({ version: '0.9.0', files: {} }));
 
   const newer = [release('v0.10.0')];
   const text = issueText('0.9.0', { version: '0.10.0', published: new Date('2026-11-20T10:00:00Z') });
@@ -120,7 +125,7 @@ describe('runBrandWatch', () => {
       return new Response(JSON.stringify(json), { status });
     };
     try {
-      const lines = await runBrandWatch({ root, repo: 'NCodeGroup/docs', fetch, ...options });
+      const lines = await runBrandWatch({ root: watchRoot, repo: 'NCodeGroup/docs', fetch, ...options });
       return { calls, lines };
     } catch (error) {
       error.calls = calls;
@@ -241,5 +246,20 @@ describe('the command line', () => {
     const result = run('--bogus');
     assert.equal(result.status, 2);
     assert.match(result.stderr, /usage: node scripts\/brand-watch\.mjs/);
+  });
+
+  it('exits 1 with the error when the run fails', () => {
+    const cli = join(work, 'brand-watch-cli');
+    rmSync(cli, { recursive: true, force: true });
+    mkdirSync(join(cli, 'scripts'), { recursive: true });
+    // The copy has no vendor/brand/brand.lock.json beside it, so the run fails before any request.
+    copyFileSync(join(root, 'scripts', 'brand-watch.mjs'), join(cli, 'scripts', 'brand-watch.mjs'));
+    const result = spawnSync(
+      process.execPath,
+      [join(cli, 'scripts', 'brand-watch.mjs'), '--dry-run', '--repo=NCodeGroup/docs'],
+      { cwd: cli, encoding: 'utf8', env },
+    );
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /brand\.lock\.json/);
   });
 });

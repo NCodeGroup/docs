@@ -2,11 +2,13 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 /*
- * Instrument on Starlight.
+ * Instrument on Starlight: the rules for Starlight's own markup.
  *
- * vendor/instrument/tokens.css holds every brand value and is never edited here. This file is the
- * only place that knows both sides: part 1 maps Starlight's own custom properties onto the tokens,
- * and the parts after it restyle Starlight's markup with the system's grammar:
+ * The brand's files in vendor/brand/ hold every value and are never edited here: tokens/tokens.css
+ * the tokens, css/fonts.css the typefaces, and css/starlight.css Starlight's own custom properties,
+ * mapped onto the tokens. customCss in astro.config.mjs loads them before this file. The rules below
+ * depend on the markup of one Starlight version, so they live here, beside the version they were
+ * written for, and restyle it with the system's grammar:
  *
  *   Plate   a flush part of the case: hairline edge, 1px lip.         the sidebar, the page sheet, cards
  *   Key     anything you press: raised on a lip, travels down.         buttons, tabs, previous and next
@@ -20,100 +22,12 @@
  * specificity contest; where a rule only repeats what Starlight does, it is not here.
  */
 
-/* ================================================================== 1. Starlight's properties, from the tokens */
+/* ================================================================== 1. Shorthands */
 
-/* Each token is light-dark(), so one set of declarations serves both themes: Starlight puts
-   data-theme on the root, and tokens.css turns that into the root's color-scheme. */
-:root,
-:root[data-theme='light'],
-::backdrop {
-  /* Text, from strongest to faintest; then lines; then surfaces. Starlight inverts this scale between
-     its themes, and so do the tokens. */
-  --sl-color-white: var(--color-text);
-  --sl-color-gray-1: var(--color-text);
-  --sl-color-gray-2: var(--color-text-secondary);
-  --sl-color-gray-3: var(--color-text-muted);
-  --sl-color-gray-4: var(--color-border-strong);
-  --sl-color-gray-5: var(--color-border);
-  --sl-color-gray-6: var(--color-surface-sunken);
-  --sl-color-gray-7: var(--color-surface);
-  --sl-color-black: var(--color-surface-raised);
-
-  --sl-color-text: var(--color-text);
-  --sl-color-text-accent: var(--color-primary-text);
-  --sl-color-text-invert: var(--color-on-primary);
-  --sl-color-bg: var(--color-page);
-  --sl-color-bg-nav: var(--color-page);
-  --sl-color-bg-sidebar: var(--color-page);
-  --sl-color-bg-inline-code: var(--color-surface-sunken);
-  --sl-color-bg-accent: var(--color-primary);
-  --sl-color-hairline-light: var(--color-border);
-  --sl-color-hairline: var(--color-border);
-  --sl-color-hairline-shade: var(--color-border);
-  --sl-color-backdrop-overlay: var(--color-scrim);
-
-  --sl-color-accent-low: var(--color-primary-subtle);
-  --sl-color-accent: var(--color-primary);
-  --sl-color-accent-high: var(--color-primary-text);
-
-  /* Asides and badges: note is information, tip is success, caution is warning, danger is danger. */
-  --sl-color-blue-low: var(--color-info-subtle);
-  --sl-color-blue: var(--color-info-mark);
-  --sl-color-blue-high: var(--color-info-text);
-  --sl-color-purple-low: var(--color-success-subtle);
-  --sl-color-purple: var(--color-success-mark);
-  --sl-color-purple-high: var(--color-success-text);
-  --sl-color-green-low: var(--color-success-subtle);
-  --sl-color-green: var(--color-success-mark);
-  --sl-color-green-high: var(--color-success-text);
-  --sl-color-orange-low: var(--color-warning-subtle);
-  --sl-color-orange: var(--color-warning-mark);
-  --sl-color-orange-high: var(--color-warning-text);
-  --sl-color-red-low: var(--color-danger-subtle);
-  --sl-color-red: var(--color-danger-mark);
-  --sl-color-red-high: var(--color-danger-text);
-
-  --sl-font: var(--font-sans);
-  --sl-font-mono: var(--font-mono);
-  --sl-text-xs: var(--text-sm);
-  --sl-text-sm: var(--text-md);
-  --sl-text-base: var(--text-base);
-  --sl-text-lg: var(--text-lg);
-  --sl-text-h1: var(--text-3xl);
-  --sl-text-h2: var(--text-2xl);
-  --sl-text-h3: var(--text-xl);
-  --sl-text-h4: var(--text-lg);
-  --sl-text-h5: var(--text-base);
-  --sl-text-code: var(--text-sm);
-  --sl-line-height: var(--leading-reading);
-  --sl-line-height-headings: 1.18;
-
-  --sl-shadow-sm: var(--elevation-flush);
-  --sl-shadow-md: var(--elevation-raised);
-  --sl-shadow-lg: var(--elevation-overlay);
-
-  /* The header is part of the case, not a bar; the sidebar is 16.25rem of plate and its gutters. */
-  --sl-nav-height: 3.75rem;
-  --sl-nav-pad-x: var(--space-5);
-  --sl-nav-pad-y: var(--space-4);
-  --sl-nav-gap: var(--space-5);
-  --sl-sidebar-width: 17.75rem;
-  --sl-sidebar-pad-x: var(--space-3);
-  --sl-content-width: 50rem;
-  --sl-content-pad-x: 1.25rem;
-  --sl-menu-button-size: var(--control-md);
-
-  /* This file's own shorthand for a key at rest and a key held down. */
+/* A key at rest and a key held down. */
+:root {
   --ncode-key-shadow: inset 0 1px 0 var(--color-glint), 0 var(--travel) 0 var(--color-lip);
   --ncode-latched-shadow: inset 0 var(--travel) 0 var(--color-shade);
-}
-
-@media (min-width: 50rem) {
-  :root,
-  :root[data-theme='light'] {
-    --sl-text-h1: var(--text-4xl);
-    --sl-content-pad-x: 3.5rem;
-  }
 }
 
 /* ================================================================== 2. Type */

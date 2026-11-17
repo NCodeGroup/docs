@@ -226,7 +226,8 @@ Run from the repository root in PowerShell 7:
 under `/Fixture/` and at a domain's root, breaks a copy of it in each way a sample or a link can be wrong, checks the
 vendored files against their manifest, and loads the built site in a browser.
 
-`npm run lint` checks the code with Biome, as CI does before it builds, and `npm run format` applies Biome's formatting and safe fixes; `biome.json` holds the rules.
+`npm run lint` checks the code with Biome, as CI does before it builds, and `npm run format` applies Biome's
+formatting and safe fixes; `biome.json` holds the rules.
 
 The browser is the headless Chromium that the locked `playwright-core` drives. `npm run browser` downloads it, once
 for each version of `playwright-core`; on Linux, `npm run browser -- --with-deps` also installs the system libraries

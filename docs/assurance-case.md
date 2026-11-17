@@ -30,9 +30,26 @@ while the library keeps `toolchain-ref` equal to its pin.
 
 ## Threat Model
 
-[//]: # "Maintainers: add a table (Threat, In scope, Countered by) and state the trust boundary."
+The trust boundary is the build job. A library's pages, components, sample files and `site.config.json`, from a pull
+request too, and the npm packages run or are read inside it, with the permissions of R1, and only the built artifact
+crosses to the deploy job. A library's default branch is trusted as the library's own code. Out of scope: a
+compromised GitHub or npm account, a maintainer with write access to a library or to this repository acting against
+it, and a vulnerability in a dependency itself ([SECURITY.md](../SECURITY.md)).
 
-Not written yet.
+| Threat | In scope | Countered by |
+| --- | --- | --- |
+| A pull request in a library, from a fork too, runs code in the build through a page or a component | Yes | R1: the build job's token only reads, and the job holds no secret; R2: a pull request's run never deploys |
+| A pull request's build is published | Yes | R2: `deploy` runs only on the default branch, and the `github-pages` environment deploys only from that branch |
+| A run leaves files in a cache that a publishing run restores | Yes | R3: `cache-mode: none`, and `package-manager-cache: false` for `setup-node` |
+| A site is built with a toolchain or packages nobody pinned | Yes | R3: a run that knows no toolchain commit stops at its first step, and `npm ci` fails when `package.json` and the lockfile disagree |
+| A new or compromised package release runs code when it is installed | Yes | R3: `--ignore-scripts`; `.npmrc`'s `min-release-age=3` and Dependabot's cooldown; every update is a reviewed pull request |
+| An action a workflow uses changes under its tag | Yes | Every action is pinned by full commit SHA, which Dependabot moves |
+| A workflow input injects a command into a step | Yes | `.github/workflows/site.yml` passes its inputs to the script through `env`, never into a command's text |
+| A content path, a samples glob or a symbolic link makes the build read a file outside the library | Yes | R4: `resolveLibrary` in `src/library.mjs` |
+| A wrong sample or a broken link is published | Yes | R5 |
+| A published site loads code or fonts from another origin, which can change after the build | Yes | R6: the fonts are vendored in `vendor/instrument/`, and the tests check every built page and every request a browser makes |
+| A vendored theme file is edited here and drifts from its source | Yes | `scripts/check-vendor.mjs`, which the tests run, compares each file with the SHA-256 in `manifest.json` |
+| A library's own page writes harmful HTML or script into its site | No | The page is the library's code, reviewed in the library (Security Requirements) |
 
 ## Secure Design Principles Applied
 

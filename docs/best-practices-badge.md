@@ -29,6 +29,7 @@ The silver criteria that need a document point to these:
 | `documentation_roadmap` | [ROADMAP.md](../ROADMAP.md) |
 | `documentation_architecture` | [architecture.md](architecture.md) |
 | `documentation_security`, `assurance_case`, `implement_secure_design` | [assurance-case.md](assurance-case.md) |
+| `input_validation`, `hardening` | [assurance-case.md](assurance-case.md), Input Validation and Secure Design Principles Applied |
 | Vulnerability response and credit | [SECURITY.md](../SECURITY.md) |
 | Coding standards and their enforcement | [CONTRIBUTING.md](../CONTRIBUTING.md), `.editorconfig`, `biome.json` |
 | Test policy (`test_policy_mandated`) | [CONTRIBUTING.md](../CONTRIBUTING.md), Make a Change, item 3 |

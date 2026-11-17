@@ -24,20 +24,49 @@ const defined = (text) => [...text.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((match) 
 const read = (path) => readFileSync(join(root, path), 'utf8');
 
 /** The theme's stylesheets, the components and ec.config.mjs: every file that reads the brand's tokens. */
-const readers = () =>
-  spawnSync('git', ['ls-files', '--', 'src/*.css', 'src/*.astro', 'fixture/*.astro'], {
+const readers = () => {
+  const result = spawnSync('git', ['ls-files', '--', 'src/*.css', 'src/*.astro', 'fixture/*.astro'], {
     cwd: root,
     encoding: 'utf8',
-  })
-    .stdout.split('\n')
-    .filter(Boolean)
-    .concat('ec.config.mjs');
+  });
+  assert.equal(result.status, 0, result.stderr);
+  const paths = result.stdout.split('\n').filter(Boolean).concat('ec.config.mjs');
+  // An empty or partial list would let the scans below pass while they check nothing.
+  for (const path of [
+    'src/styles/theme.css',
+    'src/components/overrides/SiteTitle.astro',
+    'fixture/docs/site/_components/ByteGrid.astro',
+  ])
+    assert.ok(paths.includes(path), `git ls-files lists no ${path}`);
+  return paths;
+};
 
 /**
  * The brand's private primitives, which brand's ADR-1002 lets any release change: the steps of its colour ramps and
  * of its type scale.
  */
 const PRIMITIVE = /^--nc-(?:(?:blue|stone|green|amber|red)-\d+|(?:text|weight|width|leading|tracking)-[a-z0-9]+)$/;
+
+/** The custom properties a file reads, with or without a fallback. */
+const reads = (path, text) => {
+  const names = [...text.matchAll(/var\(\s*(--[a-z0-9-]*[a-z0-9])\s*[,)]/g)].map((match) => match[1]);
+  // ec.config.mjs names a colour token by its role, token('screen'), for var(--nc-color-screen).
+  if (path === 'ec.config.mjs')
+    names.push(...[...text.matchAll(/token\('([a-z0-9-]+)'\)/g)].map((m) => `--nc-color-${m[1]}`));
+  return names;
+};
+
+/** Each property a file reads that no stylesheet defines, as `path: name`. */
+const undefinedReads = (path, text, known) =>
+  reads(path, text)
+    .filter((name) => !known.has(name))
+    .map((name) => `${path}: ${name}`);
+
+/** Each step of a colour ramp or of the type scale a file reads, as `path: name`. */
+const primitiveReads = (path, text) =>
+  reads(path, text)
+    .filter((name) => PRIMITIVE.test(name))
+    .map((name) => `${path}: ${name}`);
 
 describe('the vendored brand', () => {
   it('matches its lock', () => {
@@ -66,24 +95,23 @@ describe('the vendored brand', () => {
       ...defined(read('vendor/brand/css/starlight.css')),
       ...sources.flatMap((path) => defined(read(path))),
     ]);
-    const missing = [];
-    for (const path of sources) {
-      const text = read(path);
-      const names = [...text.matchAll(/var\((--[a-z0-9-]*[a-z0-9])\)/g)].map((match) => match[1]);
-      // ec.config.mjs names a colour token by its role, token('screen'), for var(--nc-color-screen).
-      if (path === 'ec.config.mjs')
-        names.push(...[...text.matchAll(/token\('([a-z0-9-]+)'\)/g)].map((m) => `--nc-color-${m[1]}`));
-      for (const name of names) if (!known.has(name)) missing.push(`${path}: ${name}`);
-    }
-    assert.deepEqual(missing, []);
+    assert.deepEqual(
+      sources.flatMap((path) => undefinedReads(path, read(path), known)),
+      [],
+    );
   });
 
   it('reads no step of a colour ramp or of the type scale in the theme, the code blocks and the components', () => {
-    const primitives = [];
-    for (const path of readers()) {
-      for (const match of read(path).matchAll(/var\(\s*(--[a-z0-9-]+)/g))
-        if (PRIMITIVE.test(match[1])) primitives.push(`${path}: ${match[1]}`);
-    }
-    assert.deepEqual(primitives, []);
+    assert.deepEqual(
+      readers().flatMap((path) => primitiveReads(path, read(path))),
+      [],
+    );
+  });
+
+  it('reports a read of an undefined custom property or of a primitive, with or without a fallback', () => {
+    const text = '.x { color: var(--nc-blue-600); background: var(--nc-nope, red); }';
+    const known = new Set(defined(read('vendor/brand/tokens/tokens.css')));
+    assert.deepEqual(undefinedReads('a.css', text, known), ['a.css: --nc-nope']);
+    assert.deepEqual(primitiveReads('a.css', text), ['a.css: --nc-blue-600']);
   });
 });

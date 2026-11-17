@@ -50,8 +50,9 @@ it, and a vulnerability in a dependency itself ([SECURITY.md](../SECURITY.md)).
 | A workflow input injects a command into a step | Yes | `.github/workflows/site.yml` passes its inputs to the script through `env`, never into a command's text |
 | A content path with `..`, a samples glob, or a symbolic link on a sample file's path makes the build read a file outside the library | Yes | R4: `resolveLibrary` in `src/library.mjs` |
 | A wrong sample or a broken link is published | Yes | R5 |
-| A published site loads code or fonts from another origin, which can change after the build | Yes | R6: the fonts are vendored in `vendor/instrument/`, and the tests check every built page and every request a browser makes |
-| A vendored theme file is edited here and drifts from its source | Yes | `scripts/check-vendor.mjs`, which the tests run, compares each file with the SHA-256 in `manifest.json` |
+| A published site loads code or fonts from another origin, which can change after the build | Yes | R6: the fonts are vendored in `vendor/brand/fonts/`, and the tests check every built page and every request a browser makes |
+| A vendored brand file is edited here and drifts from its release | Yes | `npm run check:vendor`, which the tests run, compares each file with the SHA-256 `vendor/brand/brand.lock.json` pins |
+| A brand release's files are swapped, at its tag or on the way, before they are vendored | Yes | `npm run update:brand` writes nothing unless `gh attestation verify` proves that NCodeGroup/brand's `publish.yml` built the release's archive for its tag on a GitHub-hosted runner, and the archive holds exactly the files its manifest lists, at their SHA-256 ([ADR-1008](decisions/1008-the-brand-is-vendored-from-an-attested-release-and-the-theme-restyles-only-starlights-markup.md)) |
 | A library's own page writes harmful HTML or script into its site | No | The page is the library's code, reviewed in the library (Security Requirements) |
 
 ## Input Validation
@@ -95,7 +96,8 @@ Each input from a library or a caller, and the check it gets before the build us
   of git's message, with `%` escaped, as a workflow command.
 - CWE-250, execution with unnecessary privileges: R1 and R2.
 - CWE-494, download of code without an integrity check: R3, since `npm ci` checks each package against the lockfile's
-  hash, and the vendored files' SHA-256 check.
+  hash, and a brand release's files are written only from an archive whose build provenance `gh attestation verify`
+  proves, and checked against their SHA-256 afterwards.
 - CWE-829, inclusion of functionality from an untrusted control sphere: R3, R6, and actions pinned by full commit SHA.
 - CWE-1395, dependency on a vulnerable third-party component: Dependabot's updates and alerts.
 
@@ -111,7 +113,9 @@ Each input from a library or a caller, and the check it gets before the build us
   `bin` folder that leads out of the library, and the schema check of R5; `test/samples.test.mjs` breaks a copy of the
   fixture in each way a sample or a link can be wrong (R5); `test/build.test.mjs` and `test/links.test.mjs` check the
   base path on the built pages (R5); `test/build.test.mjs` and `test/browser.test.mjs` check that a built page, and the
-  browser that loads it, ask no other origin for anything (R6); `test/vendor.test.mjs` runs the vendored files' check.
+  browser that loads it, ask no other origin for anything (R6); `test/vendor.test.mjs` runs the vendored brand files'
+  check, and fails when the theme reads a custom property no vendored stylesheet defines, or a step of the brand's
+  colour ramps or type scale.
   `test/workflow.test.mjs` reads `.github/workflows/site.yml` and `.npmrc` for R1 to R3: each job's permissions, the
   checkouts that keep no credentials, the deploy job that runs only from the default branch and checks out and runs
   nothing, the toolchain checked out at the pinned commit and the step that stops a run without one, the actions

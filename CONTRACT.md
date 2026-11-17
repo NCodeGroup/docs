@@ -243,9 +243,11 @@ as a column of row names, shows its cells without a name. A table written as HTM
 renders, is not stacked.
 
 A library's own component is an `.astro` file in `_components/`. It may import from the same four places, styles
-itself with the design tokens (`var(--color-screen)`, `var(--space-4)`, `var(--font-mono)`; never a colour of its
-own), and puts the class `not-content` on its root element so the page's text styles stay off it. It ships no
-client-side script that loads from another origin.
+itself with the brand's public tokens, each prefixed `--nc-`: the colour roles, the type roles, the font families,
+elevation and the measures (`var(--nc-color-screen)`, `font: var(--nc-type-value)`, `var(--nc-space-4)`). It never
+states a colour of its own, and never reads a step of a colour ramp or of the type scale, such as `--nc-blue-600` or
+`--nc-text-sm`, which a brand release may change. It puts the class `not-content` on its root element so the page's
+text styles stay off it. It ships no client-side script that loads from another origin.
 
 ## 8. What fails the build
 

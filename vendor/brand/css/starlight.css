@@ -1,0 +1,130 @@
+/* NCode Brand 0.9.0: css/starlight.css, copied by build.mjs from src/css/starlight.css; edit that file. Apache-2.0. */
+/*
+ * Instrument for Starlight: Starlight's custom properties, mapped onto NCode's tokens.
+ *
+ * Load it after tokens/tokens.css and css/fonts.css, through Starlight's customCss. Unlayered CSS wins over
+ * Starlight's own "starlight" cascade layers, so these declarations need no specificity of their own. Every value is
+ * a token: a token swap needs no change here. Each color token follows the root's color-scheme, so one set of
+ * declarations serves both themes: Starlight puts data-theme on the root, and tokens.css turns that into the root's
+ * color-scheme.
+ *
+ * It maps the semantic tokens, and the steps of the type scale where Starlight asks for a size rather than a role;
+ * it releases with the tokens, so it may read a primitive. It holds no rule for Starlight's markup: restyling the
+ * sidebar, the code frames or the callouts depends on the markup of one Starlight version, so those rules live in
+ * the documentation toolchain, next to the version they were written for (docs/decisions/1005).
+ */
+
+:root,
+:root[data-theme='light'],
+::backdrop {
+  /* Text, from strongest to faintest; then lines; then surfaces. Starlight inverts this scale between its
+     themes, and so do the tokens. */
+  --sl-color-white: var(--nc-color-text);
+  --sl-color-gray-1: var(--nc-color-text);
+  --sl-color-gray-2: var(--nc-color-text-secondary);
+  --sl-color-gray-3: var(--nc-color-text-muted);
+  --sl-color-gray-4: var(--nc-color-border-strong);
+  --sl-color-gray-5: var(--nc-color-border);
+  --sl-color-gray-6: var(--nc-color-surface-sunken);
+  --sl-color-gray-7: var(--nc-color-surface);
+  --sl-color-black: var(--nc-color-surface-raised);
+
+  /* The page is the case; the sheet of text on it is the brightest surface. Starlight paints the inverted text on the
+     accent (the skip link, the sidebar's current page, a file tree's highlight, the banner), so the pair is the brand
+     as text on the brightest surface, turned over: a pairing the contrast gate measures for any tenant's color. */
+  --sl-color-text: var(--nc-color-text);
+  --sl-color-text-accent: var(--nc-color-primary-text);
+  --sl-color-text-invert: var(--nc-color-surface-raised);
+  --sl-color-bg: var(--nc-color-page);
+  --sl-color-bg-nav: var(--nc-color-page);
+  --sl-color-bg-sidebar: var(--nc-color-page);
+  --sl-color-bg-inline-code: var(--nc-color-surface-sunken);
+  --sl-color-bg-accent: var(--nc-color-primary-text);
+  --sl-color-hairline-light: var(--nc-color-border);
+  --sl-color-hairline: var(--nc-color-border);
+  --sl-color-hairline-shade: var(--nc-color-border);
+  --sl-color-backdrop-overlay: var(--nc-color-scrim);
+
+  /* The accent is the brand: a tenant's color, or NCode Blue. Starlight draws the search field's focus border in it,
+     so it is the focus ring's color. */
+  --sl-color-accent-low: var(--nc-color-primary-subtle);
+  --sl-color-accent: var(--nc-color-focus);
+  --sl-color-accent-high: var(--nc-color-primary-text);
+
+  /* Asides and badges: note is information, tip is success, caution is warning, danger is danger. Purple has no
+     meaning of its own here, so it reads as success too. */
+  --sl-color-blue-low: var(--nc-color-info-subtle);
+  --sl-color-blue: var(--nc-color-info-mark);
+  --sl-color-blue-high: var(--nc-color-info-text);
+  --sl-color-purple-low: var(--nc-color-success-subtle);
+  --sl-color-purple: var(--nc-color-success-mark);
+  --sl-color-purple-high: var(--nc-color-success-text);
+  --sl-color-green-low: var(--nc-color-success-subtle);
+  --sl-color-green: var(--nc-color-success-mark);
+  --sl-color-green-high: var(--nc-color-success-text);
+  --sl-color-orange-low: var(--nc-color-warning-subtle);
+  --sl-color-orange: var(--nc-color-warning-mark);
+  --sl-color-orange-high: var(--nc-color-warning-text);
+  --sl-color-red-low: var(--nc-color-danger-subtle);
+  --sl-color-red: var(--nc-color-danger-mark);
+  --sl-color-red-high: var(--nc-color-danger-text);
+
+  /* Two voices: names and reading in Instrument Sans, every value in Martian Mono. Up to lg each of Starlight's steps
+     takes the scale's step of its size; from xl on, the step of its name. On a phone the title is 36 pixels and a
+     section 28, as base.css sets a long-form page there; one line height, heading-long's, serves every heading. */
+  --sl-font: var(--nc-font-sans);
+  --sl-font-mono: var(--nc-font-mono);
+  --sl-text-2xs: var(--nc-text-xs);
+  --sl-text-xs: var(--nc-text-sm);
+  --sl-text-sm: var(--nc-text-md);
+  --sl-text-base: var(--nc-text-base);
+  --sl-text-lg: var(--nc-text-lg);
+  --sl-text-xl: var(--nc-text-xl);
+  --sl-text-2xl: var(--nc-text-2xl);
+  --sl-text-3xl: var(--nc-text-3xl);
+  --sl-text-4xl: var(--nc-text-4xl);
+  --sl-text-5xl: var(--nc-text-5xl);
+  --sl-text-6xl: var(--nc-text-6xl);
+  --sl-text-h1: var(--nc-text-3xl);
+  --sl-text-h2: var(--nc-text-2xl);
+  --sl-text-h3: var(--nc-text-xl);
+  --sl-text-h4: var(--nc-text-lg);
+  --sl-text-h5: var(--nc-text-base);
+  --sl-text-code: var(--nc-text-sm);
+  --sl-line-height: var(--nc-leading-reading);
+  --sl-line-height-headings: 1.14;
+
+  /* Depth is drawn with hard edges; the one soft shadow is the overlay's. */
+  --sl-shadow-sm: var(--nc-elevation-flush);
+  --sl-shadow-md: var(--nc-elevation-raised);
+  --sl-shadow-lg: var(--nc-elevation-overlay);
+
+  /* The header is part of the case, not a bar; the sidebar is a plate with its gutters. */
+  --sl-nav-height: 3.75rem;
+  --sl-nav-pad-x: var(--nc-space-5);
+  --sl-nav-pad-y: var(--nc-space-4);
+  --sl-nav-gap: var(--nc-space-5);
+  --sl-sidebar-width: 17.75rem;
+  --sl-sidebar-pad-x: var(--nc-space-3);
+  --sl-content-width: 50rem;
+  --sl-content-pad-x: var(--nc-bleed);
+  --sl-menu-button-size: var(--nc-control-md);
+}
+
+/* Wider than 40rem, where base.css's phone rules (max-width: 40rem) end, a long-form page's title is title-long's
+   size, 56 pixels, and a section heading-long's, 36. */
+@media (width > 40rem) {
+  :root,
+  :root[data-theme='light'] {
+    --sl-text-h1: var(--nc-text-5xl);
+    --sl-text-h2: var(--nc-text-3xl);
+  }
+}
+
+/* From Starlight's own 50rem breakpoint on, the sheet takes more room. */
+@media (min-width: 50rem) {
+  :root,
+  :root[data-theme='light'] {
+    --sl-content-pad-x: 3.5rem;
+  }
+}

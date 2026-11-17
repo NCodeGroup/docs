@@ -1,31 +1,117 @@
 // Copyright © NCode Group
 // SPDX-License-Identifier: Apache-2.0
 
-// The vendored brand files are the files their manifest names, and the check notices an edit.
+// The vendored brand files are the files brand.lock.json pins, and every custom property the theme reads is one the
+// brand's stylesheets or the theme define, and none is a step of the brand's colour ramps or type scale.
 import assert from 'node:assert/strict';
-import { appendFileSync, cpSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { appendFileSync, cpSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
-import { checkVendor } from '../scripts/check-vendor.mjs';
 import { root, work } from './helpers.mjs';
 
-describe('the vendored theme', () => {
-  it('matches its manifest', () => {
-    assert.deepEqual(checkVendor(join(root, 'vendor')), []);
+const brand = join(root, 'vendor', 'brand');
+const check = (lock) =>
+  spawnSync(process.execPath, [join(root, 'scripts', 'vendor-brand.mjs'), '--check', '--lock', lock], {
+    cwd: root,
+    encoding: 'utf8',
   });
 
-  it('fails the check when a vendored file was edited, added or removed', () => {
-    const copy = join(work, 'vendor-copy');
-    rmSync(copy, { recursive: true, force: true });
-    cpSync(join(root, 'vendor'), copy, { recursive: true });
-    assert.deepEqual(checkVendor(copy), []);
+/** The custom properties a stylesheet or a component defines. */
+const defined = (text) => [...text.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((match) => match[1]);
 
-    appendFileSync(join(copy, 'instrument', 'tokens.css'), '\n:root { --brand: red; }\n');
-    writeFileSync(join(copy, 'instrument', 'extra.css'), '');
-    rmSync(join(copy, 'instrument', 'fonts.css'));
-    const problems = checkVendor(copy).join('\n');
-    assert.match(problems, /vendor\/instrument\/tokens\.css: was edited/);
-    assert.match(problems, /vendor\/instrument\/extra\.css: not named in manifest\.json/);
-    assert.match(problems, /vendor\/instrument\/fonts\.css: named in manifest\.json, but the file is missing/);
+/** A file of this repository, read as text. */
+const read = (path) => readFileSync(join(root, path), 'utf8');
+
+/** The theme's stylesheets, the components and ec.config.mjs: every file that reads the brand's tokens. */
+const readers = () => {
+  const result = spawnSync('git', ['ls-files', '--', 'src/*.css', 'src/*.astro', 'fixture/*.astro'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  assert.equal(result.status, 0, result.stderr);
+  const paths = result.stdout.split('\n').filter(Boolean).concat('ec.config.mjs');
+  // An empty or partial list would let the scans below pass while they check nothing.
+  for (const path of [
+    'src/styles/theme.css',
+    'src/components/overrides/SiteTitle.astro',
+    'fixture/docs/site/_components/ByteGrid.astro',
+  ])
+    assert.ok(paths.includes(path), `git ls-files lists no ${path}`);
+  return paths;
+};
+
+/**
+ * The brand's private primitives, which brand's ADR-1002 lets any release change: the steps of its colour ramps and
+ * of its type scale.
+ */
+const PRIMITIVE = /^--nc-(?:(?:blue|stone|green|amber|red)-\d+|(?:text|weight|width|leading|tracking)-[a-z0-9]+)$/;
+
+/** The custom properties a file reads, with or without a fallback. */
+const reads = (path, text) => {
+  const names = [...text.matchAll(/var\(\s*(--[a-z0-9-]*[a-z0-9])\s*[,)]/g)].map((match) => match[1]);
+  // ec.config.mjs names a colour token by its role, token('screen'), for var(--nc-color-screen).
+  if (path === 'ec.config.mjs')
+    names.push(...[...text.matchAll(/token\('([a-z0-9-]+)'\)/g)].map((m) => `--nc-color-${m[1]}`));
+  return names;
+};
+
+/** Each property a file reads that no stylesheet defines, as `path: name`. */
+const undefinedReads = (path, text, known) =>
+  reads(path, text)
+    .filter((name) => !known.has(name))
+    .map((name) => `${path}: ${name}`);
+
+/** Each step of a colour ramp or of the type scale a file reads, as `path: name`. */
+const primitiveReads = (path, text) =>
+  reads(path, text)
+    .filter((name) => PRIMITIVE.test(name))
+    .map((name) => `${path}: ${name}`);
+
+describe('the vendored brand', () => {
+  it('matches its lock', () => {
+    const result = check(join(brand, 'brand.lock.json'));
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /vendored files match the lock\./);
+  });
+
+  it('fails the check when a vendored file was edited or removed', () => {
+    const copy = join(work, 'vendor-brand-copy');
+    rmSync(copy, { recursive: true, force: true });
+    cpSync(brand, copy, { recursive: true });
+
+    appendFileSync(join(copy, 'tokens', 'tokens.css'), '\n:root { --nc-brand: red; }\n');
+    rmSync(join(copy, 'css', 'fonts.css'));
+    const result = check(join(copy, 'brand.lock.json'));
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /tokens\/tokens\.css: differs from tokens\/tokens\.css of brand/);
+    assert.match(result.stderr, /css\/fonts\.css: missing/);
+  });
+
+  it('defines every custom property the theme, the code blocks and the components read', () => {
+    const sources = readers();
+    const known = new Set([
+      ...defined(read('vendor/brand/tokens/tokens.css')),
+      ...defined(read('vendor/brand/css/starlight.css')),
+      ...sources.flatMap((path) => defined(read(path))),
+    ]);
+    assert.deepEqual(
+      sources.flatMap((path) => undefinedReads(path, read(path), known)),
+      [],
+    );
+  });
+
+  it('reads no step of a colour ramp or of the type scale in the theme, the code blocks and the components', () => {
+    assert.deepEqual(
+      readers().flatMap((path) => primitiveReads(path, read(path))),
+      [],
+    );
+  });
+
+  it('reports a read of an undefined custom property or of a primitive, with or without a fallback', () => {
+    const text = '.x { color: var(--nc-blue-600); background: var(--nc-nope, red); }';
+    const known = new Set(defined(read('vendor/brand/tokens/tokens.css')));
+    assert.deepEqual(undefinedReads('a.css', text, known), ['a.css: --nc-nope']);
+    assert.deepEqual(primitiveReads('a.css', text), ['a.css: --nc-blue-600']);
   });
 });

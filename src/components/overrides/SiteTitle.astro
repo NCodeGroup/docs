@@ -4,11 +4,11 @@
 
 // The header's brand: the NCode lockup (the mark's braces and the wordmark), a rule, and the
 // product's name. An override because Starlight's own site title is an image or a line of text, and
-// the lockup must take its colour from the theme's --color-logo token: it is drawn inline, from the
+// the lockup must take its colour from the theme's --nc-color-logo token: it is drawn inline, from the
 // vendored file, without that file's own colour.
 import { site } from 'virtual:ncode-docs/site';
-import ncode from '../../../vendor/instrument/logos/ncode-lockup.svg?raw';
-import identity from '../../../vendor/instrument/logos/ncode-identity-lockup.svg?raw';
+import ncode from '../../../vendor/brand/logo/ncode/lockup/ncode-lockup-blue.svg?raw';
+import identity from '../../../vendor/brand/logo/identity/lockup/ncode-identity-lockup-blue.svg?raw';
 
 const { siteTitleHref } = Astro.locals.starlightRoute;
 const source = site.mark === 'ncode-identity' ? identity : ncode;

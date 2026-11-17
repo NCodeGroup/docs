@@ -1,6 +1,6 @@
 # 1000. Library sites are built with Astro Starlight, core only
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 1008)
 - **Date:** 2026-11-15
 - **Deciders:** NCode Group
 

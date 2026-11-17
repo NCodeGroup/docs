@@ -29,9 +29,9 @@ flowchart LR
 | Samples (`src/snippets/`) | Reads the regions of the sample files and fills each `snippet=Key` block ([ADR-1002](decisions/1002-a-page-includes-a-compiled-sample-by-its-key-when-the-site-is-built.md)) |
 | Links (`src/links/`, `starlight-links-validator`) | Adds the base path to the links an author writes, fails the build on a broken link, and reads every built page for a link outside the base path ([ADR-1003](decisions/1003-links-are-written-from-the-site-root-and-the-build-proves-none-leaves-the-base-path.md)) |
 | Route middleware (`src/route-data.ts`) | Adds the base path to frontmatter links, and sets each page's edit link and "last updated" date from the library's repository |
-| Code blocks (`ec.config.mjs`, `src/highlighting/`) | Expressive Code's theme, from the brand tokens, and Shiki's C# grammar with two rules for C# 14 extension blocks ([ADR-1004](decisions/1004-the-csharp-grammar-is-patched-at-build-time-for-extension-blocks.md)) |
-| Theme (`src/styles/theme.css`, `src/tables/`, `src/components/`, `vendor/instrument/`) | The vendored brand tokens, fonts and marks, the stylesheet that maps Starlight onto them and stacks a table on a phone, the Markdown plugin that labels each table cell with its column's name for that ([ADR-1007](decisions/1007-a-markdown-table-stacks-on-a-phone-with-its-cells-labelled-when-the-site-is-built.md)), the shared components and three Starlight overrides |
-| Vendor check (`scripts/check-vendor.mjs`) | Fails when a vendored file differs from the SHA-256 its `manifest.json` records |
+| Code blocks (`ec.config.mjs`, `src/highlighting/`) | Expressive Code's syntax theme, the brand's `syntax/instrument-screen.json`, a frame styled from the brand's public tokens, with an inserted or deleted line in its success or danger colours, and Shiki's C# grammar with two rules for C# 14 extension blocks ([ADR-1004](decisions/1004-the-csharp-grammar-is-patched-at-build-time-for-extension-blocks.md)) |
+| Theme (`src/styles/theme.css`, `src/tables/`, `src/components/`, `vendor/brand/`) | The brand's tokens, fonts, Starlight mapping, syntax theme and marks, vendored from a release of NCodeGroup/brand ([ADR-1008](decisions/1008-the-brand-is-vendored-from-an-attested-release-and-the-theme-restyles-only-starlights-markup.md)), the stylesheet that restyles Starlight's markup in the brand's type roles, with running text in the `reading` role on the brand's measure, and stacks a table on a phone, the Markdown plugin that labels each table cell with its column's name for that ([ADR-1007](decisions/1007-a-markdown-table-stacks-on-a-phone-with-its-cells-labelled-when-the-site-is-built.md)), the shared components and three Starlight overrides |
+| Brand vendoring (`scripts/vendor-brand.mjs`, `vendor/brand/brand.lock.json`) | `npm run update:brand` writes the files the lock names from a release whose archive `gh attestation verify` proves; `npm run check:vendor` fails, with no network, when a vendored file differs from the SHA-256 the lock pins |
 | Fixture and tests (`fixture/`, `test/`, `scripts/screenshots.mjs`) | A stand-in library that `npm run build` builds, the `node:test` suites that build it and broken copies of it, and screenshots to check a theme change |
 
 ## Design Rules
@@ -60,7 +60,9 @@ flowchart LR
   ([ADR-1004](decisions/1004-the-csharp-grammar-is-patched-at-build-time-for-extension-blocks.md)).
 - The build writes nothing to the library: it reads a copy of the content folder, which git ignores and the next run
   replaces.
-- Vendored files are never edited here, and `src/styles/theme.css` and `ec.config.mjs` state no colour of their own.
+- Vendored files are never edited here: a release of NCodeGroup/brand replaces them whole. `src/styles/theme.css` and
+  `ec.config.mjs` read only the brand's public tokens and the Starlight properties `css/starlight.css` sets, never a
+  step of a colour ramp or of the type scale, and state no colour of their own.
 - Decisions the design rests on are recorded in [decisions/](decisions/README.md).
 
 ## Build and Release

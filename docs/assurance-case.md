@@ -34,6 +34,10 @@ Not written yet.
 [//]: # "Maintainers: add the tests and the coverage the project keeps."
 
 - **Gate:** CI runs the project's commands on every pull request.
+- **Tests and coverage:** `npm run test` builds the fixture library and broken copies of it, and CI fails when the
+  tests cover less than 90% of the statements or 80% of the branches of the toolchain's code;
+  `.github/workflows/tag-release.yml` runs CI again on each release's commit before it tags it
+  ([ADR-0026](decisions/project-template/0026-tests-gate-coverage-at-the-gold-thresholds-and-a-release-waits-for-them.md)).
 - **Static analysis:** with CodeQL's default setup configured, the repository ruleset blocks a pull request that adds a
   CodeQL alert at warning level or above, or a security alert of any severity
   ([ADR-0005](decisions/project-template/0005-the-default-branch-accepts-changes-only-through-pull-requests.md)).

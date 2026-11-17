@@ -35,10 +35,20 @@ import {
 } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { CONFIG_FILE, lockFile, mountDirectory, mountPath, resolveLibrary, toolchainRoot } from '../src/library.mjs';
+import {
+  CONFIG_FILE,
+  lockFile,
+  mountDirectory,
+  mountPath,
+  ownNotFoundPage,
+  resolveLibrary,
+  toolchainRoot,
+} from '../src/library.mjs';
 import { readSnippets } from '../src/snippets/catalog.mjs';
 
 const COMMANDS = ['build', 'dev', 'preview', 'prepare'];
+// The page mounted as 404.mdx when the library has none of its own.
+const DEFAULT_NOT_FOUND = join(toolchainRoot, 'src', 'defaults', '404.mdx');
 
 // CodeQL's js/clear-text-logging flags this console.error, because some problems quote SITE_URL or DOCS_OUT from a copy
 // of process.env. They are a URL and a folder the caller passed, never a secret: its alert is a false positive.
@@ -76,27 +86,30 @@ const skipped = (name) => name === CONFIG_FILE || name === 'node_modules' || nam
 /**
  * Makes `target` a copy of `source`: copies what is new or changed, removes what is gone. A file
  * that did not change is left alone, so the dev server reloads only what an author touched.
+ * `extras` are files added at the top level, as `[name, file]` pairs, that `source` does not have.
  * @returns {number} How many files were copied or removed.
  */
-function sync(source, target, top = true) {
+function sync(source, target, top = true, extras = []) {
   let changes = 0;
   mkdirSync(target, { recursive: true });
   const wanted = new Map();
   for (const entry of readdirSync(source, { withFileTypes: true })) {
     if (top && skipped(entry.name)) continue;
-    if (entry.isDirectory() || entry.isFile()) wanted.set(entry.name, entry);
+    if (entry.isDirectory() || entry.isFile()) {
+      wanted.set(entry.name, { from: join(source, entry.name), directory: entry.isDirectory() });
+    }
   }
+  for (const [name, from] of extras) wanted.set(name, { from, directory: false });
   for (const entry of readdirSync(target, { withFileTypes: true })) {
     const match = wanted.get(entry.name);
-    if (!match || match.isDirectory() !== entry.isDirectory()) {
+    if (!match || match.directory !== entry.isDirectory()) {
       rmSync(join(target, entry.name), { recursive: true, force: true });
       changes++;
     }
   }
-  for (const [name, entry] of wanted) {
-    const from = join(source, name);
+  for (const [name, { from, directory }] of wanted) {
     const to = join(target, name);
-    if (entry.isDirectory()) {
+    if (directory) {
       changes += sync(from, to, false);
       continue;
     }
@@ -117,9 +130,11 @@ function sync(source, target, top = true) {
  * from the real location of the importing file; under a link that location is the library's
  * repository, which has no node_modules by design. A copy also behaves the same on Windows, where
  * links need a privilege or a junction, and keeps every file the dev server serves inside its root.
+ * The toolchain's 404 page is mounted when the library has none of its own.
  */
 function mount(library) {
-  return sync(library.contentDirectory, mountDirectory);
+  const extras = ownNotFoundPage(library) ? [] : [['404.mdx', DEFAULT_NOT_FOUND]];
+  return sync(library.contentDirectory, mountDirectory, true, extras);
 }
 
 const isRunning = (pid) => {

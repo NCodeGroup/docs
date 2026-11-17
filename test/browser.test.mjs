@@ -48,6 +48,7 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
     const response = await page.goto(`${site.origin}${BASE}quick-start/`, { waitUntil: 'networkidle' });
     assert.equal(response.status(), 200);
     assert.equal(await page.title(), 'Quick start | NCode.Fixture');
+    // biome-ignore lint/performance/useDomNodeTextContent: the check reads the page as a reader sees it, which innerText gives and textContent does not.
     assert.match(await page.locator('main').innerText(), /using var vault = Vault\.Rent\(32, out Span<byte> key\);/);
     await page.evaluate(() => document.fonts.ready);
     const fonts = await page.evaluate(() =>

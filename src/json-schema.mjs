@@ -63,7 +63,9 @@ function check(value, schema, root, path, problems) {
         break;
       case 'items':
         if (Array.isArray(value))
-          value.forEach((item, index) => check(item, rule, root, `${path}[${index}]`, problems));
+          value.forEach((item, index) => {
+            check(item, rule, root, `${path}[${index}]`, problems);
+          });
         break;
       case 'required':
         if (typeOf(value) === 'object')

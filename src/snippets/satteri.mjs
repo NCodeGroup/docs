@@ -36,7 +36,9 @@ export function watchSnippetSources(sources) {
   return {
     name: 'ncode-watch-snippet-sources',
     hooks: {
-      'astro:config:setup': ({ addWatchFile }) => sources.forEach((source) => addWatchFile(source)),
+      'astro:config:setup': ({ addWatchFile }) => {
+        for (const source of sources) addWatchFile(source);
+      },
       // The samples are outside the site's folder, so Vite does not watch them on its own.
       'astro:server:setup': ({ server }) => server.watcher.add(sources),
     },

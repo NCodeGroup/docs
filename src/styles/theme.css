@@ -146,6 +146,7 @@ starlight-toc h2,
 mobile-starlight-toc .toggle,
 .starlight-aside__title,
 .pagination-links a > span,
+.sl-markdown-content table.ncode-stacked td[data-label]:not(:where(.not-content *))::before,
 .sl-markdown-content th:not(:where(.not-content *)) {
   font-family: var(--font-sans);
   font-size: var(--text-2xs);
@@ -615,6 +616,41 @@ main:has(h1[data-numbered]) .sl-markdown-content > .sl-heading-wrapper.level-h2:
 .sl-markdown-content tbody tr:last-child td:not(:where(.not-content *)) { border-bottom: 0; }
 .sl-markdown-content tr:nth-child(2n):not(:where(.not-content *)) { background: none; }
 .sl-markdown-content td:first-child code:not(:where(.not-content *)) { white-space: nowrap; }
+/* On a phone a table is a stack of rows, each cell under its column's name, which
+   src/tables/stacked-tables.mjs copies from the head onto the cell. The head stays for screen readers. */
+@media (max-width: 40rem) {
+  .sl-markdown-content table.ncode-stacked :is(thead, tbody, tr, td):not(:where(.not-content *)) {
+    display: block;
+    margin: 0;
+  }
+  .sl-markdown-content table.ncode-stacked thead:not(:where(.not-content *)) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .sl-markdown-content table.ncode-stacked tr:not(:where(.not-content *)) {
+    padding-block: var(--space-4);
+    border-bottom: var(--border-hair) solid var(--color-border);
+  }
+  .sl-markdown-content table.ncode-stacked tbody tr:last-child:not(:where(.not-content *)) { border-bottom: 0; }
+  .sl-markdown-content table.ncode-stacked td:not(:where(.not-content *)) {
+    height: auto;
+    padding: var(--space-2) var(--space-5);
+    border-bottom: 0;
+  }
+  .sl-markdown-content table.ncode-stacked td[data-label]:not(:where(.not-content *))::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: var(--space-1);
+  }
+  .sl-markdown-content table.ncode-stacked td code:not(:where(.not-content *)) {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
 
 /* ---- Steps: numbered on small plates, joined by a rule. */
 .sl-steps > li::before {

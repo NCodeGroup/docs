@@ -3,7 +3,8 @@
 
 // The built site in a real browser, served under its base path the way GitHub Pages serves it: a
 // page loads, the search finds a page, a missing URL gets the site's own 404 page, and the browser
-// asks no other origin for anything.
+// asks no other origin for anything. In a phone's window no page scrolls sideways and a Markdown
+// table is a stack of labelled rows.
 //
 // The browser is the headless Chromium that the locked playwright-core names. "npm run browser"
 // downloads it, once for each version of playwright-core. Where it is not installed the check is
@@ -29,6 +30,8 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
   const BASE = '/Fixture/';
   let site;
   let page;
+  /** A page in a phone's window, 390 by 844. */
+  let phone;
   /** Every URL the browser asked for. */
   const requested = [];
   const errors = [];
@@ -40,6 +43,8 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
     page = await browser.newPage();
     page.on('request', (request) => requested.push(request.url()));
     page.on('pageerror', (error) => errors.push(error.message));
+    phone = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+    phone.on('pageerror', (error) => errors.push(error.message));
   });
 
   after(async () => {
@@ -91,6 +96,52 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
       [...document.styleSheets].filter((sheet) => sheet.href).map((sheet) => sheet.cssRules.length),
     );
     assert.ok(stylesheets.length > 0 && stylesheets.every((rules) => rules > 0), 'the 404 page has its styles');
+  });
+
+  it('lets no page scroll sideways on a phone', async () => {
+    for (const path of [
+      '',
+      'quick-start/',
+      'guides/derive-a-key/',
+      'guides/extension-members/',
+      'concepts/how-sealing-works/',
+      'reference/api/',
+    ]) {
+      await phone.goto(`${site.origin}${BASE}${path}`, { waitUntil: 'networkidle' });
+      await phone.evaluate(() => document.fonts.ready);
+      const [scroll, client] = await phone.evaluate(() => [
+        document.documentElement.scrollWidth,
+        document.documentElement.clientWidth,
+      ]);
+      assert.ok(
+        scroll <= client,
+        `${BASE}${path} scrolls sideways on a phone: ${scroll} px of content in ${client} px`,
+      );
+    }
+  });
+
+  it('stacks a Markdown table on a phone, each cell under its column name', async () => {
+    await phone.goto(`${site.origin}${BASE}reference/api/`, { waitUntil: 'networkidle' });
+    await phone.evaluate(() => document.fonts.ready);
+    const stacked = await phone.evaluate(() => {
+      const table = document.querySelector('.sl-markdown-content table');
+      return {
+        fits: table.scrollWidth <= table.clientWidth,
+        labels: [...table.querySelectorAll('tbody tr:first-child td')].map(
+          (cell) => getComputedStyle(cell, '::before').content,
+        ),
+        head: table.querySelector('thead').getBoundingClientRect().height,
+      };
+    });
+    assert.deepEqual(stacked, { fits: true, labels: ['"Member"', '"Returns"', '"Notes"'], head: 1 });
+
+    await page.goto(`${site.origin}${BASE}reference/api/`, { waitUntil: 'networkidle' });
+    await page.evaluate(() => document.fonts.ready);
+    const wide = await page.evaluate(() => {
+      const cell = document.querySelector('.sl-markdown-content tbody td');
+      return [getComputedStyle(cell).display, getComputedStyle(cell, '::before').content];
+    });
+    assert.deepEqual(wide, ['table-cell', 'none']);
   });
 
   it('asks no other origin for anything', () => {

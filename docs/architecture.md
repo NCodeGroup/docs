@@ -60,7 +60,9 @@ flowchart LR
   ([ADR-1004](decisions/1004-the-csharp-grammar-is-patched-at-build-time-for-extension-blocks.md)).
 - The build writes nothing to the library: it reads a copy of the content folder, which git ignores and the next run
   replaces.
-- Vendored files are never edited here: a release of NCodeGroup/brand replaces them whole. `src/styles/theme.css` and `ec.config.mjs` read only the brand's public tokens and the Starlight properties `css/starlight.css` sets, never a step of a colour ramp or of the type scale, and state no colour of their own.
+- Vendored files are never edited here: a release of NCodeGroup/brand replaces them whole. `src/styles/theme.css` and
+  `ec.config.mjs` read only the brand's public tokens and the Starlight properties `css/starlight.css` sets, never a
+  step of a colour ramp or of the type scale, and state no colour of their own.
 - Decisions the design rests on are recorded in [decisions/](decisions/README.md).
 
 ## Build and Release

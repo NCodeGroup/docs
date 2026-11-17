@@ -113,8 +113,9 @@ Each input from a library or a caller, and the check it gets before the build us
   base path on the built pages (R5); `test/build.test.mjs` and `test/browser.test.mjs` check that a built page, and the
   browser that loads it, ask no other origin for anything (R6); `test/vendor.test.mjs` runs the vendored files' check.
   `test/workflow.test.mjs` reads `.github/workflows/site.yml` and `.npmrc` for R1 to R3: each job's permissions, the
-  checkouts that keep no credentials, the deploy job that checks out and runs nothing on any branch but the default
-  one, the actions pinned by commit, the install without scripts or a cache, and npm's three-day minimum release age.
+  checkouts that keep no credentials, the deploy job that runs only from the default branch and checks out and runs
+  nothing, the toolchain checked out at the pinned commit and the step that stops a run without one, the actions
+  pinned by commit, the install without scripts or a cache, and npm's three-day minimum release age.
 - **Static analysis:** with CodeQL's default setup configured, the repository ruleset blocks a pull request that adds a
   CodeQL alert at warning level or above, or a security alert of any severity
   ([ADR-0005](decisions/project-template/0005-the-default-branch-accepts-changes-only-through-pull-requests.md)).

@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // Shared by the Markdown plugins: a fenced code block whose info string carries `snippet=<Key>`
 // is filled with that sample from the library's sample files. The block itself stays empty in the page.
 const REFERENCE = /(?:^|\s)snippet=(\S+)/;

@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // What a page imports from '@ncodegroup/docs/components': Starlight's components, and the ones every
 // NCode site shares. A library's own components come from '@site/components/<file>'.
 export {

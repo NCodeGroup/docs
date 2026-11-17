@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { i18nLoader } from '@astrojs/starlight/loaders';

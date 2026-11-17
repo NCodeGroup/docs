@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // The Astro integration that hands the library's settings to the site's own code, and gives pages
 // their import aliases:
 //

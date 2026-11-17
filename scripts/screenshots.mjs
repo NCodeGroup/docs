@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // Takes the screenshots a theme change is judged by: the fixture's landing page and one
 // documentation page, in the light and the dark theme, at 1440 by 900 and at 390 by 844.
 //

@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // Starlight adds the site's base path to its own links (the sidebar, the site title, assets) and to
 // nothing an author writes. This Sätteri hast plugin adds it to site-absolute `href` and `src`
 // values in a page, so an author writes `/guides/derive-a-key/` and the link works under

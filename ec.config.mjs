@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // @ts-check
 // Code blocks are "screens": a deep field of the brand hue with lit values on it, the same in the
 // light and the dark theme. Expressive Code reads this file by itself, here and for the <Code>

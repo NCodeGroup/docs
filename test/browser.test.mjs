@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // The built site in a real browser, served under its base path the way GitHub Pages serves it: a
 // page loads, the search finds a page, a missing URL gets the site's own 404 page, and the browser
 // asks no other origin for anything.

@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // The two functions the link checks rest on, without a build: the base path goes onto the HTML an
 // author writes in a plain Markdown page, and a built page's URLs are read from its tags alone.
 import assert from 'node:assert/strict';

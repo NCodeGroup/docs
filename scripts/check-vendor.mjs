@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // Checks that every vendored file is the file its manifest names, byte for byte.
 //
 //   node scripts/check-vendor.mjs            fails when a vendored file was edited, added or removed

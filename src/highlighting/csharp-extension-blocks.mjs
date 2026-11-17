@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // C# 14 extension blocks for Shiki's bundled "csharp" TextMate grammar.
 //
 // The grammar Shiki bundles (dotnet/csharp-tmLanguage, through microsoft/vscode and tm-grammars) has no rule

@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // Starlight route middleware: runs once for every page, before it renders.
 //
 //   1. Adds the base path to the site-absolute links Starlight renders exactly as written from

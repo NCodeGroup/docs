@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // The last word on links: after the build, every built page is read, and the build fails on
 //
 //   1. a site-absolute URL that does not start with the base path. The base-path plugin and the

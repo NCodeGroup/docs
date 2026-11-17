@@ -1,0 +1,42 @@
+name: Brand watch
+
+# Every day, compares the brand release vendor/brand/brand.lock.json pins with the newest release of
+# NCodeGroup/brand, which Dependabot can't see. While the lock is behind, it keeps one open issue labeled
+# brand-update, "Update the brand to <version>", with the release's links and the command that takes it, and closes
+# it once the lock pins the newest release. A brand release is taken as soon as it is published (ADR-1008), so the
+# watch names a release however young. scripts/brand-watch.mjs does the work; npm run watch:brand -- --dry-run shows
+# what it would do.
+on:
+  schedule:
+    - cron: '30 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: brand-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    name: Brand watch
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Opens, edits and closes the brand-update issue and creates its labels; the only write the workflow needs.
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          # The job installs nothing, and a job that can write restores no cache.
+          package-manager-cache: false
+      - name: Open, update or close the brand-update issue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/brand-watch.mjs

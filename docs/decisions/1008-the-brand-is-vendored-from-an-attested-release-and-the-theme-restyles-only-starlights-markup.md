@@ -35,11 +35,16 @@ in it, the fonts and Lucide's icons, wait three days in brand before brand pins 
    `./.template/Test-FileHeaders.ps1 -Fix` adds after its `#!` line. Biome and the coverage leave it out, as brand's
    code, tested in brand.
 3. `customCss` loads `tokens/tokens.css`, `css/fonts.css`, `css/starlight.css`, then `src/styles/theme.css`, which
-   holds only rules for Starlight's markup and reads the tokens by their `--nc-` names. `ec.config.mjs` takes
-   `syntax/instrument-screen.json` and keeps the frame's style overrides. This amends ADR-1000's second decision: the
+   holds only rules for Starlight's markup and reads only the brand's public tokens by their `--nc-` names: each text
+   in the type role that names its use, running text in the `reading` role on `--nc-measure`, and the colour roles.
+   Where a rule keeps a size its role does not have, it reads Starlight's own `--sl-text-*` property of that size,
+   which `css/starlight.css` sets. `ec.config.mjs` takes `syntax/instrument-screen.json` and keeps the frame's style
+   overrides, with an inserted or deleted line in the success or danger colours, which the screen's
+   `color-scheme: dark` resolves to their dark values in both themes. This amends ADR-1000's second decision: the
    brand's `css/starlight.css` maps Starlight's custom properties onto the tokens.
 4. A library's component reads only the brand's public tokens. `test/vendor.test.mjs` fails when the theme, the code
-   blocks or a component reads a custom property that neither the brand's stylesheets nor the theme define.
+   blocks or a component reads a custom property that neither the brand's stylesheets nor the theme define, or a step
+   of a colour ramp or of the type scale.
 5. A brand release is taken when it is published, without ADR-0009's three-day wait.
 
 ## Options considered
@@ -51,6 +56,8 @@ in it, the fonts and Lucide's icons, wait three days in brand before brand pins 
   would be written twice.
 - **Holding a brand release three days.** Rejected: the wait guards against a third party's release, and a brand
   release is attested, approved and immutable before it is published.
+- **Reading the steps of the type scale and the colour ramps in the theme.** Rejected: brand's ADR-1002 lets any
+  release change them, so a release could restyle the sites with no change here.
 - **Brand's script with the header added, in `scripts/`** (chosen).
 
 ## Consequences
@@ -60,8 +67,10 @@ in it, the fonts and Lucide's icons, wait three days in brand before brand pins 
 - When a release changes `vendoring/vendor-brand.mjs`, `scripts/vendor-brand.mjs` is copied again by hand and `-Fix`
   run again.
 - A release that renames or removes a token the theme reads fails the tests.
-- The theme reads some of the brand's private primitives, the steps of the type scale and two colour ramps, which a
-  brand release may change.
+- A brand release that changes a step of a colour ramp or of the type scale changes the sites only through the roles
+  and `css/starlight.css`, which release with it.
+- No sans-serif role is set at the medium weight, so the sidebar's links, the theme switch and the unselected tabs are
+  regular.
 
 ## References
 

@@ -18,7 +18,7 @@
 // moves to another one, such as a custom domain, where only the deploying build would notice.
 import { fileURLToPath } from 'node:url';
 
-const prefixOf = (base) => '/' + base.replace(/^\/|\/$/g, '');
+const prefixOf = (base) => `/${base.replace(/^\/|\/$/g, '')}`;
 const siteAbsolute = (link) => typeof link === 'string' && link.startsWith('/') && !link.startsWith('//');
 
 /**
@@ -28,7 +28,7 @@ const siteAbsolute = (link) => typeof link === 'string' && link.startsWith('/') 
 export function withBase(base, link) {
   const prefix = prefixOf(base);
   if (prefix === '/' || !siteAbsolute(link)) return link;
-  if (link === prefix || link.startsWith(prefix + '/')) return link;
+  if (link === prefix || link.startsWith(`${prefix}/`)) return link;
   return prefix + link;
 }
 
@@ -39,7 +39,7 @@ export function withBase(base, link) {
 export function addBase(base, link, where) {
   const prefix = prefixOf(base);
   if (prefix === '/' || !siteAbsolute(link)) return link;
-  if (link === prefix || link.startsWith(prefix + '/')) {
+  if (link === prefix || link.startsWith(`${prefix}/`)) {
     throw new Error(
       `${where}: the link ${link} starts with the site's base path ${prefix}. Write it from the site's root, as ${link.slice(prefix.length) || '/'}: ` +
         'the build adds the base path, and the same page must work where the site is served under another.',
@@ -89,7 +89,9 @@ function visitors(base, page) {
     filter: Object.keys(MDX_LINKS),
     visit(node, ctx) {
       const name = MDX_LINKS[node.name];
-      const attribute = node.attributes.find((candidate) => candidate.type === 'mdxJsxAttribute' && candidate.name === name);
+      const attribute = node.attributes.find(
+        (candidate) => candidate.type === 'mdxJsxAttribute' && candidate.name === name,
+      );
       if (!attribute || typeof attribute.value !== 'string') return;
       const fixed = addBase(base, attribute.value, page);
       if (fixed !== attribute.value) ctx.setAttribute(node, name, fixed);

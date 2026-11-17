@@ -48,16 +48,19 @@ export function checkVendor(vendorRoot, { update = false } = {}) {
     }
     if (update) {
       manifest.files = actual;
-      writeFileSync(join(folder, MANIFEST), JSON.stringify(manifest, null, 2) + '\n');
+      writeFileSync(join(folder, MANIFEST), `${JSON.stringify(manifest, null, 2)}\n`);
       continue;
     }
     for (const key of ['source', 'version']) {
-      if (typeof manifest[key] !== 'string' || manifest[key] === '') problems.push(`vendor/${entry.name}/${MANIFEST}: "${key}" is missing`);
+      if (typeof manifest[key] !== 'string' || manifest[key] === '')
+        problems.push(`vendor/${entry.name}/${MANIFEST}: "${key}" is missing`);
     }
     const recorded = manifest.files ?? {};
     for (const [name, hash] of Object.entries(recorded)) {
-      if (!(name in actual)) problems.push(`vendor/${entry.name}/${name}: named in ${MANIFEST}, but the file is missing`);
-      else if (actual[name] !== hash) problems.push(`vendor/${entry.name}/${name}: was edited (its SHA-256 is not the one ${MANIFEST} records)`);
+      if (!(name in actual))
+        problems.push(`vendor/${entry.name}/${name}: named in ${MANIFEST}, but the file is missing`);
+      else if (actual[name] !== hash)
+        problems.push(`vendor/${entry.name}/${name}: was edited (its SHA-256 is not the one ${MANIFEST} records)`);
     }
     for (const name of Object.keys(actual)) {
       if (!(name in recorded)) problems.push(`vendor/${entry.name}/${name}: not named in ${MANIFEST}`);
@@ -71,7 +74,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const update = process.argv.includes('--update');
   const problems = checkVendor(vendorRoot, { update });
   if (problems.length > 0) {
-    console.error(`Vendored files do not match their manifest:\n  ${problems.join('\n  ')}\n\nVendored files are never edited here. Restore them, or after a new drop from the source run: node scripts/check-vendor.mjs --update`);
+    console.error(
+      `Vendored files do not match their manifest:\n  ${problems.join('\n  ')}\n\nVendored files are never edited here. Restore them, or after a new drop from the source run: node scripts/check-vendor.mjs --update`,
+    );
     process.exit(1);
   }
   console.log(update ? 'Recorded the vendored files in their manifests.' : 'Vendored files match their manifests.');

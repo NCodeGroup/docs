@@ -36,7 +36,8 @@ export function siteAbsoluteUrls(html) {
     for (const [, attribute, double, single, bare] of tag[2].matchAll(ATTRIBUTE)) {
       const value = double ?? single ?? bare ?? '';
       if (URL_ATTRIBUTES.has(attribute.toLowerCase())) urls.push(value);
-      else if (attribute.toLowerCase() === 'srcset') urls.push(...value.split(',').map((entry) => entry.trim().split(/\s+/)[0]));
+      else if (attribute.toLowerCase() === 'srcset')
+        urls.push(...value.split(',').map((entry) => entry.trim().split(/\s+/)[0]));
     }
     if (TEXT_ONLY.has(name)) {
       const close = new RegExp(`</${name}\\b`, 'gi');
@@ -50,7 +51,7 @@ export function siteAbsoluteUrls(html) {
 /** Files written after this check runs, by an integration Starlight adds: never reported as missing. */
 const WRITTEN_LATER = new Set(['/sitemap-index.xml']);
 
-const prefixOf = (base) => (base.replace(/^\/|\/$/g, '') === '' ? '' : '/' + base.replace(/^\/|\/$/g, ''));
+const prefixOf = (base) => (base.replace(/^\/|\/$/g, '') === '' ? '' : `/${base.replace(/^\/|\/$/g, '')}`);
 
 /** Every built page under `directory`: its path from the site's root, and its HTML. */
 function* builtPages(directory) {

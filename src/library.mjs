@@ -41,20 +41,26 @@ const isNeverRead = (inLibrary) => inLibrary.split('/').some((segment) => NEVER_
  */
 export function resolveLibrary(environment = process.env) {
   if (!environment.DOCS_LIBRARY) {
-    throw new Error('No library to build: set DOCS_LIBRARY to the library\'s repository folder, or run "npm run build -- <folder>".');
+    throw new Error(
+      'No library to build: set DOCS_LIBRARY to the library\'s repository folder, or run "npm run build -- <folder>".',
+    );
   }
   const root = resolve(environment.DOCS_LIBRARY);
   if (!existsSync(root) || !statSync(root).isDirectory()) throw new Error(`The library folder ${root} does not exist.`);
 
   const contentPath = posix(environment.DOCS_CONTENT || DEFAULT_CONTENT).replace(/^\.\/|\/+$/g, '');
   if (contentPath === '' || isAbsolute(contentPath) || contentPath.split('/').includes('..')) {
-    throw new Error(`The content path "${environment.DOCS_CONTENT}" must be a folder inside the library, relative to its root, such as ${DEFAULT_CONTENT}.`);
+    throw new Error(
+      `The content path "${environment.DOCS_CONTENT}" must be a folder inside the library, relative to its root, such as ${DEFAULT_CONTENT}.`,
+    );
   }
   const contentDirectory = join(root, ...contentPath.split('/'));
   const configFile = join(contentDirectory, CONFIG_FILE);
   const configName = `${contentPath}/${CONFIG_FILE}`;
   if (!existsSync(configFile)) {
-    throw new Error(`${configName} was not found in ${root}. A library's content folder holds its pages and that file; pass another folder with --content.`);
+    throw new Error(
+      `${configName} was not found in ${root}. A library's content folder holds its pages and that file; pass another folder with --content.`,
+    );
   }
 
   let config;
@@ -65,7 +71,8 @@ export function resolveLibrary(environment = process.env) {
     throw new Error(`${configName} is not valid JSON: ${error.message}`);
   }
   const problems = validate(config, schema);
-  if (problems.length > 0) throw new Error(`${configName} is not a valid site configuration:\n  ${problems.join('\n  ')}`);
+  if (problems.length > 0)
+    throw new Error(`${configName} is not a valid site configuration:\n  ${problems.join('\n  ')}`);
 
   const repository = { url: config.repository.url, branch: config.repository.branch ?? 'main' };
   const globs = config.samples ?? [DEFAULT_SAMPLES];
@@ -75,7 +82,10 @@ export function resolveLibrary(environment = process.env) {
   const sampleFiles = [];
   for (const glob of globs) {
     // The exclude callback keeps a wildcard out of those folders; the check below is the rule.
-    const found = globSync(glob, { cwd: root, exclude: (name) => NEVER_READ.has(typeof name === 'string' ? name : name.name) });
+    const found = globSync(glob, {
+      cwd: root,
+      exclude: (name) => NEVER_READ.has(typeof name === 'string' ? name : name.name),
+    });
     for (const file of found) {
       // Each match is checked as a path, not the glob as text: "[.][.]/x" and "{..,tests}/x" reach
       // the folder above the root as "tests/../../x" does. resolve, not join, so that an absolute
@@ -83,7 +93,9 @@ export function resolveLibrary(environment = process.env) {
       const path = resolve(root, file);
       const inLibrary = posix(relative(root, path));
       if (isOutside(inLibrary)) {
-        throw new Error(`${configName}: the samples glob "${glob}" matches ${posix(file)}, which is outside the library. A glob names files under the repository root, such as ${DEFAULT_SAMPLES}.`);
+        throw new Error(
+          `${configName}: the samples glob "${glob}" matches ${posix(file)}, which is outside the library. A glob names files under the repository root, such as ${DEFAULT_SAMPLES}.`,
+        );
       }
       // exclude is given a folder a glob names literally as a path, such as "tests/bin", not as a name.
       // Before anything follows a link: nothing in a folder that is never read stops the build.
@@ -96,7 +108,10 @@ export function resolveLibrary(environment = process.env) {
       } catch (error) {
         // Both follow every symbolic link on the path, and Node's error for a link that leads
         // nowhere or around in a loop names neither this file nor the glob.
-        throw new Error(`${configName}: the samples glob "${glob}" matches ${posix(file)}, which could not be read: ${error.message}`, { cause: error });
+        throw new Error(
+          `${configName}: the samples glob "${glob}" matches ${posix(file)}, which could not be read: ${error.message}`,
+          { cause: error },
+        );
       }
       if (!stats.isFile()) continue;
       // A path under the root still leads out of it when the file, or a folder on its path, is a
@@ -109,7 +124,9 @@ export function resolveLibrary(environment = process.env) {
       // file, because a library's pages run in the build.
       const reallyInLibrary = posix(relative(realRoot, realPath));
       if (isOutside(reallyInLibrary)) {
-        throw new Error(`${configName}: the samples glob "${glob}" matches ${posix(file)}, which is outside the library through a symbolic link: its real path is ${realPath}. A sample file is under the repository root once every link on its path is followed.`);
+        throw new Error(
+          `${configName}: the samples glob "${glob}" matches ${posix(file)}, which is outside the library through a symbolic link: its real path is ${realPath}. A sample file is under the repository root once every link on its path is followed.`,
+        );
       }
       // Kept as the path the glob matched, not the real path: a message names a sample file as its
       // author knows it.
@@ -165,12 +182,16 @@ export function libraryPath(library, file) {
  */
 export function readLastUpdated(library, environment = process.env) {
   // One "git log" for the folder, as Starlight does it: a commit's time, then the files it changed.
-  const log = spawnSync('git', ['log', '--format=t:%ct', '--name-only', '--relative', '-z', '--', library.contentPath], {
-    cwd: library.root,
-    env: environment,
-    encoding: 'utf8',
-    maxBuffer: 64 * 1024 * 1024,
-  });
+  const log = spawnSync(
+    'git',
+    ['log', '--format=t:%ct', '--name-only', '--relative', '-z', '--', library.contentPath],
+    {
+      cwd: library.root,
+      env: environment,
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+    },
+  );
   if (log.error || log.status !== 0) {
     // A folder in no repository has no dates, and that needs no word. git's message cannot tell it
     // from a repository git refuses: a .git file that points nowhere also says "not a git

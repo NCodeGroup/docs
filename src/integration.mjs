@@ -25,16 +25,19 @@ export function ncodeSite(site) {
           vite: {
             resolve: {
               alias: [
-                { find: '@ncodegroup/docs/components', replacement: join(toolchainRoot, 'src', 'components', 'index.ts') },
-                { find: /^@site\/components\//, replacement: join(mountDirectory, '_components') + '/' },
-                { find: /^@site\/assets\//, replacement: join(mountDirectory, '_assets') + '/' },
+                {
+                  find: '@ncodegroup/docs/components',
+                  replacement: join(toolchainRoot, 'src', 'components', 'index.ts'),
+                },
+                { find: /^@site\/components\//, replacement: `${join(mountDirectory, '_components')}/` },
+                { find: /^@site\/assets\//, replacement: `${join(mountDirectory, '_assets')}/` },
               ],
             },
             plugins: [
               {
                 name: 'ncode-docs-site',
-                resolveId: (id) => (id === VIRTUAL ? '\0' + VIRTUAL : undefined),
-                load: (id) => (id === '\0' + VIRTUAL ? `export const site = ${JSON.stringify(settings)};` : undefined),
+                resolveId: (id) => (id === VIRTUAL ? `\0${VIRTUAL}` : undefined),
+                load: (id) => (id === `\0${VIRTUAL}` ? `export const site = ${JSON.stringify(settings)};` : undefined),
               },
             ],
           },

@@ -219,10 +219,15 @@ Run from the repository root in PowerShell 7:
 | Build | `npm run build` |
 | Install the test browser | `npm run browser` |
 | Test | `npm run test` |
+| Lint | `npm run lint` |
+| Format | `npm run format` |
 
 `npm run build` builds [`fixture/`](fixture/), a stand-in library, into `dist/`. `npm run test` builds the fixture
 under `/Fixture/` and at a domain's root, breaks a copy of it in each way a sample or a link can be wrong, checks the
 vendored files against their manifest, and loads the built site in a browser.
+
+`npm run lint` checks the code with Biome, as CI does before it builds, and `npm run format` applies Biome's
+formatting and safe fixes; `biome.json` holds the rules.
 
 The browser is the headless Chromium that the locked `playwright-core` drives. `npm run browser` downloads it, once
 for each version of `playwright-core`; on Linux, `npm run browser -- --with-deps` also installs the system libraries
@@ -249,6 +254,7 @@ through a newer one: `npx npm@11 ci --ignore-scripts`. `npm run` works with any 
 | `schema/site.config.schema.json` | The site configuration's schema |
 | `fixture/` | A stand-in library: what `npm run build` builds and the tests check |
 | `test/` | The tests, for Node's own test runner |
+| `biome.json` | Biome's formatter and linter rules |
 | `CONTRACT.md` | What a library holds, and what the build does with it |
 
 ### The theme

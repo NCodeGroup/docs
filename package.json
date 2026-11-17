@@ -14,7 +14,9 @@
     "preview": "node scripts/site.mjs preview",
     "check:vendor": "node scripts/check-vendor.mjs",
     "browser": "playwright-core install --only-shell chromium",
-    "test": "node --test --test-concurrency=1 \"test/*.test.mjs\""
+    "test": "node --test --test-concurrency=1 \"test/*.test.mjs\"",
+    "lint": "biome ci --error-on-warnings .",
+    "format": "biome check --write ."
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "0.4.9",
@@ -24,6 +26,7 @@
     "starlight-links-validator": "0.27.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.7",
     "playwright-core": "1.65.0"
   }
 }

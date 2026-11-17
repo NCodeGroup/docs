@@ -9,7 +9,7 @@ coverage_gate: false
 file_headers: false
 git_host: github
 license: Apache-2.0
-node_lint: false
+node_lint: true
 package_manager: npm
 project_description: The shared documentation toolchain for NCode libraries.
 project_name: NCode Docs

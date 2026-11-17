@@ -53,6 +53,7 @@ it, and a vulnerability in a dependency itself ([SECURITY.md](../SECURITY.md)).
 | A published site loads code or fonts from another origin, which can change after the build | Yes | R6: the fonts are vendored in `vendor/brand/fonts/`, and the tests check every built page and every request a browser makes |
 | A vendored brand file is edited here and drifts from its release | Yes | `npm run check:vendor`, which the tests run, compares each file with the SHA-256 `vendor/brand/brand.lock.json` pins |
 | A brand release's files are swapped, at its tag or on the way, before they are vendored | Yes | `npm run update:brand` writes nothing unless `gh attestation verify` proves that NCodeGroup/brand's `publish.yml` built the release's archive for its tag on a GitHub-hosted runner, and the archive holds exactly the files its manifest lists, at their SHA-256 ([ADR-1008](decisions/1008-the-brand-is-vendored-from-an-attested-release-and-the-theme-restyles-only-starlights-markup.md)) |
+| The brand watch's token, which can write issues, runs code a pull request changed | Yes | `.github/workflows/brand-watch.yml` runs only on its schedule and when a maintainer starts it, from the default branch; its job may write issues and nothing else, and its checkout keeps no credentials |
 | A library's own page writes harmful HTML or script into its site | No | The page is the library's code, reviewed in the library (Security Requirements) |
 
 ## Input Validation

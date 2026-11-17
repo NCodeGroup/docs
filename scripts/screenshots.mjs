@@ -28,7 +28,11 @@ const browser = await chromium.launch();
 try {
   for (const theme of ['light', 'dark']) {
     for (const size of SIZES) {
-      const context = await browser.newContext({ viewport: { width: size.width, height: size.height }, colorScheme: theme, deviceScaleFactor: 1 });
+      const context = await browser.newContext({
+        viewport: { width: size.width, height: size.height },
+        colorScheme: theme,
+        deviceScaleFactor: 1,
+      });
       const page = await context.newPage();
       for (const { name, path } of PAGES) {
         await page.goto(`${site.origin}${BASE}${path}`, { waitUntil: 'networkidle' });

@@ -61,7 +61,10 @@ export function readSnippets({ files, relativeTo = process.cwd() }) {
       const begin = BEGIN.exec(trimmed);
       if (begin) {
         const key = begin[1];
-        if (!KEY.test(key)) problems.push(`${file}:${index + 1}: "${key}" is not a snippet key (letters, digits, "_", "." and "-", starting and ending with a letter or digit)`);
+        if (!KEY.test(key))
+          problems.push(
+            `${file}:${index + 1}: "${key}" is not a snippet key (letters, digits, "_", "." and "-", starting and ending with a letter or digit)`,
+          );
         open.push({ key, startLine: index + 1, lines: [] });
       } else if (END.test(trimmed)) {
         const region = open.pop();
@@ -69,11 +72,21 @@ export function readSnippets({ files, relativeTo = process.cwd() }) {
           problems.push(`${file}:${index + 1}: end marker without a begin marker`);
         } else if (snippets.has(region.key)) {
           const first = snippets.get(region.key);
-          problems.push(`${file}:${region.startLine}: snippet "${region.key}" is already defined at ${first.file}:${first.startLine}`);
+          problems.push(
+            `${file}:${region.startLine}: snippet "${region.key}" is already defined at ${first.file}:${first.startLine}`,
+          );
         } else {
           const code = render(region.lines);
           if (code === '') problems.push(`${file}:${region.startLine}: snippet "${region.key}" is empty`);
-          snippets.set(region.key, { key: region.key, code, lang: extname(path).slice(1), file, path, startLine: region.startLine, endLine: index + 1 });
+          snippets.set(region.key, {
+            key: region.key,
+            code,
+            lang: extname(path).slice(1),
+            file,
+            path,
+            startLine: region.startLine,
+            endLine: index + 1,
+          });
         }
       } else if (MALFORMED.test(trimmed)) {
         problems.push(`${file}:${index + 1}: malformed snippet marker "${trimmed}"`);

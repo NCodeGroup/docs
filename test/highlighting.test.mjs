@@ -33,7 +33,11 @@ test('C# 14 extension blocks are highlighted as declarations', async () => {
   const scopesOf = (text) => tokens.filter(([content]) => content === text).map(([, scope]) => scope);
 
   assert.deepEqual(scopesOf('extension'), ['storage.type.extension.cs', 'storage.type.extension.cs']);
-  assert.deepEqual(scopesOf('public'), ['storage.modifier.public.cs', 'storage.modifier.public.cs', 'storage.modifier.public.cs']);
+  assert.deepEqual(scopesOf('public'), [
+    'storage.modifier.public.cs',
+    'storage.modifier.public.cs',
+    'storage.modifier.public.cs',
+  ]);
   assert.deepEqual(scopesOf('CryptographicOperations'), ['entity.name.type.cs']);
   assert.deepEqual(scopesOf('span').slice(0, 1), ['entity.name.variable.parameter.cs']);
   assert.deepEqual(scopesOf('where'), ['storage.modifier.where.cs', 'storage.modifier.where.cs']);
@@ -46,7 +50,10 @@ test('one version of shiki is locked: the grammar is patched for the highlighter
   const versions = Object.entries(lock.packages)
     .filter(([path]) => path === 'node_modules/shiki' || path.endsWith('/node_modules/shiki'))
     .map(([, entry]) => entry.version);
-  assert.deepEqual([...new Set(versions)], [JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).dependencies.shiki]);
+  assert.deepEqual(
+    [...new Set(versions)],
+    [JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).dependencies.shiki],
+  );
 });
 
 test('a built page colours the members of an extension block', () => {
@@ -55,6 +62,9 @@ test('a built page colours the members of an extension block', () => {
   const html = readFileSync(join(result.out, 'guides/extension-members/index.html'), 'utf8');
   // "extension" and the "public" inside the block are keywords: lit, as "static class" is outside it.
   assert.match(html, /<span style="--0:var\(--color-screen-lit\)">extension<\/span>/);
-  assert.match(html, /<span style="--0:var\(--color-screen-lit\)">public<\/span><span[^>]*> <\/span><span style="--0:var\(--color-screen-lit\)">void<\/span>/);
+  assert.match(
+    html,
+    /<span style="--0:var\(--color-screen-lit\)">public<\/span><span[^>]*> <\/span><span style="--0:var\(--color-screen-lit\)">void<\/span>/,
+  );
   assert.match(html, /<span style="--0:var\(--color-on-screen\)">CopyTo<\/span>/);
 });

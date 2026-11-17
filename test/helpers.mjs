@@ -25,12 +25,16 @@ export function build(name, { library = fixture, args = [], env = {} } = {}) {
   const environment = { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0' };
   // A site URL or a library in the environment of whoever runs the tests is not the tests' input.
   for (const key of ['SITE_URL', 'DOCS_LIBRARY', 'DOCS_CONTENT', 'DOCS_OUT', 'INIT_CWD']) delete environment[key];
-  const result = spawnSync(process.execPath, [join(root, 'scripts', 'site.mjs'), 'build', library, '--out', out, ...args], {
-    cwd: root,
-    env: { ...environment, ...env },
-    encoding: 'utf8',
-    timeout: 180_000,
-  });
+  const result = spawnSync(
+    process.execPath,
+    [join(root, 'scripts', 'site.mjs'), 'build', library, '--out', out, ...args],
+    {
+      cwd: root,
+      env: { ...environment, ...env },
+      encoding: 'utf8',
+      timeout: 180_000,
+    },
+  );
   return { code: result.status ?? 1, output: `${result.stdout}\n${result.stderr}`, out };
 }
 
@@ -54,7 +58,14 @@ export function pages(out) {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
       const path = join(directory, entry.name);
       if (entry.isDirectory()) walk(path);
-      else if (entry.name.endsWith('.html')) found.push({ file: path.slice(out.length + 1).split(sep).join('/'), html: readFileSync(path, 'utf8') });
+      else if (entry.name.endsWith('.html'))
+        found.push({
+          file: path
+            .slice(out.length + 1)
+            .split(sep)
+            .join('/'),
+          html: readFileSync(path, 'utf8'),
+        });
     }
   };
   walk(out);
@@ -112,7 +123,11 @@ export function serve(out, base) {
       const { port } = server.address();
       resolve({
         origin: `http://127.0.0.1:${port}`,
-        close: () => new Promise((closed) => { server.closeAllConnections(); server.close(() => closed()); }),
+        close: () =>
+          new Promise((closed) => {
+            server.closeAllConnections();
+            server.close(() => closed());
+          }),
       });
     });
   });

@@ -36,6 +36,31 @@ flowchart LR
 
 ## Design Rules
 
+- A library holds its content only. The toolchain, its packages and the workflow live here, and one pinned commit
+  selects them together
+  ([ADR-1001](decisions/1001-the-toolchain-lives-in-this-repository-and-a-library-calls-it-by-one-pinned-commit.md));
+  [CONTRACT.md](../CONTRACT.md) is the interface between the two.
+- The job that runs the packages and a library's pages holds no write permission, and the job that deploys runs no code
+  of the library or the toolchain
+  ([ADR-1001](decisions/1001-the-toolchain-lives-in-this-repository-and-a-library-calls-it-by-one-pinned-commit.md)).
+- No job restores or saves a cache, and every build is a full build
+  ([ADR-1001](decisions/1001-the-toolchain-lives-in-this-repository-and-a-library-calls-it-by-one-pinned-commit.md),
+  [ADR-1002](decisions/1002-a-page-includes-a-compiled-sample-by-its-key-when-the-site-is-built.md)).
+- A sample or a link the build cannot place fails the build, never a warning, and the message names the file as its
+  author knows it
+  ([ADR-1002](decisions/1002-a-page-includes-a-compiled-sample-by-its-key-when-the-site-is-built.md),
+  [ADR-1003](decisions/1003-links-are-written-from-the-site-root-and-the-build-proves-none-leaves-the-base-path.md)).
+- Sites use Starlight's core with one add-on, the link validator, and a package is added only for what every library's
+  site needs
+  ([ADR-1000](decisions/1000-library-sites-are-built-with-astro-starlight-core-only.md)). Biome is a devDependency,
+  which the workflow's install leaves out
+  ([ADR-1005](decisions/1005-biome-lints-astro-components-without-formatting-them.md)).
+- The C# grammar patch steps aside when the grammar has a rule of its own for extension blocks, and stops the build
+  when a rule it builds on is missing
+  ([ADR-1004](decisions/1004-the-csharp-grammar-is-patched-at-build-time-for-extension-blocks.md)).
+- The build writes nothing to the library: it reads a copy of the content folder, which git ignores and the next run
+  replaces.
+- Vendored files are never edited here, and `src/styles/theme.css` and `ec.config.mjs` state no colour of their own.
 - Decisions the design rests on are recorded in [decisions/](decisions/README.md).
 
 ## Build and Release

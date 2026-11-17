@@ -15,6 +15,7 @@ import { baseLinks } from './src/links/base-links.mjs';
 import { checkBuiltLinks } from './src/links/built-links.mjs';
 import { readSnippets } from './src/snippets/catalog.mjs';
 import { snippetsPlugin, watchSnippetSources } from './src/snippets/satteri.mjs';
+import { stackedTables } from './src/tables/stacked-tables.mjs';
 
 const library = resolveLibrary();
 const { config } = library;
@@ -44,7 +45,7 @@ export default defineConfig({
   markdown: {
     processor: satteri({
       mdastPlugins: [snippetsPlugin(snippets, { describePage })],
-      hastPlugins: [baseLinks(base, { describePage })],
+      hastPlugins: [baseLinks(base, { describePage }), stackedTables()],
     }),
   },
   integrations: [

@@ -22,7 +22,7 @@ Run from the repository root in PowerShell 7.
 - Lint: `npm run lint` runs Biome's format check and linter and fails on a formatting difference, a lint error or a lint warning, as CI and the Landing gate do; `npm run format` applies Biome's formatting and safe fixes, twice after a large change
 - Coverage: `./.template/Test-Coverage.ps1`, after `npm run test`, which writes the `lcov.info` it reads; it fails below 90% of the statements or 80% of the branches, as CI does
 - A library's site: `npm run site -- build <library folder>` builds it, and `npm run dev -- <library folder>` serves it while its pages are edited
-- Vendored files: `npm run check:vendor` checks them; `npm run update:brand -- <version>` vendors a release of NCodeGroup/brand
+- Vendored files: `npm run check:vendor` checks them; `npm run update:brand -- <version>` vendors a release of NCodeGroup/brand; the daily `brand-watch` workflow keeps one `brand-update` issue open while brand has a newer release, and `npm run watch:brand -- --dry-run` shows what it would do
 - Decision index: `./.template/Test-AdrIndex.ps1`
 - File headers: `./.template/Test-FileHeaders.ps1` fails a JavaScript or TypeScript file without the `Copyright © NCode Group` and `SPDX-License-Identifier: Apache-2.0` lines in its first 10 lines, as CI does, and `-Fix` adds them; the script skips Astro components, stylesheets and `.d.ts` files, and `npm run test` checks them (`test/headers.test.mjs`): an Astro component carries the lines as `//` comments right after its opening `---`, a stylesheet as `/* */` comments on its first lines, and a `.d.ts` file as `//` comments on its first lines
 

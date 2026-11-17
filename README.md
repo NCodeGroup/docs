@@ -255,6 +255,7 @@ through a newer one: `npx npm@11 ci --ignore-scripts`. `npm run` works with any 
 | `astro.config.mjs`, `ec.config.mjs` | The Starlight project, and its code blocks |
 | `scripts/site.mjs` | Builds, serves or previews one library's site |
 | `scripts/vendor-brand.mjs` | Vendors a release of NCodeGroup/brand, and checks the vendored files |
+| `scripts/brand-watch.mjs`, `.github/workflows/brand-watch.yml` | Opens an issue each day NCodeGroup/brand has a release newer than the vendored one |
 | `src/snippets/` | Reads sample regions and fills `snippet=` blocks |
 | `src/links/` | Adds the base path to links; checks the built pages |
 | `src/highlighting/` | C# 14 extension blocks for the C# grammar |
@@ -291,10 +292,13 @@ stylesheet defines
   The version exists, whatever the error's next line says: npm takes it once it is three days old, so wait until
   then, or take the newest version npm offers. `shiki` and `@astrojs/markdown-satteri` are pinned to the versions
   Astro and Starlight resolve, so they move together with them in one pull request.
-- **The brand.** `npm run update:brand -- <version>` vendors another release of NCodeGroup/brand. It needs the GitHub
-  CLI, signed in, and writes the files only once `gh attestation verify` proves the release's archive was built by
-  brand's publish workflow for its tag. A brand release is taken when it is published, without the packages'
-  three-day wait
+- **The brand.** `npm run update:brand -- <version>` vendors another release of NCodeGroup/brand. Dependabot can't see
+  vendored files, so the brand-watch workflow, `.github/workflows/brand-watch.yml`, checks NCodeGroup/brand every day:
+  while the lock pins an older release than the newest, it keeps one open issue labeled `brand-update`, "Update the
+  brand to <version>", with the release's links and these steps, and closes it once the lock pins the newest release.
+  `npm run watch:brand -- --dry-run` shows what it would do. The update needs the GitHub CLI, signed in, and writes the
+  files only once `gh attestation verify` proves the release's archive was built by brand's publish workflow for its
+  tag. A brand release is taken when it is published, without the packages' three-day wait
   ([ADR-1008](docs/decisions/1008-the-brand-is-vendored-from-an-attested-release-and-the-theme-restyles-only-starlights-markup.md)).
   When the release changes `vendoring/vendor-brand.mjs`, copy it over `scripts/vendor-brand.mjs` and run
   `./.template/Test-FileHeaders.ps1 -Fix`. Then `npm run build`, `npm run test` and `node scripts/screenshots.mjs`: a

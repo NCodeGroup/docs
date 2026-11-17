@@ -19,8 +19,11 @@ Once in each clone, run `git config core.hooksPath .githooks`. It turns on `.git
 | Build | `npm run build` |
 | Install the test browser | `npm run browser` |
 | Test | `npm run test` |
+| Check the coverage, after the tests | `./.template/Test-Coverage.ps1` |
 
 `npm run build` builds the stand-in library in `fixture/`. `npm run test` builds it under a base path and at the root of a domain, breaks a copy of it in each way a sample or a link can be wrong, and loads the built site in a browser. The browser check needs `npm run browser` once for each version of `playwright-core`, and is skipped without it. CI runs the same commands on every pull request, with the browser check required.
+
+CI fails when the tests cover less than 90% of the statements or 80% of the branches, the OpenSSF Best Practices gold thresholds, as `./.template/Test-Coverage.ps1` reports from the coverage the tests write ([the decision](docs/decisions/project-template/0026-tests-gate-coverage-at-the-gold-thresholds-and-a-release-waits-for-them.md)). `npm run test` writes `lcov.info` with Node.js's test runner, from the toolchain's code that the tests and the builds they start run, leaving out the tests and the sites they build under `.work/`. Run `./.template/Test-Coverage.ps1` after the tests to see the figures.
 
 To see a change on a real site, build or serve a library that is cloned beside this repository: `npm run dev -- ../Buffers`. [README.md](README.md) has the details.
 

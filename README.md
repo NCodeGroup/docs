@@ -219,10 +219,14 @@ Run from the repository root in PowerShell 7:
 | Build | `npm run build` |
 | Install the test browser | `npm run browser` |
 | Test | `npm run test` |
+| Check the coverage | `./.template/Test-Coverage.ps1` |
 
 `npm run build` builds [`fixture/`](fixture/), a stand-in library, into `dist/`. `npm run test` builds the fixture
 under `/Fixture/` and at a domain's root, breaks a copy of it in each way a sample or a link can be wrong, checks the
 vendored files against their manifest, and loads the built site in a browser.
+
+`npm run test` also writes the coverage of the toolchain's code to `lcov.info`, and `./.template/Test-Coverage.ps1`
+fails below 90% of its statements or 80% of its branches. CI runs it after the tests, and a release waits for it.
 
 The browser is the headless Chromium that the locked `playwright-core` drives. `npm run browser` downloads it, once
 for each version of `playwright-core`; on Linux, `npm run browser -- --with-deps` also installs the system libraries

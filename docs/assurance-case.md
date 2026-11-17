@@ -12,8 +12,9 @@ user-facing summary.
   or the toolchain: `deploy` runs when the caller asks and the run is on the default branch, in the `github-pages`
   environment, checks out nothing and hands the build's artifact to GitHub Pages.
 - **R3.** A site is built with the toolchain commit the library pinned and exactly the packages that commit's lockfile
-  names: the toolchain is checked out at `job.workflow_sha` or `toolchain-ref`, never at a branch,
-  `npm ci --ignore-scripts --omit=dev` installs the packages, and no job restores or saves a cache.
+  names: the toolchain is checked out at `toolchain-ref` when the caller sets it and otherwise at `job.workflow_sha`,
+  with no fallback to a branch, `npm ci --ignore-scripts --omit=dev` installs the packages, and no job restores or
+  saves a cache.
 - **R4.** The build reads a library's files only from inside its repository: the content path is a relative folder
   without `..`, each sample file is checked by its real path with every symbolic link on it followed, and `bin`,
   `obj`, `node_modules`, `TestResults` and `.git` are never read.
@@ -25,8 +26,9 @@ user-facing summary.
 
 Users must not rely on the toolchain to check a library's pages: the build runs a page and a component as code and
 publishes the HTML they write as written, so a library reviews its pages as it reviews its code. External links are
-published unchecked. Where the `job.workflow_*` properties are missing, as on GitHub Enterprise Server, R3 holds only
-while the library keeps `toolchain-ref` equal to its pin.
+published unchecked. Where a library sets `toolchain-ref`, as it must where the `job.workflow_*` properties are
+missing, such as on GitHub Enterprise Server, R3 holds only while it keeps that input equal to its pin: the workflow
+checks the input out as given.
 
 ## Threat Model
 
@@ -59,7 +61,7 @@ Each input from a library or a caller, and the check it gets before the build us
 | --- | --- |
 | `content-path` (the workflow's input, `DOCS_CONTENT`, `--content`) | A relative folder inside the library, without `..` (`resolveLibrary` in `src/library.mjs`) |
 | `deploy` | A boolean, which publishes only together with a run on the default branch |
-| `toolchain-ref` | Used only where `job.workflow_sha` is missing, as the commit of the toolchain to check out |
+| `toolchain-ref` | None: when the caller sets it, it is checked out as given, in place of `job.workflow_sha`; a library sets it only where `job.workflow_sha` is missing, and keeps it equal to its pin |
 | `site.config.json` | Parsed as JSON and checked against `schema/site.config.schema.json` by `src/json-schema.mjs`, which names each problem by its key and rejects an unknown key |
 | `samples` globs | Each file a glob matches is checked by its path and its real path (R4) |
 | Sample files | `src/snippets/catalog.mjs` checks each marker's spelling, each key's form, and that no key is defined twice and no region is unclosed or empty |

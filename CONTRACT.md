@@ -15,7 +15,7 @@ docs/site/                     the content folder (the workflow's content-path i
   index.mdx                    the landing page, served at the site's root
   quick-start.mdx              a page, served at /quick-start/
   guides/derive-a-key.mdx      a page, served at /guides/derive-a-key/
-  404.mdx                      optional: the page a missing URL gets
+  404.mdx                      optional: the page a missing URL gets (or 404.md)
   _components/Diagram.astro    optional: the library's own components
   _assets/lifecycle.png        optional: the library's own images
 tests/**/*.cs                  the sample files (the samples setting names other globs)
@@ -27,6 +27,10 @@ tests/**/*.cs                  the sample files (the samples setting names other
   cannot import or use a component, and HTML written in it is published as written (section 5).
 - A file or folder whose name starts with `_` is never a page. `_components/` and `_assets/` are the two such folders
   with a meaning.
+- `404.mdx`, or `404.md`, at the root of the content folder is the page a missing URL gets, served as `/404.html`.
+  A content folder with both fails the build. It is no page of its own: it has no `/404/` URL, no edit link and no
+  "last updated" date, search leaves it out, and a sidebar slug cannot name it. A library without one gets the
+  toolchain's page: "Page not found", the header's search box and a link to the site's start.
 - `site.config.json`, dotfiles and `node_modules` in the content folder are not part of the site.
 - The library holds no `package.json`, no lockfile and no Astro or Starlight configuration.
 - Avoid a folder name the repository's `.gitignore` ignores (`release/`, `debug/`, `packages/`, `publish/`, `log/` in

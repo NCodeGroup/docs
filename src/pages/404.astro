@@ -1,0 +1,37 @@
+---
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
+// The 404 page of every site: the library's own 404.mdx or 404.md, or else the toolchain's
+// (src/defaults/404.mdx), the one entry of the notFound collection. A route of the toolchain's own
+// because Starlight's looks the page up among the docs pages and warns when there is none. It goes
+// through StarlightPage, which validates the frontmatter again with the docs schema; the content
+// layer has already turned each hero action's icon into an object that second validation rejects,
+// so the icons are turned back into the name or the <svg> an author writes.
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection, render } from 'astro:content';
+
+const [page] = await getCollection('notFound');
+// scripts/site.mjs always mounts a 404 page, so an empty collection means the mount is broken or mid-update.
+if (!page) {
+  throw new Error(
+    'No 404 page in the mounted content: scripts/site.mjs mounts src/defaults/404.mdx when the library has none.',
+  );
+}
+const { Content, headings } = await render(page);
+const { hero } = page.data;
+const frontmatter = {
+  ...page.data,
+  hero: hero && {
+    ...hero,
+    actions: hero.actions.map(({ icon, ...action }) => ({
+      ...action,
+      ...(icon && { icon: icon.type === 'icon' ? icon.name : icon.html }),
+    })),
+  },
+};
+---
+
+<StarlightPage frontmatter={frontmatter} headings={headings}>
+  <Content />
+</StarlightPage>

@@ -28,6 +28,26 @@ export const mountPath = posix(relative(toolchainRoot, mountDirectory));
 /** Names the process that holds the mount, while scripts/site.mjs runs; in a folder git ignores. */
 export const lockFile = join(toolchainRoot, 'node_modules', '.ncode-docs-site.lock');
 
+/** The names a library's own 404 page can have, at the root of its content folder. */
+const NOT_FOUND_PAGES = ['404.mdx', '404.md'];
+
+/**
+ * The library's own 404 page, by its name at the root of its content folder, or undefined. Read on each call,
+ * because the dev server's mount follows a page an author adds or removes.
+ * @param {{ contentDirectory: string, contentPath: string }} library
+ * @returns {string | undefined}
+ * @throws {Error} When the content folder has both, which would be one page.
+ */
+export function ownNotFoundPage(library) {
+  const found = NOT_FOUND_PAGES.filter((name) => existsSync(join(library.contentDirectory, name)));
+  if (found.length > 1) {
+    throw new Error(
+      `${library.contentPath}/404.mdx and ${library.contentPath}/404.md are both the site's 404 page: keep one of them.`,
+    );
+  }
+  return found[0];
+}
+
 const schema = JSON.parse(readFileSync(join(toolchainRoot, 'schema', 'site.config.schema.json'), 'utf8'));
 
 /** Folders a sample glob never reads from: build output and packages, which hold copies of sources. */

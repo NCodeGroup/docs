@@ -71,3 +71,4 @@ records are indexed in [project-template/](project-template/README.md).
 | [ADR-1003](1003-links-are-written-from-the-site-root-and-the-build-proves-none-leaves-the-base-path.md) | Links are written from the site root, and the build proves none leaves the base path | Accepted |
 | [ADR-1004](1004-the-csharp-grammar-is-patched-at-build-time-for-extension-blocks.md) | The C# grammar is patched at build time for extension blocks | Accepted |
 | [ADR-1005](1005-biome-lints-astro-components-without-formatting-them.md) | Biome lints the Astro components without formatting them | Accepted |
+| [ADR-1006](1006-the-toolchain-renders-the-404-page-and-supplies-one-when-a-library-has-none.md) | The toolchain renders the 404 page, and supplies one when a library has none | Accepted |

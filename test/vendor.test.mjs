@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // The vendored brand files are the files brand.lock.json pins, and every custom property the theme reads is one the
-// brand's stylesheets or the theme define.
+// brand's stylesheets or the theme define, and none is a step of the brand's colour ramps or type scale.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, cpSync, readFileSync, rmSync } from 'node:fs';
@@ -19,6 +19,25 @@ const check = (lock) =>
 
 /** The custom properties a stylesheet or a component defines. */
 const defined = (text) => [...text.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((match) => match[1]);
+
+/** A file of this repository, read as text. */
+const read = (path) => readFileSync(join(root, path), 'utf8');
+
+/** The theme's stylesheets, the components and ec.config.mjs: every file that reads the brand's tokens. */
+const readers = () =>
+  spawnSync('git', ['ls-files', '--', 'src/*.css', 'src/*.astro', 'fixture/*.astro'], {
+    cwd: root,
+    encoding: 'utf8',
+  })
+    .stdout.split('\n')
+    .filter(Boolean)
+    .concat('ec.config.mjs');
+
+/**
+ * The brand's private primitives, which brand's ADR-1002 lets any release change: the steps of its colour ramps and
+ * of its type scale.
+ */
+const PRIMITIVE = /^--nc-(?:(?:blue|stone|green|amber|red)-\d+|(?:text|weight|width|leading|tracking)-[a-z0-9]+)$/;
 
 describe('the vendored brand', () => {
   it('matches its lock', () => {
@@ -41,14 +60,7 @@ describe('the vendored brand', () => {
   });
 
   it('defines every custom property the theme, the code blocks and the components read', () => {
-    const read = (path) => readFileSync(join(root, path), 'utf8');
-    const sources = spawnSync('git', ['ls-files', '--', 'src/*.css', 'src/*.astro', 'fixture/*.astro'], {
-      cwd: root,
-      encoding: 'utf8',
-    })
-      .stdout.split('\n')
-      .filter(Boolean)
-      .concat('ec.config.mjs');
+    const sources = readers();
     const known = new Set([
       ...defined(read('vendor/brand/tokens/tokens.css')),
       ...defined(read('vendor/brand/css/starlight.css')),
@@ -64,5 +76,14 @@ describe('the vendored brand', () => {
       for (const name of names) if (!known.has(name)) missing.push(`${path}: ${name}`);
     }
     assert.deepEqual(missing, []);
+  });
+
+  it('reads no step of a colour ramp or of the type scale in the theme, the code blocks and the components', () => {
+    const primitives = [];
+    for (const path of readers()) {
+      for (const match of read(path).matchAll(/var\(\s*(--[a-z0-9-]+)/g))
+        if (PRIMITIVE.test(match[1])) primitives.push(`${path}: ${match[1]}`);
+    }
+    assert.deepEqual(primitives, []);
   });
 });

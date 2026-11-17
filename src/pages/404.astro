@@ -12,6 +12,12 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { getCollection, render } from 'astro:content';
 
 const [page] = await getCollection('notFound');
+// scripts/site.mjs always mounts a 404 page, so an empty collection means the mount is broken or mid-update.
+if (!page) {
+  throw new Error(
+    'No 404 page in the mounted content: scripts/site.mjs mounts src/defaults/404.mdx when the library has none.',
+  );
+}
 const { Content, headings } = await render(page);
 const { hero } = page.data;
 const frontmatter = {

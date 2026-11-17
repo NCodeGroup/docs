@@ -19,6 +19,7 @@ Run from the repository root in PowerShell 7.
 - Install: `npm ci --ignore-scripts`, with npm 11.10 or later; with an older npm, `npx npm@11 ci --ignore-scripts`
 - Build: `npm run build` builds the stand-in library in `fixture/` into `dist/`
 - Test: `npm run test` runs every check. `npm run browser` installs the browser its browser check uses, once for each version of `playwright-core`; without it that check is skipped, and `$env:DOCS_REQUIRE_BROWSER = '1'` makes a missing browser a failure, as CI does
+- Lint: `npm run lint` runs Biome's format check and linter and fails on any finding, as CI and the Landing gate do; `npm run format` applies Biome's formatting and safe fixes, twice after a large change
 - A library's site: `npm run site -- build <library folder>` builds it, and `npm run dev -- <library folder>` serves it while its pages are edited
 - Vendored files: `npm run check:vendor`
 - Decision index: `./.template/Test-AdrIndex.ps1`
@@ -34,7 +35,7 @@ How `/ship-plan` lands a reviewed plan. `integrate`: `pull-request` pushes the p
 - draft: yes
 - follow-ups: issues
 - follow-up-label: follow-up
-- gate: none
+- gate: npm run lint
 - protect: none
 - pr-format: none
 - review-bots: ncode-review
@@ -46,8 +47,8 @@ How `/ship-plan` lands a reviewed plan. `integrate`: `pull-request` pushes the p
 - The toolchain lives here and a library holds content only (ADR-1001): nothing of one library is committed here, `fixture/` is the only content, and a change a library needs is made here, released, and taken by the library through its pin. A library pins this repository by commit and Dependabot moves that pin to release tags, so the Landing section sets `release: tag+release` and every change a library is to take ships in a release.
 - `CONTRACT.md` is the interface with libraries. A change to what a page may write, to `site.config.json` or to the inputs of `.github/workflows/site.yml` changes `CONTRACT.md`, `schema/site.config.schema.json`, the fixture and a test in the same pull request.
 - The build fails, never warns, on a sample or a link it cannot place (ADR-1002, ADR-1003). Each such failure has a test that breaks a copy of the fixture and reads the message, and a message names the file as its author knows it.
-- Packages are pinned exactly in `package.json`, each at least three days old when it is taken (`.npmrc`), and installed with `npm ci --ignore-scripts` everywhere. A workflow runs a package's command from `node_modules` through a `package.json` script, never through an `npx` call that could fetch one. `shiki` and `@astrojs/markdown-satteri` stay at the versions Astro and Starlight resolve (ADR-1004). A package is added only for what every library's site needs (ADR-1000).
+- Packages are pinned exactly in `package.json`, each at least three days old when it is taken (`.npmrc`), and installed with `npm ci --ignore-scripts` everywhere. A workflow runs a package's command from `node_modules` through a `package.json` script, never through an `npx` call that could fetch one. `shiki` and `@astrojs/markdown-satteri` stay at the versions Astro and Starlight resolve (ADR-1004). A package the site is built with is added only for what every library's site needs (ADR-1000); a tool for this repository's own checks, such as Biome or `playwright-core`, is a devDependency, which `site.yml` never installs (ADR-1005).
 - `.github/workflows/site.yml` runs in other repositories: its actions are pinned by commit, no job uses a cache, values reach a script through `env`, and the job that runs packages holds no write permission (ADR-1001).
 - Files under `vendor/` are copies and are never edited here: a change is made at the source, dropped in whole and recorded with `node scripts/check-vendor.mjs --update`. `src/styles/theme.css` and `ec.config.mjs` state no colour of their own.
-- Code is ES modules that use Node's built-in modules, formatted as `.editorconfig` says, with two spaces in JavaScript, TypeScript, Astro and CSS files. There is no formatter package. A comment says why the code is what it is.
+- Code is ES modules that use Node's built-in modules. Biome checks it with the rules in `biome.json`: it formats and lints the JavaScript and TypeScript files and lints the Astro components without formatting them (ADR-0201, ADR-1005), and `.editorconfig` sets the rest, with two spaces in JavaScript, TypeScript, Astro and CSS files. A comment says why the code is what it is.
 - Documentation and the fixture name no .NET version and no target framework: a library's project file is the one place they are set.

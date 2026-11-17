@@ -23,7 +23,7 @@ Run from the repository root in PowerShell 7.
 - A library's site: `npm run site -- build <library folder>` builds it, and `npm run dev -- <library folder>` serves it while its pages are edited
 - Vendored files: `npm run check:vendor`
 - Decision index: `./.template/Test-AdrIndex.ps1`
-- File headers: `./.template/Test-FileHeaders.ps1` fails a JavaScript or TypeScript file without the `Copyright © NCode Group` and `SPDX-License-Identifier: Apache-2.0` lines in its first 10 lines, as CI does, and `-Fix` adds them; an Astro component carries them as `//` comments right after its opening `---`, and a stylesheet as `/* */` comments on its first lines, which `npm run test` checks (`test/headers.test.mjs`)
+- File headers: `./.template/Test-FileHeaders.ps1` fails a JavaScript or TypeScript file without the `Copyright © NCode Group` and `SPDX-License-Identifier: Apache-2.0` lines in its first 10 lines, as CI does, and `-Fix` adds them; the script skips Astro components, stylesheets and `.d.ts` files, and `npm run test` checks them (`test/headers.test.mjs`): an Astro component carries the lines as `//` comments right after its opening `---`, a stylesheet as `/* */` comments on its first lines, and a `.d.ts` file as `//` comments on its first lines
 
 ## Landing
 

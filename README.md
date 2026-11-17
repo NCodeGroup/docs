@@ -231,8 +231,8 @@ vendored files against their manifest, and loads the built site in a browser.
 formatting and safe fixes; `biome.json` holds the rules.
 
 `./.template/Test-FileHeaders.ps1` checks that each JavaScript and TypeScript file starts with the copyright line and
-the `SPDX-License-Identifier: Apache-2.0` line, as CI does, and `-Fix` adds them;
-[CONTRIBUTING.md](CONTRIBUTING.md) says where the lines go in an Astro component or a stylesheet.
+the `SPDX-License-Identifier: Apache-2.0` line, as CI does, and `-Fix` adds them; [CONTRIBUTING.md](CONTRIBUTING.md)
+says where the lines go in the files it skips: Astro components, stylesheets and `.d.ts` files.
 
 The browser is the headless Chromium that the locked `playwright-core` drives. `npm run browser` downloads it, once
 for each version of `playwright-core`; on Linux, `npm run browser -- --with-deps` also installs the system libraries

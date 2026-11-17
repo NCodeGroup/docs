@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 declare module 'virtual:ncode-docs/site' {
   /** The settings of the library the build is for: astro.config.mjs builds them, and src/integration.mjs adds the mount. */
   export const site: {

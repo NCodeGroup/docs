@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // A library's code samples are regions of its compiled tests: this module reads every region a
 // source file marks with a begin and an end marker comment and hands it out by key, so a page never
 // holds a copy of a sample. It renders a region as MarkdownSnippets renders the same region into a

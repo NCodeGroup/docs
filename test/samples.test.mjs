@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // Each way a sample can be wrong fails the build, with a message that names the page or the sample
 // file, and the key.
 import assert from 'node:assert/strict';

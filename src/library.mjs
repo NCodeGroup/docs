@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // The library a build is for. Nothing about a library is committed to this repository: the build is
 // pointed at one through two environment variables, which scripts/site.mjs sets from its arguments
 // and the reusable workflow sets from its inputs.

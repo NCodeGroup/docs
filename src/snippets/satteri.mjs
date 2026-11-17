@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // Sätteri (Astro's default Markdown and MDX processor since Astro 7): the mdast plugin that fills
 // `snippet=Key` code blocks, and the integration that makes `astro dev` follow the samples. The
 // caller says how to name a page in a message, because the page the build reads is a mounted copy.

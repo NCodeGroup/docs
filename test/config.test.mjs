@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // A library's site.config.json is checked against schema/site.config.schema.json before anything is
 // built, and a wrong one is reported by key.
 import assert from 'node:assert/strict';

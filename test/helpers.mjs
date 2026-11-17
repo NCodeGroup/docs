@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // Shared by the tests: build a library's site into a folder of its own, make a changed copy of the
 // fixture library, read the built pages, and serve a built site the way GitHub Pages does.
 import { spawnSync } from 'node:child_process';

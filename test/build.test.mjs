@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // The fixture library builds, under a base path and at the root of a domain, and what it builds is
 // right: the samples are in the pages, no marker line is, and nothing links outside the base.
 import assert from 'node:assert/strict';

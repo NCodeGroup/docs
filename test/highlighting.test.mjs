@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // Guards the C# 14 extension-block grammar patch against a Shiki update: the patched grammar scopes
 // an extension block as a declaration, one version of Shiki is locked, and a built page shows it.
 import assert from 'node:assert/strict';

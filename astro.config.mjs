@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // @ts-check
 // The one Astro project every NCode library's documentation site is built with. It holds no
 // library's content: scripts/site.mjs (or the reusable workflow) names a library through

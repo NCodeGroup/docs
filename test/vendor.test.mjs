@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // The vendored brand files are the files their manifest names, and the check notices an edit.
 import assert from 'node:assert/strict';
 import { appendFileSync, cpSync, rmSync, writeFileSync } from 'node:fs';

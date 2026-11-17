@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // Builds, serves or previews one library's documentation site.
 //
 //   node scripts/site.mjs <build|dev|preview|prepare> <library folder> [options]

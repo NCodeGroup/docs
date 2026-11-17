@@ -1,3 +1,6 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
 // A JSON Schema validator for the keywords schema/site.config.schema.json uses, so that file is the
 // one definition of a site configuration: editors read it, and the build checks against it. It is
 // not a general validator: an unknown keyword is an error here, so a schema edit that needs more

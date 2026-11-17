@@ -13,8 +13,9 @@
     "dev": "node scripts/site.mjs dev",
     "preview": "node scripts/site.mjs preview",
     "check:vendor": "node scripts/check-vendor.mjs",
+    "update:brand": "node scripts/vendor-brand.mjs --lock vendor/brand/brand.lock.json --update",
     "browser": "playwright-core install --only-shell chromium",
-    "test": "node --test --test-concurrency=1 --experimental-test-coverage \"--test-coverage-exclude=.work/**\" \"--test-coverage-exclude=test/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info \"test/*.test.mjs\"",
+    "test": "node --test --test-concurrency=1 --experimental-test-coverage \"--test-coverage-exclude=.work/**\" \"--test-coverage-exclude=test/**\" \"--test-coverage-exclude=scripts/vendor-brand.mjs\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info \"test/*.test.mjs\"",
     "lint": "biome ci --error-on-warnings .",
     "format": "biome check --write ."
   },

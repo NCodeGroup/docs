@@ -12,7 +12,8 @@
       "**/*.tsx",
       "**/*.astro",
       "!!**/.claude",
-      "!!**/.template"
+      "!!**/.template",
+      "!scripts/vendor-brand.mjs"
     ]
   },
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },

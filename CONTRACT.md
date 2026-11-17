@@ -27,10 +27,10 @@ tests/**/*.cs                  the sample files (the samples setting names other
   cannot import or use a component, and HTML written in it is published as written (section 5).
 - A file or folder whose name starts with `_` is never a page. `_components/` and `_assets/` are the two such folders
   with a meaning.
-- `404.mdx`, or `404.md`, at the root of the content folder is the page a missing URL gets, served as `/404.html`. It
-  is no page of its own: it has no `/404/` URL, no edit link and no "last updated" date, search leaves it out, and a
-  sidebar slug cannot name it. A library without one gets the toolchain's page: "Page not found", the header's search
-  box and a link to the site's start.
+- `404.mdx`, or `404.md`, at the root of the content folder is the page a missing URL gets, served as `/404.html`.
+  A content folder with both fails the build. It is no page of its own: it has no `/404/` URL, no edit link and no
+  "last updated" date, search leaves it out, and a sidebar slug cannot name it. A library without one gets the
+  toolchain's page: "Page not found", the header's search box and a link to the site's start.
 - `site.config.json`, dotfiles and `node_modules` in the content folder are not part of the site.
 - The library holds no `package.json`, no lockfile and no Astro or Starlight configuration.
 - Avoid a folder name the repository's `.gitignore` ignores (`release/`, `debug/`, `packages/`, `publish/`, `log/` in

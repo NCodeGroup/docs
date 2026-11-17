@@ -21,7 +21,8 @@ Both were read 2026-11-16.
 
 1. The page is the one entry of the `notFound` collection: the library's `404.mdx` or `404.md` at the root of its
    content folder, or else `src/defaults/404.mdx`, which `scripts/site.mjs` mounts in its place. The `docs` collection
-   leaves both names out at its root.
+   leaves both names out at its root. A content folder with both fails the build, because the two would be one entry
+   and the page that renders would depend on the loader's order.
 2. The default page is "Page not found" with a link to the site's start. Its search box is the header's, because a
    second search in the body would repeat the search dialog's element ids and its Ctrl+K shortcut.
 3. `StarlightPage` validates the frontmatter again, so the route turns each hero action's parsed `icon` back into the

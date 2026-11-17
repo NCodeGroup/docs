@@ -17,7 +17,11 @@
  *   Screen  values on a deep field of the brand hue.                   code (see ec.config.mjs)
  *   Label   names are engraved (narrow capitals); values are monospace.
  *
- * A token swap needs no change here: nothing below states a colour, a font or a radius of its own.
+ * A token swap needs no change here: nothing below states a colour, a font or a radius of its own. Every custom
+ * property it reads is one of the brand's public tokens, a type role, a colour role or a measure, or one of
+ * Starlight's own properties, which css/starlight.css sets; none is a step of a colour ramp or of the type scale,
+ * which a brand release may change. A type role is set whole: its font, then its width, tracking and case. Where
+ * a rule keeps a size its role does not have, it reads Starlight's property of that size.
  * Starlight's styles are in the cascade layer "starlight", so every rule here wins without a
  * specificity contest; where a rule only repeats what Starlight does, it is not here.
  */
@@ -33,24 +37,56 @@
 /* ================================================================== 2. Type */
 
 body {
-  font-stretch: var(--nc-width-text);
+  font-stretch: var(--nc-type-body-stretch);
   font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
+/* Each heading takes the brand's role for its level on a long-form page; its size is Starlight's for that
+   level, which css/starlight.css sets for each width. */
 h1,
-h2,
-h3,
-.sl-markdown-content :is(h1, h2, h3):not(:where(.not-content *)) {
-  font-stretch: var(--nc-width-display);
-  font-weight: var(--nc-weight-semibold);
+.sl-markdown-content h1:not(:where(.not-content *)) {
+  font: var(--nc-type-title-long);
+  font-size: var(--sl-text-h1);
+  font-stretch: var(--nc-type-title-long-stretch);
+  letter-spacing: var(--nc-type-title-long-tracking);
   text-wrap: balance;
 }
-h1 { line-height: var(--nc-leading-tight); letter-spacing: var(--nc-tracking-display); }
 h2,
-h3 { letter-spacing: var(--nc-tracking-heading); }
-.sl-markdown-content :is(h4, h5):not(:where(.not-content *)) { font-weight: var(--nc-weight-semibold); }
+.sl-markdown-content h2:not(:where(.not-content *)) {
+  font: var(--nc-type-heading-long);
+  font-size: var(--sl-text-h2);
+  font-stretch: var(--nc-type-heading-long-stretch);
+  letter-spacing: var(--nc-type-heading-long-tracking);
+  text-wrap: balance;
+}
+h3,
+.sl-markdown-content h3:not(:where(.not-content *)) {
+  font: var(--nc-type-subheading);
+  font-size: var(--sl-text-h3);
+  font-stretch: var(--nc-type-subheading-stretch);
+  letter-spacing: var(--nc-type-subheading-tracking);
+  text-wrap: balance;
+}
+.sl-markdown-content :is(h4, h5):not(:where(.not-content *)) {
+  font: var(--nc-type-minor);
+  font-stretch: var(--nc-type-minor-stretch);
+  letter-spacing: var(--nc-type-minor-tracking);
+}
+.sl-markdown-content h4:not(:where(.not-content *)) { font-size: var(--sl-text-h4); }
+.sl-markdown-content h5:not(:where(.not-content *)) { font-size: var(--sl-text-h5); }
+
+/* Running text is read: the reading role, on the measure section 6 gives it. On a phone it is a step smaller,
+   as the brand's long-form page is there. */
+.sl-markdown-content {
+  font: var(--nc-type-reading);
+  font-stretch: var(--nc-type-reading-stretch);
+  letter-spacing: var(--nc-type-reading-tracking);
+}
+@media (max-width: 40rem) {
+  .sl-markdown-content { font-size: var(--sl-text-base); line-height: 1.65; }
+}
 .sl-markdown-content p { text-wrap: pretty; }
 
 /* Engraved: the name of a thing. */
@@ -425,17 +461,20 @@ main {
 .content-panel .sl-container > .ncode-crumbs + h1 { margin-top: var(--nc-space-4); }
 .content-panel .sl-container > h1 { color: var(--nc-color-text); font-size: var(--sl-text-h1); }
 .content-panel .sl-container > .ncode-lead {
-  max-width: 42.5rem;
+  max-width: var(--nc-measure);
   margin-top: var(--nc-space-5);
   color: var(--nc-color-text-secondary);
-  font-size: var(--nc-text-lg);
+  font: var(--nc-type-lead);
+  font-size: var(--sl-text-lg);
+  font-stretch: var(--nc-type-lead-stretch);
+  letter-spacing: var(--nc-type-lead-tracking);
   line-height: 1.55;
   text-wrap: pretty;
 }
 
-/* Running text keeps a reading measure; screens, tables, tabs and cards may use the whole sheet. */
+/* Running text keeps the brand's reading measure; screens, tables, tabs and cards may use the whole sheet. */
 .sl-markdown-content > :where(p, ul, ol, dl, blockquote, .starlight-aside, .sl-heading-wrapper, h1, h2, h3, h4, h5, h6, details):not(:where(.not-content *)) {
-  max-width: 42.5rem;
+  max-width: var(--nc-measure);
 }
 .sl-markdown-content :is(h1, h2, h3, h4, h5, h6):not(:where(.not-content *)) { color: var(--nc-color-text); }
 .sl-markdown-content > .sl-heading-wrapper.level-h2 { margin-top: 3.25rem; }

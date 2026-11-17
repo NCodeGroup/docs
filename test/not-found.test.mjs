@@ -38,7 +38,10 @@ describe('a library without a 404 page', () => {
   it('builds without a warning', () => {
     assert.equal(result.code, 0, result.output);
     assert.deepEqual(warnings(result.output), []);
-    assert.equal(ownNotFoundPage({ contentDirectory: join(fixture, 'docs', 'site') }), undefined);
+    assert.equal(
+      ownNotFoundPage({ contentDirectory: join(fixture, 'docs', 'site'), contentPath: 'docs/site' }),
+      undefined,
+    );
   });
 
   it("gets the toolchain's page, with the search box and a link to the site's start", () => {
@@ -61,7 +64,10 @@ describe('a library with its own 404.md', () => {
   it('keeps its own page', () => {
     assert.equal(result.code, 0, result.output);
     assert.deepEqual(warnings(result.output), []);
-    assert.equal(ownNotFoundPage({ contentDirectory: join(library, 'docs', 'site') }), '404.md');
+    assert.equal(
+      ownNotFoundPage({ contentDirectory: join(library, 'docs', 'site'), contentPath: 'docs/site' }),
+      '404.md',
+    );
     const html = readFileSync(join(result.out, '404.html'), 'utf8');
     assert.match(html, /<title>Lost in Markdown \| NCode\.Fixture<\/title>/);
     assert.doesNotMatch(html, /Page not found/);
@@ -104,6 +110,21 @@ describe('a 404 page whose hero action is written with the base path', () => {
     assert.match(
       result.output,
       /docs\/site\/404\.mdx \(hero action "Start over"\): the link \/Fixture\/quick-start\/ starts with the site's base path/,
+    );
+  });
+});
+
+describe('a library with both 404.mdx and 404.md', () => {
+  const library = copyOfFixture('both-not-found');
+  writeFileSync(join(library, 'docs/site/404.mdx'), '---\ntitle: From MDX\n---\n\nMDX page.\n');
+  writeFileSync(join(library, 'docs/site/404.md'), '---\ntitle: From MD\n---\n\nMD page.\n');
+  const result = build('both-not-found', { library });
+
+  it('fails the build, and names both files', () => {
+    assert.notEqual(result.code, 0, `the build should have failed:\n${result.output}`);
+    assert.match(
+      result.output,
+      /docs\/site\/404\.mdx and docs\/site\/404\.md are both the site's 404 page: keep one of them\./,
     );
   });
 });

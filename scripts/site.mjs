@@ -256,6 +256,8 @@ async function main() {
     // The same check astro.config.mjs makes, made here first so its message stands alone: a
     // duplicate key, an unclosed region or a malformed marker in the library's sample files.
     readSnippets({ files: library.sampleFiles, relativeTo: library.root });
+    // Fails on a content folder with both 404.mdx and 404.md, as mount() would, before the lock.
+    ownNotFoundPage(library);
   } catch (error) {
     console.error(error.message);
     process.exit(1);

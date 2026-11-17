@@ -23,15 +23,27 @@ const EXPECTED_PAGES = [
 const text = (html) =>
   html
     .replace(/<[^>]+>/g, '')
-    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&#x27;/g, "'").replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&#x27;/g, "'")
+    .replace(/&amp;/g, '&')
     .replace(/\s+/g, ' ');
 
 function checkSamples(out) {
   const page = (file) => text(readFileSync(join(out, file), 'utf8'));
   const quickStart = page('quick-start/index.html');
-  assert.match(quickStart, /using var vault = Vault\.Rent\(32, out Span<byte> key\);/, 'the QuickStart sample is in the quick start');
+  assert.match(
+    quickStart,
+    /using var vault = Vault\.Rent\(32, out Span<byte> key\);/,
+    'the QuickStart sample is in the quick start',
+  );
   assert.match(quickStart, /QuickStart\.cs/, 'the sample block has its title');
-  assert.match(page('guides/derive-a-key/index.html'), /RandomNumberGenerator\.Fill\(salt\);/, 'the DeriveKey sample is in its guide');
+  assert.match(
+    page('guides/derive-a-key/index.html'),
+    /RandomNumberGenerator\.Fill\(salt\);/,
+    'the DeriveKey sample is in its guide',
+  );
   const extensions = page('guides/extension-members/index.html');
   assert.match(extensions, /extension\(Vault vault\)/, 'the C# 14 extension block is in its guide');
   assert.match(extensions, /public static Vault RentKey\(\) => Vault\.Rent\(32, out _\);/);
@@ -46,7 +58,12 @@ describe('the fixture under the base path /Fixture/', () => {
 
   it('builds', () => {
     assert.equal(result.code, 0, result.output);
-    assert.deepEqual(pages(result.out).map(({ file }) => file).sort(), EXPECTED_PAGES);
+    assert.deepEqual(
+      pages(result.out)
+        .map(({ file }) => file)
+        .sort(),
+      EXPECTED_PAGES,
+    );
     assert.match(result.output, /All internal links are valid/);
     assert.ok(existsSync(join(result.out, 'pagefind', 'pagefind.js')), 'the search index was built');
   });
@@ -76,22 +93,33 @@ describe('the fixture under the base path /Fixture/', () => {
     assert.match(home, /href="\/Fixture\/guides\/derive-a-key\/"/);
     const guide = readFileSync(join(result.out, 'guides/derive-a-key/index.html'), 'utf8');
     assert.match(guide, /href="\/Fixture\/quick-start\/#seal-a-secret"/, 'a Markdown link with a fragment');
-    assert.match(guide, /class="sl-link-button[^"]*"[^>]*href="\/Fixture\/guides\/extension-members\/"/, 'a LinkButton');
+    assert.match(
+      guide,
+      /class="sl-link-button[^"]*"[^>]*href="\/Fixture\/guides\/extension-members\/"/,
+      'a LinkButton',
+    );
     assert.match(guide, /href="https:\/\/cheatsheetseries\.owasp\.org\//, 'an external link is left alone');
     const api = readFileSync(join(result.out, 'reference/api/index.html'), 'utf8');
-    assert.match(api, /<a[^>]+href="\/Fixture\/quick-start\/"[^>]*rel="next"|<a[^>]+rel="next"[^>]*href="\/Fixture\/quick-start\/"/, 'a next link from frontmatter');
+    assert.match(
+      api,
+      /<a[^>]+href="\/Fixture\/quick-start\/"[^>]*rel="next"|<a[^>]+rel="next"[^>]*href="\/Fixture\/quick-start\/"/,
+      'a next link from frontmatter',
+    );
   });
 
-  it('serves the library\'s images from under the base', () => {
+  it("serves the library's images from under the base", () => {
     const concept = readFileSync(join(result.out, 'concepts/how-sealing-works/index.html'), 'utf8');
     assert.match(concept, /<img[^>]+src="\/Fixture\/_astro\/lifecycle\.[^"]+\.webp"/, 'a Markdown image, optimized');
     assert.match(concept, /<img[^>]+src="\/Fixture\/_astro\/lifecycle\.[^"]+\.svg"/, 'an imported image');
-    assert.match(concept, /byte-grid/, 'the library\'s own component rendered');
+    assert.match(concept, /byte-grid/, "the library's own component rendered");
   });
 
-  it('names the library\'s repository in edit links, and the site in titles', () => {
+  it("names the library's repository in edit links, and the site in titles", () => {
     const quickStart = readFileSync(join(result.out, 'quick-start/index.html'), 'utf8');
-    assert.match(quickStart, /href="https:\/\/github\.com\/NCodeGroup\/Fixture\/edit\/main\/docs\/site\/quick-start\.mdx"/);
+    assert.match(
+      quickStart,
+      /href="https:\/\/github\.com\/NCodeGroup\/Fixture\/edit\/main\/docs\/site\/quick-start\.mdx"/,
+    );
     assert.match(quickStart, /<title>Quick start \| NCode\.Fixture<\/title>/);
     assert.match(quickStart, /<link rel="canonical" href="https:\/\/ncodegroup\.github\.io\/Fixture\/quick-start\/"/);
     assert.match(readFileSync(join(result.out, 'index.html'), 'utf8'), /<title>NCode\.Fixture<\/title>/);
@@ -99,7 +127,11 @@ describe('the fixture under the base path /Fixture/', () => {
 
   it('loads fonts and scripts from the site itself', () => {
     for (const { file, html } of pages(result.out)) {
-      const external = [...html.matchAll(/<(?:script|link|img|source|iframe)\b[^>]*\s(?:src|href)="(https?:)?\/\/([^"/]+)[^"]*"[^>]*>/g)]
+      const external = [
+        ...html.matchAll(
+          /<(?:script|link|img|source|iframe)\b[^>]*\s(?:src|href)="(https?:)?\/\/([^"/]+)[^"]*"[^>]*>/g,
+        ),
+      ]
         .filter(([tag]) => !/rel="(canonical|me|sitemap|alternate)"/.test(tag))
         .map(([, , host]) => host);
       assert.deepEqual(external, [], `${file} loads from another origin`);
@@ -112,7 +144,12 @@ describe('the fixture at the root of a domain', () => {
 
   it('builds', () => {
     assert.equal(result.code, 0, result.output);
-    assert.deepEqual(pages(result.out).map(({ file }) => file).sort(), EXPECTED_PAGES);
+    assert.deepEqual(
+      pages(result.out)
+        .map(({ file }) => file)
+        .sort(),
+      EXPECTED_PAGES,
+    );
   });
 
   it('includes the samples and never a marker line', () => checkSamples(result.out));
@@ -125,7 +162,11 @@ describe('the fixture at the root of a domain', () => {
     assert.match(home, /<a[^>]+href="\/quick-start\/"[^>]*>\s*Get started/);
     assert.match(home, /<link rel="canonical" href="https:\/\/docs\.example\.test\/"/);
     const api = readFileSync(join(result.out, 'reference/api/index.html'), 'utf8');
-    assert.match(api, /<a[^>]+href="\/quick-start\/"[^>]*rel="next"|<a[^>]+rel="next"[^>]*href="\/quick-start\/"/, 'a next link from frontmatter');
+    assert.match(
+      api,
+      /<a[^>]+href="\/quick-start\/"[^>]*rel="next"|<a[^>]+rel="next"[^>]*href="\/quick-start\/"/,
+      'a next link from frontmatter',
+    );
   });
 });
 
@@ -139,7 +180,7 @@ describe('a page written as plain Markdown', () => {
       '---',
       '',
       'A [Markdown link](/quick-start/), <a href="/quick-start/#seal-a-secret">an HTML link</a>,',
-      "<a class=\"key\" href='/guides/derive-a-key/'>one in single quotes</a>",
+      '<a class="key" href=\'/guides/derive-a-key/\'>one in single quotes</a>',
       'and <a href="https://example.test/">an external one</a>.',
       '',
       '<p>',
@@ -154,7 +195,12 @@ describe('a page written as plain Markdown', () => {
 
   it('builds beside the .mdx pages', () => {
     assert.equal(result.code, 0, result.output);
-    assert.deepEqual(pages(result.out).map(({ file }) => file).sort(), [...EXPECTED_PAGES, 'guides/plain/index.html'].sort());
+    assert.deepEqual(
+      pages(result.out)
+        .map(({ file }) => file)
+        .sort(),
+      [...EXPECTED_PAGES, 'guides/plain/index.html'].sort(),
+    );
   });
 
   it('gets the base on links and images written as HTML, and on none shown as code', () => {
@@ -176,7 +222,10 @@ describe('a checkout that is already building a library', () => {
     try {
       const result = build('locked');
       assert.equal(result.code, 1, result.output);
-      assert.match(result.output, new RegExp(`This toolchain checkout is in use: process ${process.pid} is building or serving /somewhere/Other`));
+      assert.match(
+        result.output,
+        new RegExp(`This toolchain checkout is in use: process ${process.pid} is building or serving /somewhere/Other`),
+      );
       assert.doesNotMatch(result.output, /Mounted/);
     } finally {
       rmSync(lockFile, { force: true });
@@ -192,7 +241,7 @@ describe('a checkout that is already building a library', () => {
   });
 });
 
-describe('an output folder outside the toolchain whose path starts with the toolchain\'s', () => {
+describe("an output folder outside the toolchain whose path starts with the toolchain's", () => {
   it('stops the build before it starts, and says why', () => {
     // Such as ../docs-site beside a toolchain at ../docs, which Astro takes for a folder inside it.
     const toolchain = root.replace(/[\\/]+$/, '');
@@ -220,11 +269,15 @@ describe('a library that keeps its content in another folder, in a git repositor
   renameSync(join(library, 'docs', 'site'), join(library, 'website'));
   const git = (...args) => {
     const date = '2026-01-02T03:04:05Z';
-    const result = spawnSync('git', ['-c', 'user.name=Test', '-c', 'user.email=test@example.test', '-c', 'commit.gpgsign=false', ...args], {
-      cwd: library,
-      encoding: 'utf8',
-      env: { ...process.env, GIT_AUTHOR_DATE: date, GIT_COMMITTER_DATE: date },
-    });
+    const result = spawnSync(
+      'git',
+      ['-c', 'user.name=Test', '-c', 'user.email=test@example.test', '-c', 'commit.gpgsign=false', ...args],
+      {
+        cwd: library,
+        encoding: 'utf8',
+        env: { ...process.env, GIT_AUTHOR_DATE: date, GIT_COMMITTER_DATE: date },
+      },
+    );
     assert.equal(result.status, 0, result.stderr);
   };
   git('init', '--quiet');
@@ -234,12 +287,20 @@ describe('a library that keeps its content in another folder, in a git repositor
 
   it('builds from the folder the caller names', () => {
     assert.equal(result.code, 0, result.output);
-    assert.deepEqual(pages(result.out).map(({ file }) => file).sort(), EXPECTED_PAGES);
+    assert.deepEqual(
+      pages(result.out)
+        .map(({ file }) => file)
+        .sort(),
+      EXPECTED_PAGES,
+    );
   });
 
-  it('points edit links at that folder, and dates each page from the library\'s own history', () => {
+  it("points edit links at that folder, and dates each page from the library's own history", () => {
     const quickStart = readFileSync(join(result.out, 'quick-start/index.html'), 'utf8');
-    assert.match(quickStart, /href="https:\/\/github\.com\/NCodeGroup\/Fixture\/edit\/main\/website\/quick-start\.mdx"/);
+    assert.match(
+      quickStart,
+      /href="https:\/\/github\.com\/NCodeGroup\/Fixture\/edit\/main\/website\/quick-start\.mdx"/,
+    );
     assert.match(quickStart, /<time datetime="2026-01-02T03:04:05\.000Z">/);
   });
 });
@@ -252,12 +313,15 @@ describe('a library whose history git cannot read', () => {
   const result = build('unreadable-history', { library, env: { GITHUB_ACTIONS: 'true' } });
   const warning = /No page shows a "last updated" date: git could not read the history of .+unreadable-history: /;
 
-  it('builds without dates in a repository git refuses, and warns with git\'s message, as an annotation in GitHub Actions', () => {
+  it("builds without dates in a repository git refuses, and warns with git's message, as an annotation in GitHub Actions", () => {
     assert.equal(result.code, 0, result.output);
     assert.match(result.output, new RegExp(`^::warning::${warning.source}`, 'm'));
     for (const { file, html } of pages(result.out)) assert.doesNotMatch(html, /<time\b/, `${file} shows a date`);
     const quickStart = readFileSync(join(result.out, 'quick-start/index.html'), 'utf8');
-    assert.match(quickStart, /href="https:\/\/github\.com\/NCodeGroup\/Fixture\/edit\/main\/docs\/site\/quick-start\.mdx"/);
+    assert.match(
+      quickStart,
+      /href="https:\/\/github\.com\/NCodeGroup\/Fixture\/edit\/main\/docs\/site\/quick-start\.mdx"/,
+    );
   });
 
   it('warns, as a plain line outside GitHub Actions, where git is not installed', (t) => {

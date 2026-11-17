@@ -35,10 +35,14 @@ function check(value, schema, root, path, problems) {
         check(value, resolveRef(rule, root), root, path, problems);
         break;
       case 'type':
-        if (typeOf(value) !== rule) problems.push(`${at} must be ${rule === 'object' || rule === 'array' ? `an ${rule}` : `a ${rule}`}, not ${typeOf(value)}`);
+        if (typeOf(value) !== rule)
+          problems.push(
+            `${at} must be ${rule === 'object' || rule === 'array' ? `an ${rule}` : `a ${rule}`}, not ${typeOf(value)}`,
+          );
         break;
       case 'enum':
-        if (!rule.includes(value)) problems.push(`${at} must be one of ${rule.map((option) => JSON.stringify(option)).join(', ')}`);
+        if (!rule.includes(value))
+          problems.push(`${at} must be one of ${rule.map((option) => JSON.stringify(option)).join(', ')}`);
         break;
       case 'minLength':
         if (typeof value === 'string' && value.length < rule) problems.push(`${at} must not be empty`);
@@ -48,17 +52,22 @@ function check(value, schema, root, path, problems) {
         break;
       case 'pattern':
         if (typeof value === 'string' && !new RegExp(rule).test(value)) {
-          problems.push(`${at} (${JSON.stringify(value)}) does not have the form its description gives${schema.description ? `: ${schema.description}` : ''}`);
+          problems.push(
+            `${at} (${JSON.stringify(value)}) does not have the form its description gives${schema.description ? `: ${schema.description}` : ''}`,
+          );
         }
         break;
       case 'minItems':
-        if (Array.isArray(value) && value.length < rule) problems.push(`${at} must have at least ${rule} ${rule === 1 ? 'entry' : 'entries'}`);
+        if (Array.isArray(value) && value.length < rule)
+          problems.push(`${at} must have at least ${rule} ${rule === 1 ? 'entry' : 'entries'}`);
         break;
       case 'items':
-        if (Array.isArray(value)) value.forEach((item, index) => check(item, rule, root, `${path}[${index}]`, problems));
+        if (Array.isArray(value))
+          value.forEach((item, index) => check(item, rule, root, `${path}[${index}]`, problems));
         break;
       case 'required':
-        if (typeOf(value) === 'object') for (const key of rule) if (!(key in value)) problems.push(`${at} needs "${key}"`);
+        if (typeOf(value) === 'object')
+          for (const key of rule) if (!(key in value)) problems.push(`${at} needs "${key}"`);
         break;
       case 'properties':
         if (typeOf(value) === 'object') {

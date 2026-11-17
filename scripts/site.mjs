@@ -17,7 +17,19 @@
 // environment. Nothing is written to the library, and nothing of the library stays in this
 // repository: the mount is ignored by git and replaced by the next run.
 import { spawn } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, utimesSync, watch, writeFileSync } from 'node:fs';
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  statSync,
+  utimesSync,
+  watch,
+  writeFileSync,
+} from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { CONFIG_FILE, lockFile, mountDirectory, mountPath, resolveLibrary, toolchainRoot } from '../src/library.mjs';
@@ -26,7 +38,9 @@ import { readSnippets } from '../src/snippets/catalog.mjs';
 const COMMANDS = ['build', 'dev', 'preview', 'prepare'];
 
 function usage(problem) {
-  console.error(`${problem}\n\nUsage: node scripts/site.mjs <${COMMANDS.join('|')}> <library folder> [--content <path>] [--site-url <url>] [--out <folder>] [--port <number>]`);
+  console.error(
+    `${problem}\n\nUsage: node scripts/site.mjs <${COMMANDS.join('|')}> <library folder> [--content <path>] [--site-url <url>] [--out <folder>] [--port <number>]`,
+  );
   process.exit(2);
 }
 
@@ -40,7 +54,9 @@ function usage(problem) {
  * has where a symbolic link leads to the toolchain, so both are checked.
  */
 function outFolderProblem(out) {
-  for (const toolchain of new Set([toolchainRoot, realpathSync(toolchainRoot)].map((path) => path.replace(/[\\/]+$/, '')))) {
+  for (const toolchain of new Set(
+    [toolchainRoot, realpathSync(toolchainRoot)].map((path) => path.replace(/[\\/]+$/, '')),
+  )) {
     const rest = out.slice(toolchain.length);
     if (out.startsWith(toolchain) && rest !== '' && !/^[\\/]/.test(rest)) {
       return `The output folder ${out} is outside the toolchain, but its path starts with the toolchain's, ${toolchain}: Astro takes it for a folder inside the toolchain, and the build then cannot find the toolchain's packages. Name a folder whose path does not start with ${toolchain}.`;
@@ -141,7 +157,7 @@ function lock(library) {
       if (held && isRunning(held.pid)) {
         console.error(
           `This toolchain checkout is in use: process ${held.pid} is building or serving ${held.library}.\n` +
-            'One checkout builds one library at a time, because the library\'s content is mounted into it. Wait for that command, stop it, or use a second checkout.',
+            "One checkout builds one library at a time, because the library's content is mounted into it. Wait for that command, stop it, or use a second checkout.",
         );
         process.exit(1);
       }
@@ -155,14 +171,16 @@ function runAstro(args, environment) {
   // Astro's own entry file, run with this Node.js: no shell and no .cmd shim, so it is the same on Windows.
   const astro = join(toolchainRoot, 'node_modules', 'astro', 'bin', 'astro.mjs');
   if (!existsSync(astro)) {
-    console.error('The toolchain\'s packages are not installed: run "npm ci --ignore-scripts" in ' + toolchainRoot);
+    console.error(`The toolchain's packages are not installed: run "npm ci --ignore-scripts" in ${toolchainRoot}`);
     process.exit(1);
   }
   const child = spawn(process.execPath, [astro, ...args], { cwd: toolchainRoot, env: environment, stdio: 'inherit' });
   // Ending this script ends Astro too, so a server never outlives the command that started it.
   const stop = (signal) => child.kill(signal);
   for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, stop);
-  child.on('exit', () => { for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.off(signal, stop); });
+  child.on('exit', () => {
+    for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.off(signal, stop);
+  });
   return child;
 }
 
@@ -173,7 +191,12 @@ async function main() {
   try {
     parsed = parseArgs({
       allowPositionals: true,
-      options: { content: { type: 'string' }, 'site-url': { type: 'string' }, out: { type: 'string' }, port: { type: 'string' } },
+      options: {
+        content: { type: 'string' },
+        'site-url': { type: 'string' },
+        out: { type: 'string' },
+        port: { type: 'string' },
+      },
     });
   } catch (error) {
     usage(error.message);
@@ -190,9 +213,9 @@ async function main() {
     // A folder is relative to where the command was typed; "fixture", which the package scripts name,
     // is found in the toolchain from anywhere.
     const typed = resolve(from, folder);
-    environment.DOCS_LIBRARY = !existsSync(typed) && existsSync(resolve(toolchainRoot, folder)) ? resolve(toolchainRoot, folder) : typed;
-  }
-  else if (environment.DOCS_LIBRARY) environment.DOCS_LIBRARY = resolve(from, environment.DOCS_LIBRARY);
+    environment.DOCS_LIBRARY =
+      !existsSync(typed) && existsSync(resolve(toolchainRoot, folder)) ? resolve(toolchainRoot, folder) : typed;
+  } else if (environment.DOCS_LIBRARY) environment.DOCS_LIBRARY = resolve(from, environment.DOCS_LIBRARY);
   else usage('No library folder given.');
   if (parsed.values.content) environment.DOCS_CONTENT = parsed.values.content;
   if (parsed.values['site-url']) environment.SITE_URL = parsed.values['site-url'];
@@ -200,7 +223,10 @@ async function main() {
   else if (environment.DOCS_OUT) environment.DOCS_OUT = resolve(from, environment.DOCS_OUT);
   if (environment.SITE_URL && !URL.canParse(environment.SITE_URL)) usage(`"${environment.SITE_URL}" is not a URL.`);
   // dev and prepare build nothing, so they leave the output folder alone.
-  const outProblem = environment.DOCS_OUT && (command === 'build' || command === 'preview') ? outFolderProblem(environment.DOCS_OUT) : undefined;
+  const outProblem =
+    environment.DOCS_OUT && (command === 'build' || command === 'preview')
+      ? outFolderProblem(environment.DOCS_OUT)
+      : undefined;
   if (outProblem) usage(outProblem);
   const port = parsed.values.port ? ['--port', parsed.values.port] : [];
 
@@ -245,7 +271,9 @@ async function main() {
   const built = await finished(runAstro(['build', '--force'], environment));
   if (built !== 0) {
     // Astro and its plugins name the file they read, which is the mounted copy.
-    console.error(`\nThe build of ${library.root} failed. In the messages above, a path under ${mountPath}/ is the same path under ${library.contentPath}/ in the library.`);
+    console.error(
+      `\nThe build of ${library.root} failed. In the messages above, a path under ${mountPath}/ is the same path under ${library.contentPath}/ in the library.`,
+    );
   }
   if (built !== 0 || command === 'build') return built;
   return finished(runAstro(['preview', '--ignore-lock', ...port], environment));

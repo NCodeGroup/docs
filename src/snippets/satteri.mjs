@@ -19,7 +19,12 @@ export function snippetsPlugin(snippets, { describePage = (file) => file } = {})
     ({ fileURL }) => ({
       name: 'ncode-snippets',
       code(node) {
-        const filled = fillCodeBlock(snippets, getSnippet, node, fileURL ? describePage(fileURLToPath(fileURL)) : 'a page');
+        const filled = fillCodeBlock(
+          snippets,
+          getSnippet,
+          node,
+          fileURL ? describePage(fileURLToPath(fileURL)) : 'a page',
+        );
         return filled ? { ...node, ...filled } : undefined;
       },
     }),

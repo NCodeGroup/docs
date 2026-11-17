@@ -35,7 +35,7 @@ export const extensionDeclaration = {
       patterns: [{ include: '#class-or-struct-members' }],
     },
   ],
-}
+};
 
 /** The receiver: `(Type name)`, or `(Type)` for static members; attributes and ref, in and scoped allowed. */
 export const extensionReceiver = {
@@ -50,7 +50,7 @@ export const extensionReceiver = {
     { include: '#parameter' },
     { include: '#type' },
   ],
-}
+};
 
 /** The rules of the bundled grammar that the two rules above include or extend. */
 const requiredRules = [
@@ -63,7 +63,7 @@ const requiredRules = [
   'comment',
   'preprocessor',
   'attribute-section',
-]
+];
 
 /**
  * Returns the given Shiki language registrations with the C# grammar replaced by a copy that also understands
@@ -75,18 +75,22 @@ const requiredRules = [
  */
 export function withExtensionBlocks(languages) {
   if (!languages.some((language) => language.scopeName === 'source.cs')) {
-    throw new Error('withExtensionBlocks: no C# grammar (scope "source.cs") in the given languages.')
+    throw new Error('withExtensionBlocks: no C# grammar (scope "source.cs") in the given languages.');
   }
   return languages.map((language) => {
-    const repository = language.repository ?? {}
-    if (language.scopeName !== 'source.cs' || Object.keys(repository).some((name) => name.includes('extension'))) return language
+    const repository = language.repository ?? {};
+    if (language.scopeName !== 'source.cs' || Object.keys(repository).some((name) => name.includes('extension')))
+      return language;
     for (const rule of requiredRules) {
-      if (!repository[rule]) throw new Error(`withExtensionBlocks: the C# grammar has no "${rule}" rule; review csharp-extension-blocks.mjs.`)
+      if (!repository[rule])
+        throw new Error(
+          `withExtensionBlocks: the C# grammar has no "${rule}" rule; review csharp-extension-blocks.mjs.`,
+        );
     }
-    const patched = structuredClone(language)
-    patched.repository['extension-declaration'] = structuredClone(extensionDeclaration)
-    patched.repository['extension-receiver'] = structuredClone(extensionReceiver)
-    patched.repository['type-declarations'].patterns.unshift({ include: '#extension-declaration' })
-    return patched
-  })
+    const patched = structuredClone(language);
+    patched.repository['extension-declaration'] = structuredClone(extensionDeclaration);
+    patched.repository['extension-receiver'] = structuredClone(extensionReceiver);
+    patched.repository['type-declarations'].patterns.unshift({ include: '#extension-declaration' });
+    return patched;
+  });
 }

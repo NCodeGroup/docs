@@ -12,7 +12,9 @@ export function fillCodeBlock(snippets, getSnippet, node, usedBy) {
   const match = REFERENCE.exec(node.meta ?? '');
   if (!match) return undefined;
   if ((node.value ?? '').trim() !== '') {
-    throw new Error(`${usedBy}: a code block with snippet=${match[1]} must be empty; its code comes from the library's sample files.`);
+    throw new Error(
+      `${usedBy}: a code block with snippet=${match[1]} must be empty; its code comes from the library's sample files.`,
+    );
   }
   const snippet = getSnippet(snippets, match[1], usedBy);
   if (node.lang && node.lang !== snippet.lang) {

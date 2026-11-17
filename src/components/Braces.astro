@@ -4,7 +4,7 @@
 
 // A value held between the braces of the NCode mark. The braces are the mark's own drawing, taken
 // from the vendored logo file: a font's braces differ from them, and the logo kit rules those out.
-import mark from '../../vendor/instrument/logos/ncode-mark.svg?raw';
+import mark from '../../vendor/brand/logo/ncode/mark/ncode-mark-blue.svg?raw';
 
 // The mark is one path of three closed shapes: the left brace, the letter, the right brace.
 const shapes = (/\sd="([^"]+)"/.exec(mark)?.[1] ?? '').split('Z').filter(Boolean).map((shape) => `${shape}Z`);

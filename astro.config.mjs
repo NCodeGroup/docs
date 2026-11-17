@@ -40,8 +40,8 @@ export default defineConfig({
   // With 'always', the build, the dev server and GitHub Pages agree on every page's URL.
   trailingSlash: 'always',
   outDir: process.env.DOCS_OUT || './dist',
-  // The favicons, from the brand kit; a library's images are imported from its _assets folder.
-  publicDir: './vendor/instrument/public',
+  // The favicons, from the brand's {N} logo kit; a library's images are imported from its _assets folder.
+  publicDir: './vendor/brand/logo/ncode/favicon',
   markdown: {
     processor: satteri({
       mdastPlugins: [snippetsPlugin(snippets, { describePage })],
@@ -73,9 +73,14 @@ export default defineConfig({
         { tag: 'link', attrs: { rel: 'icon', href: inBase('/favicon.ico'), sizes: '32x32' } },
         { tag: 'link', attrs: { rel: 'apple-touch-icon', href: inBase('/apple-touch-icon.png') } },
       ],
-      // One stylesheet of brand tokens, vendored and never edited here; the font files it names;
-      // then the stylesheet that maps Starlight onto the tokens.
-      customCss: ['./vendor/instrument/fonts.css', './vendor/instrument/tokens.css', './src/styles/theme.css'],
+      // The brand's tokens, the typefaces they name and Starlight's own properties mapped onto them,
+      // vendored and never edited here; then the stylesheet that restyles Starlight's markup.
+      customCss: [
+        './vendor/brand/tokens/tokens.css',
+        './vendor/brand/css/fonts.css',
+        './vendor/brand/css/starlight.css',
+        './src/styles/theme.css',
+      ],
       components: {
         SiteTitle: './src/components/overrides/SiteTitle.astro',
         SocialIcons: './src/components/overrides/SocialIcons.astro',

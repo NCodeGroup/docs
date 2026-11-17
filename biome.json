@@ -13,7 +13,7 @@
       "**/*.astro",
       "!!**/.claude",
       "!!**/.template",
-      "!scripts/vendor-brand.mjs"
+      "!vendor"
     ]
   },
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },

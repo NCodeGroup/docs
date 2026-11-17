@@ -72,9 +72,8 @@ export function issueText(pinned, release) {
     `${MARKER}\n\`${LOCK}\` pins NCode Brand ${pinned}, and ${v} was published on ${date}: ` +
     `[release notes](${brand}/releases/tag/v${v}), [changes since ${pinned}](${brand}/compare/v${pinned}...v${v}).`;
   const howTo =
-    `To take it, run \`npm run update:brand -- ${v}\`: it writes the release's files only once ` +
-    '`gh attestation verify` proves its archive. When the release changes `vendoring/vendor-brand.mjs`, copy it over ' +
-    '`scripts/vendor-brand.mjs` and run `./.template/Test-FileHeaders.ps1 -Fix`. Then run `npm run build`, ' +
+    `To take it, run \`npm run update:brand -- ${v}\`: it writes the release's files, its vendoring script among ` +
+    'them, only once `gh attestation verify` proves its archive. Then run `npm run build`, ' +
     '`npm run test` and `node scripts/screenshots.mjs`, and name the release in the brand entries of `CHANGELOG.md`.';
   const footer =
     'The brand-watch workflow, `.github/workflows/brand-watch.yml`, checks every day: it rewrites this issue when a ' +

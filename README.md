@@ -254,7 +254,7 @@ through a newer one: `npx npm@11 ci --ignore-scripts`. `npm run` works with any 
 | `.github/workflows/site.yml` | The reusable workflow |
 | `astro.config.mjs`, `ec.config.mjs` | The Starlight project, and its code blocks |
 | `scripts/site.mjs` | Builds, serves or previews one library's site |
-| `scripts/vendor-brand.mjs` | Vendors a release of NCodeGroup/brand, and checks the vendored files |
+| `vendor/brand/vendoring/vendor-brand.mjs` | Brand's script that vendors a release of NCodeGroup/brand and checks the vendored files, vendored with them |
 | `scripts/brand-watch.mjs`, `.github/workflows/brand-watch.yml` | Checks NCodeGroup/brand every day and keeps one issue open while it has a release newer than the vendored one |
 | `src/snippets/` | Reads sample regions and fills `snippet=` blocks |
 | `src/links/` | Adds the base path to links; checks the built pages |
@@ -274,13 +274,13 @@ through a newer one: `npx npm@11 ci --ignore-scripts`. `npm run` works with any 
 The look is NCode's design system, Instrument, from [NCodeGroup/brand](https://github.com/NCodeGroup/brand).
 `vendor/brand/` holds the files `vendor/brand/brand.lock.json` names from one of its releases, in the release's own
 folders: the tokens, the fonts, `css/starlight.css`, which sets Starlight's own properties from the tokens, the code
-blocks' syntax theme, the marks and the favicons. They are never edited here: `npm run check:vendor`, which the tests
-run, fails when a file differs from the SHA-256 the lock pins. `src/styles/theme.css` restyles Starlight's markup and
-`ec.config.mjs` frames the code blocks, both with the brand's public tokens alone: its type roles, with running text in
-the `reading` role on the `--nc-measure` column, its colour roles and its measures, and the Starlight properties
-`css/starlight.css` sets. Neither states a colour of its own or reads a step of a colour ramp or of the type scale,
-which a brand release may change, and the tests fail when either reads such a step or a custom property no vendored
-stylesheet defines
+blocks' syntax theme, the marks, the favicons and the script that vendors them, `vendoring/vendor-brand.mjs`. They are
+never edited here: `npm run check:vendor`, which the tests run, fails when a file differs from the SHA-256 the lock
+pins. `src/styles/theme.css` restyles Starlight's markup and `ec.config.mjs` frames the code blocks, both with the
+brand's public tokens alone: its type roles, with running text in the `reading` role on the `--nc-measure` column, its
+colour roles and its measures, and the Starlight properties `css/starlight.css` sets. Neither states a colour of its own
+or reads a step of a colour ramp or of the type scale, which a brand release may change, and the tests fail when either
+reads such a step or a custom property no vendored stylesheet defines
 ([ADR-1008](docs/decisions/1008-the-brand-is-vendored-from-an-attested-release-and-the-theme-restyles-only-starlights-markup.md)).
 
 ### Updating and releasing
@@ -301,9 +301,10 @@ stylesheet defines
   once `gh attestation verify` proves the release's archive was built by brand's publish workflow for its tag. A brand
   release is taken when it is published, without the packages' three-day wait
   ([ADR-1008](docs/decisions/1008-the-brand-is-vendored-from-an-attested-release-and-the-theme-restyles-only-starlights-markup.md)).
-  When the release changes `vendoring/vendor-brand.mjs`, copy it over `scripts/vendor-brand.mjs` and run
-  `./.template/Test-FileHeaders.ps1 -Fix`. Then `npm run build`, `npm run test` and `node scripts/screenshots.mjs`: a
-  release that renames or removes a token the theme reads fails the tests.
+  The update also writes the release's own `vendoring/vendor-brand.mjs`, the script it runs
+  ([ADR-1009](docs/decisions/1009-brands-vendoring-script-is-vendored-and-pinned-in-the-brand-lock.md)). Then
+  `npm run build`, `npm run test` and `node scripts/screenshots.mjs`: a release that renames or removes a token the
+  theme reads fails the tests.
 - **Checking an update.** `npm ci --ignore-scripts`, `npm run build`, `npm run browser` and `npm run test`, then the
   screenshots: Starlight is 0.x and a minor release may change the markup the theme styles.
 - **Releasing.** A release is a version tag on the default branch, with a GitHub release:

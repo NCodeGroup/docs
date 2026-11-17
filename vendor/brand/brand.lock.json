@@ -1,17 +1,17 @@
 {
-  "version": "0.9.0",
+  "version": "0.10.0",
   "files": {
     "tokens/tokens.css": {
       "source": "tokens/tokens.css",
-      "sha256": "ca13de2139ab22a771bf8748e736351f57e2e21545f4eb918aa7112b6b199767"
+      "sha256": "07977b831405150512fae29eceb213449998e7f12b9f3995e729ad7131e97f38"
     },
     "css/fonts.css": {
       "source": "css/fonts.css",
-      "sha256": "18379e93b63e75432b10f57545a159f9d8b3c7abce87393d8e0e627e0e738b7c"
+      "sha256": "79fe97ec6d58ee12dff689e27369b5fd6fda3437cbbbc35a88cad89ccdbe1513"
     },
     "css/starlight.css": {
       "source": "css/starlight.css",
-      "sha256": "2e4e5723ac89ce14d1b6d1b176c24ae50449e64b0d06aa6c0d0b7c930897f42e"
+      "sha256": "fd2cf04c03ba41d12eeeb6177d0f07249188042c730d442185a2d5d6e567214c"
     },
     "fonts/instrument-sans-latin-wdth-normal.woff2": {
       "source": "fonts/instrument-sans-latin-wdth-normal.woff2",
@@ -39,7 +39,7 @@
     },
     "syntax/instrument-screen.json": {
       "source": "syntax/instrument-screen.json",
-      "sha256": "36bda8051a1c3660d806b4571f0c0e8917cdb8747276a9e853fd27d4a33bf6b6"
+      "sha256": "a585ae1acf81734cf47a616e1033575ae20af730ff654e283a2da87bea6ff60c"
     },
     "logo/ncode/mark/ncode-mark-blue.svg": {
       "source": "logo/ncode/mark/ncode-mark-blue.svg",
@@ -68,6 +68,10 @@
     "TRADEMARKS.md": {
       "source": "TRADEMARKS.md",
       "sha256": "9f6d36fbb7aba17abd6667846d0224fb1c4a4729353a3b3748d9b1d1ccedf2c8"
+    },
+    "vendoring/vendor-brand.mjs": {
+      "source": "vendoring/vendor-brand.mjs",
+      "sha256": "5a3633cc7d697a4d85f4c7cb788a9d6152a1b22242557b796386307afe71f502"
     }
   }
 }

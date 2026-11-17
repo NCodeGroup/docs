@@ -1,6 +1,6 @@
 # 1008. The brand is vendored from an attested release, and the theme restyles only Starlight's markup
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 1009)
 - **Date:** 2026-11-16
 - **Deciders:** NCode Group
 - **Amends:** 1000, and project-template ADR-0009 for releases of NCodeGroup/brand

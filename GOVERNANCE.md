@@ -5,11 +5,9 @@ what and how decisions are made.
 
 ## Roles
 
-[//]: # "Maintainers: name each maintainer in the Who column, such as @octocat."
-
 | Role | Who | Responsibilities |
 | --- | --- | --- |
-| Maintainer | The repository's owners | Sets direction, triages issues, reviews and merges pull requests, answers vulnerability reports, owns the repository's settings |
+| Maintainer | [@polewskm](https://github.com/polewskm) | Sets direction, triages issues, reviews and merges pull requests, answers vulnerability reports, owns the repository's settings |
 | Contributor | Anyone | Opens issues and pull requests, under [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md) |
 | Automation | `ncode-review[bot]`, Dependabot, GitHub Actions | Reviews and approves a clean pull request, proposes dependency updates, runs CI, tags and publishes releases where `AGENTS.md`'s Landing section sets `release: tag+release`; never merges a pull request except the pin bump `code-review-auto-merge.yml` merges once a maintainer approves it |
 
@@ -37,9 +35,7 @@ The repository, its issues, decision records, build, release automation and docu
 GitHub organization that owns it, so anyone given access can carry
 on with no knowledge held elsewhere.
 
-[//]: # "Maintainers: name the owners, and keep the list current."
-
-Owners today: the repository's owners. Continuity
+Owners today: [@polewskm](https://github.com/polewskm). Continuity
 needs at least two people who can administer the repository; until there are
 two, it is incomplete, and the OpenSSF Best Practices silver level can't be claimed
 ([docs/best-practices-badge.md](docs/best-practices-badge.md)).

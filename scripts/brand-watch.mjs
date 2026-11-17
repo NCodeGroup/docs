@@ -12,6 +12,9 @@
 //
 // Exit codes: 0 done, 1 a request failed, 2 usage error.
 
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
 export const REPO = 'NCodeGroup/brand';
 export const LOCK = 'vendor/brand/brand.lock.json';
 export const LABEL = 'brand-update';
@@ -81,4 +84,77 @@ export function chooseAction(issues, text) {
       .trimEnd();
   const same = normal(issue.title) === normal(text.title) && normal(issue.body) === normal(text.body);
   return { kind: same ? 'none' : 'edit', number: issue.number };
+}
+
+/** Compares the lock with brand's newest release and keeps the one issue on GitHub; returns the lines it reports. */
+export async function runBrandWatch({ root, repo, token = '', fetch = globalThis.fetch, dryRun = false }) {
+  const pinned = JSON.parse(readFileSync(path.join(root, LOCK), 'utf8')).version;
+  const api = `https://api.github.com/repos/${repo}`;
+  const current = `brand ${pinned} is the newest release.`;
+  const done =
+    `\`${LOCK}\` pins NCode Brand ${pinned}, the newest release, so this issue is done. ` +
+    'The brand-watch workflow opens a new one when a newer release is out.';
+  const LABELS = [
+    { name: LABEL, color: '1D76DB', description: 'NCodeGroup/brand has a newer release' },
+    { name: 'dependencies', color: '0366D6', description: 'A dependency to update' },
+  ];
+
+  const request = async (method, url, body) => {
+    const headers = {
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'User-Agent': 'ncode-docs-brand-watch',
+    };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const init = { method, headers, signal: AbortSignal.timeout(30_000) };
+    if (body) {
+      headers['Content-Type'] = 'application/json';
+      init.body = JSON.stringify(body);
+    }
+    const response = await fetch(url, init);
+    if (!response.ok) {
+      const error = new Error(`${method} ${url} answered ${response.status}`);
+      error.status = response.status;
+      throw error;
+    }
+    return response.json();
+  };
+
+  const releases = await request('GET', `https://api.github.com/repos/${REPO}/releases?per_page=100`);
+  const release = newestRelease(releases, pinned);
+  const issues = await request('GET', `${api}/issues?labels=${LABEL}&state=open&per_page=100`);
+  const text = release ? issueText(pinned, release) : null;
+  const action = chooseAction(issues, text);
+  const n = action.number;
+
+  switch (action.kind) {
+    case 'create': {
+      if (dryRun) return [`Would open: ${text.title}`];
+      for (const label of LABELS) {
+        try {
+          await request('GET', `${api}/labels/${encodeURIComponent(label.name)}`);
+        } catch (error) {
+          if (error.status !== 404) throw error;
+          await request('POST', `${api}/labels`, label);
+        }
+      }
+      const created = await request('POST', `${api}/issues`, {
+        title: text.title,
+        body: text.body,
+        labels: LABELS.map((l) => l.name),
+      });
+      return [`Opened #${created.number}: ${text.title}`];
+    }
+    case 'edit':
+      if (dryRun) return [`Would update #${n}: ${text.title}`];
+      await request('PATCH', `${api}/issues/${n}`, { title: text.title, body: text.body });
+      return [`Updated #${n}: ${text.title}`];
+    case 'close':
+      if (dryRun) return [`Would close #${n}: ${current}`];
+      await request('POST', `${api}/issues/${n}/comments`, { body: done });
+      await request('PATCH', `${api}/issues/${n}`, { state: 'closed', state_reason: 'completed' });
+      return [`Closed #${n}: ${current}`];
+    default:
+      return [n ? `#${n} already says: ${text.title}` : current];
+  }
 }

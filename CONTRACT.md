@@ -236,6 +236,12 @@ library that needs one asks for it in this repository. `@astrojs/starlight/compo
 
 Callouts need no import: `:::note`, `:::tip`, `:::caution` and `:::danger`, with an optional title, `:::tip[Title]`.
 
+A table written in Markdown needs no import either. In a window narrower than 40rem (640 px), such as a phone's, it
+is shown as a stack of rows: each cell on a line of its own, under its column's name, which the build copies from the
+head cell. Keep head cells short, since each is repeated on every row there; a column whose head cell is empty, such
+as a column of row names, shows its cells without a name. A table written as HTML, or one a library's component
+renders, is not stacked.
+
 A library's own component is an `.astro` file in `_components/`. It may import from the same four places, styles
 itself with the design tokens (`var(--color-screen)`, `var(--space-4)`, `var(--font-mono)`; never a colour of its
 own), and puts the class `not-content` on its root element so the page's text styles stay off it. It ships no

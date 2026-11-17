@@ -72,3 +72,4 @@ records are indexed in [project-template/](project-template/README.md).
 | [ADR-1004](1004-the-csharp-grammar-is-patched-at-build-time-for-extension-blocks.md) | The C# grammar is patched at build time for extension blocks | Accepted |
 | [ADR-1005](1005-biome-lints-astro-components-without-formatting-them.md) | Biome lints the Astro components without formatting them | Accepted |
 | [ADR-1006](1006-the-toolchain-renders-the-404-page-and-supplies-one-when-a-library-has-none.md) | The toolchain renders the 404 page, and supplies one when a library has none | Accepted |
+| [ADR-1007](1007-a-markdown-table-stacks-on-a-phone-with-its-cells-labelled-when-the-site-is-built.md) | A Markdown table stacks on a phone, with its cells labelled when the site is built | Accepted |

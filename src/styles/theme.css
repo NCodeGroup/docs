@@ -146,6 +146,7 @@ starlight-toc h2,
 mobile-starlight-toc .toggle,
 .starlight-aside__title,
 .pagination-links a > span,
+.sl-markdown-content table.ncode-stacked td[data-label]:not(:where(.not-content *))::before,
 .sl-markdown-content th:not(:where(.not-content *)) {
   font-family: var(--font-sans);
   font-size: var(--text-2xs);
@@ -615,6 +616,41 @@ main:has(h1[data-numbered]) .sl-markdown-content > .sl-heading-wrapper.level-h2:
 .sl-markdown-content tbody tr:last-child td:not(:where(.not-content *)) { border-bottom: 0; }
 .sl-markdown-content tr:nth-child(2n):not(:where(.not-content *)) { background: none; }
 .sl-markdown-content td:first-child code:not(:where(.not-content *)) { white-space: nowrap; }
+/* On a phone a table is a stack of rows, each cell under its column's name, which
+   src/tables/stacked-tables.mjs copies from the head onto the cell. The head stays for screen readers. */
+@media (max-width: 40rem) {
+  .sl-markdown-content table.ncode-stacked :is(thead, tbody, tr, td):not(:where(.not-content *)) {
+    display: block;
+    margin: 0;
+  }
+  .sl-markdown-content table.ncode-stacked thead:not(:where(.not-content *)) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .sl-markdown-content table.ncode-stacked tr:not(:where(.not-content *)) {
+    padding-block: var(--space-4);
+    border-bottom: var(--border-hair) solid var(--color-border);
+  }
+  .sl-markdown-content table.ncode-stacked tbody tr:last-child:not(:where(.not-content *)) { border-bottom: 0; }
+  .sl-markdown-content table.ncode-stacked td:not(:where(.not-content *)) {
+    height: auto;
+    padding: var(--space-2) var(--space-5);
+    border-bottom: 0;
+  }
+  .sl-markdown-content table.ncode-stacked td[data-label]:not(:where(.not-content *))::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: var(--space-1);
+  }
+  .sl-markdown-content table.ncode-stacked td code:not(:where(.not-content *)) {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
 
 /* ---- Steps: numbered on small plates, joined by a rule. */
 .sl-steps > li::before {
@@ -810,6 +846,22 @@ mobile-starlight-toc .dropdown { border: var(--border-hair) solid var(--color-bo
 .expressive-code .frame.is-terminal.has-title .header { justify-content: flex-start; padding: 0; }
 .expressive-code .frame:not(.has-title) pre { border-radius: var(--radius-panel); }
 .expressive-code .frame pre { box-shadow: none; }
+/* A listing wider than its screen lights the edge it has more code past. The two covers scroll with the
+   code and hide each lit edge once that end of the code is in view, so no script measures anything. */
+.expressive-code .frame pre {
+  background:
+    linear-gradient(to right, var(--color-screen) 1.5rem, transparent) left / 2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--color-screen) 1.5rem, transparent) right / 2.5rem 100% no-repeat local,
+    linear-gradient(to right, var(--color-screen-lit) 2px, color-mix(in srgb, var(--color-screen-lit) 40%, transparent) 2px, transparent) left / 1rem 100% no-repeat scroll,
+    linear-gradient(to left, var(--color-screen-lit) 2px, color-mix(in srgb, var(--color-screen-lit) 40%, transparent) 2px, transparent) right / 1rem 100% no-repeat scroll,
+    var(--color-screen);
+}
+/* A listing that scrolls takes the focus itself. Its ring is lit, as everything on a screen is, and drawn
+   just inside its edge, where the screen's title bar cannot cover it. */
+.expressive-code pre:focus-visible {
+  outline-color: var(--color-screen-lit);
+  outline-offset: calc(var(--focus-width) * -1);
+}
 /* A one-line command shows its prompt; it is not part of what the copy key copies. */
 .expressive-code .frame.is-terminal code:has(> .ec-line:only-child) .code::before {
   content: '$ ';

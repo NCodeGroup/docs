@@ -257,6 +257,7 @@ through a newer one: `npx npm@11 ci --ignore-scripts`. `npm run` works with any 
 | `src/snippets/` | Reads sample regions and fills `snippet=` blocks |
 | `src/links/` | Adds the base path to links; checks the built pages |
 | `src/highlighting/` | C# 14 extension blocks for the C# grammar |
+| `src/tables/` | Labels each Markdown table's cells with their column names, so a table stacks on a phone |
 | `src/components/` | The shared components, and the three Starlight overrides |
 | `src/styles/theme.css` | Starlight mapped onto the brand tokens |
 | `vendor/instrument/` | The brand tokens, fonts and marks, vendored |

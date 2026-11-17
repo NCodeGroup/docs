@@ -51,6 +51,21 @@ it, and a vulnerability in a dependency itself ([SECURITY.md](../SECURITY.md)).
 | A vendored theme file is edited here and drifts from its source | Yes | `scripts/check-vendor.mjs`, which the tests run, compares each file with the SHA-256 in `manifest.json` |
 | A library's own page writes harmful HTML or script into its site | No | The page is the library's code, reviewed in the library (Security Requirements) |
 
+## Input Validation
+
+Each input from a library or a caller, and the check it gets before the build uses it:
+
+| Input | Check |
+| --- | --- |
+| `content-path` (the workflow's input, `DOCS_CONTENT`, `--content`) | A relative folder inside the library, without `..` (`resolveLibrary` in `src/library.mjs`) |
+| `deploy` | A boolean, which publishes only together with a run on the default branch |
+| `toolchain-ref` | Used only where `job.workflow_sha` is missing, as the commit of the toolchain to check out |
+| `site.config.json` | Parsed as JSON and checked against `schema/site.config.schema.json` by `src/json-schema.mjs`, which names each problem by its key and rejects an unknown key |
+| `samples` globs | Each file a glob matches is checked by its path and its real path (R4) |
+| Sample files | `src/snippets/catalog.mjs` checks each marker's spelling, each key's form, and that no key is defined twice and no region is unclosed or empty |
+| Pages | `snippet=` blocks (`src/snippets/code-block.mjs`), frontmatter through Starlight's schema, and links (R5) |
+| `scripts/site.mjs`'s arguments, `SITE_URL` and `DOCS_OUT` | `parseArgs` in strict mode and a known command; `SITE_URL` must parse as a URL; an output folder Astro would misplace stops `build` and `preview` |
+
 ## Secure Design Principles Applied
 
 [//]: # "Maintainers: say how the design applies economy of mechanism, fail-safe defaults, complete mediation, least

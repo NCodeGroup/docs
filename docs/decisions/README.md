@@ -73,4 +73,5 @@ records are indexed in [project-template/](project-template/README.md).
 | [ADR-1005](1005-biome-lints-astro-components-without-formatting-them.md) | Biome lints the Astro components without formatting them | Accepted |
 | [ADR-1006](1006-the-toolchain-renders-the-404-page-and-supplies-one-when-a-library-has-none.md) | The toolchain renders the 404 page, and supplies one when a library has none | Accepted |
 | [ADR-1007](1007-a-markdown-table-stacks-on-a-phone-with-its-cells-labelled-when-the-site-is-built.md) | A Markdown table stacks on a phone, with its cells labelled when the site is built | Accepted |
-| [ADR-1008](1008-the-brand-is-vendored-from-an-attested-release-and-the-theme-restyles-only-starlights-markup.md) | The brand is vendored from an attested release, and the theme restyles only Starlight's markup (amends 1000) | Accepted |
+| [ADR-1008](1008-the-brand-is-vendored-from-an-attested-release-and-the-theme-restyles-only-starlights-markup.md) | The brand is vendored from an attested release, and the theme restyles only Starlight's markup (amends 1000) | Accepted (amended by 1009) |
+| [ADR-1009](1009-brands-vendoring-script-is-vendored-and-pinned-in-the-brand-lock.md) | Brand's vendoring script is vendored and pinned in the brand lock (amends 1008) | Accepted |

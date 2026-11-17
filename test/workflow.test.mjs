@@ -37,7 +37,7 @@ describe('the site workflow and the npm settings', () => {
     assert.equal((build.match(/^ +persist-credentials: false$/gm) ?? []).length, checkouts.length);
   });
 
-  it('give the deploy job only the Pages and OIDC write permissions it needs (R1, R2)', () => {
+  it('give the deploy job only the Pages and OIDC write permissions it needs (R2)', () => {
     const deploy = job('deploy');
     const writes = (deploy.match(/^[ \t]+[\w-]+: write(-all)?$/gm) ?? []).map((line) => line.trim()).sort();
     assert.deepEqual(writes, ['id-token: write', 'pages: write']);

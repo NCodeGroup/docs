@@ -12,7 +12,8 @@ import { root } from './helpers.mjs';
 const workflow = readFileSync(join(root, '.github/workflows/site.yml'), 'utf8');
 const npmrc = readFileSync(join(root, '.npmrc'), 'utf8');
 
-/** The job named `name`, from its line to the next line at its indent or less, without comment lines. */
+// The workflow is read as text, without a YAML package (ADR-1000), so a job is the lines from its key to the next
+// key at its indent or less; comment lines are dropped so a comment can't satisfy or break an assertion.
 function job(name) {
   const lines = workflow.split(/\r?\n/);
   const start = lines.indexOf(`  ${name}:`);

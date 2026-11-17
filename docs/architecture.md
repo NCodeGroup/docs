@@ -23,7 +23,7 @@ flowchart LR
 | Component | Role |
 | --- | --- |
 | Reusable workflow (`.github/workflows/site.yml`) | Two jobs: `build` checks out the library and the toolchain at the pinned commit, installs, builds and uploads the site; `deploy` hands the artifact to GitHub Pages, from the library's default branch only |
-| Site script (`scripts/site.mjs`) | Checks its arguments, resolves the library, reads the samples once, takes the checkout's lock, copies the content folder to `src/content/docs/` and runs `astro build --force`, `dev` or `preview` |
+| Site script (`scripts/site.mjs`) | Checks its arguments, resolves the library, checks the samples before Astro reads them, takes the checkout's lock, copies the content folder to `src/content/docs/` and runs `astro build --force`, `dev` or `preview` |
 | Library settings (`src/library.mjs`, `src/json-schema.mjs`, `schema/site.config.schema.json`) | Reads `DOCS_LIBRARY` and `DOCS_CONTENT`, checks `site.config.json` against the schema, resolves the sample globs to files inside the library, and dates each page with one `git log` |
 | Astro project (`astro.config.mjs`, `src/integration.mjs`, `src/content.config.ts`) | Configures Starlight from the library's settings: the base path from `SITE_URL` or `site.url`, the Markdown plugins, the link checks, and the import aliases `@ncodegroup/docs/components`, `@site/components/` and `@site/assets/` |
 | Samples (`src/snippets/`) | Reads the regions of the sample files and fills each `snippet=Key` block ([ADR-1002](decisions/1002-a-page-includes-a-compiled-sample-by-its-key-when-the-site-is-built.md)) |

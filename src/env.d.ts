@@ -11,6 +11,8 @@ declare module 'virtual:ncode-docs/site' {
     repository: { url: string; branch: string };
     social: { label: string; href: string }[];
     contentPath: string;
+    /** The library's own 404 page at the root of its content folder, 404.mdx or 404.md, when it has one (src/library.mjs). */
+    notFoundPage?: string;
     /** The folder Starlight reads pages from, as a page's filePath starts: src/content/docs/ (src/library.mjs). */
     mount: string;
     editLinks: boolean;

@@ -24,7 +24,13 @@ export const onRequest = defineRouteMiddleware((context) => {
   // The page's file under the content folder, such as guides/derive-a-key.mdx. Astro names it from
   // the toolchain's folder, src/content/docs/guides/derive-a-key.mdx: site.mount is that prefix.
   const filePath = entry.filePath?.replaceAll('\\', '/');
-  const file = filePath?.startsWith(site.mount) ? filePath.slice(site.mount.length) : undefined;
+  // src/pages/404.astro renders the 404 page through StarlightPage, which names every page's file <id>.md.
+  const file =
+    entry.id === '404'
+      ? site.notFoundPage
+      : filePath?.startsWith(site.mount)
+        ? filePath.slice(site.mount.length)
+        : undefined;
 
   // A hero action, and a `prev` or `next` the frontmatter gives a link, is exactly what its author
   // wrote, so one with the base path already on it is an error, as it is in a page's body. The base

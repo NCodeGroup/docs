@@ -4,11 +4,12 @@
 // The brand watch names the newest brand release above the pinned version, and only a published release tagged
 // v<x.y.z> counts.
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { chooseAction, issueText, newestRelease, runBrandWatch } from '../scripts/brand-watch.mjs';
-import { work } from './helpers.mjs';
+import { root, work } from './helpers.mjs';
 
 const release = (tag_name, extra = {}) => ({
   tag_name,
@@ -214,5 +215,31 @@ describe('runBrandWatch', () => {
       assert.ok(error.calls.every((c) => c.method === 'GET'));
       return true;
     });
+  });
+});
+
+describe('the command line', () => {
+  const { GITHUB_TOKEN, GH_TOKEN, GITHUB_REPOSITORY, ...env } = process.env;
+  const run = (...args) =>
+    spawnSync(process.execPath, [join(root, 'scripts', 'brand-watch.mjs'), ...args], {
+      cwd: root,
+      encoding: 'utf8',
+      env,
+    });
+
+  it('exits 2 with the usage when a real run has no token', () => {
+    const result = run('--repo=NCodeGroup/docs');
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /usage: node scripts\/brand-watch\.mjs/);
+  });
+
+  it('exits 2 when the repository is not owner/name', () => {
+    assert.equal(run('--repo=not-a-repo', '--dry-run').status, 2);
+  });
+
+  it('exits 2 for an option it does not know', () => {
+    const result = run('--bogus');
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /usage: node scripts\/brand-watch\.mjs/);
   });
 });

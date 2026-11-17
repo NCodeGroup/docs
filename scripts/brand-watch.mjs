@@ -14,6 +14,8 @@
 
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
 
 export const REPO = 'NCodeGroup/brand';
 export const LOCK = 'vendor/brand/brand.lock.json';
@@ -156,5 +158,34 @@ export async function runBrandWatch({ root, repo, token = '', fetch = globalThis
       return [`Closed #${n}: ${current}`];
     default:
       return [n ? `#${n} already says: ${text.title}` : current];
+  }
+}
+
+// Only the entry point runs the watch, so the tests can import the functions above.
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const usage = 'usage: node scripts/brand-watch.mjs [--dry-run] [--repo=<owner/name>]';
+  let values;
+  try {
+    ({ values } = parseArgs({ options: { 'dry-run': { type: 'boolean', default: false }, repo: { type: 'string' } } }));
+  } catch (error) {
+    console.error(`${error.message}\n${usage}`);
+    process.exitCode = 2;
+  }
+  if (values) {
+    const dryRun = values['dry-run'];
+    const repo = values.repo ?? process.env.GITHUB_REPOSITORY ?? '';
+    const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
+    if (!/^[\w.-]+\/[\w.-]+$/.test(repo) || !(token || dryRun)) {
+      console.error(usage);
+      process.exitCode = 2;
+    } else {
+      const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+      try {
+        for (const line of await runBrandWatch({ root, repo, token, dryRun })) console.log(line);
+      } catch (error) {
+        console.error(error.message);
+        process.exitCode = 1;
+      }
+    }
   }
 }

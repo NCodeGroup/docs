@@ -3,6 +3,8 @@
 [![CI](https://github.com/NCodeGroup/docs/actions/workflows/ci.yml/badge.svg)](https://github.com/NCodeGroup/docs/actions/workflows/ci.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/NCodeGroup/docs/badge)](https://scorecard.dev/viewer/?uri=github.com/NCodeGroup/docs)
 
+[//]: # "Badges: once the project is registered at bestpractices.dev, record its number as docs/best-practices-criteria.md says, then add the OpenSSF Best Practices badge that page shows."
+
 The shared documentation toolchain for NCode libraries: an [Astro Starlight](https://starlight.astro.build) project,
 the NCode theme, the plugins that include compiled samples and keep links working under a base path, and the reusable
 GitHub Actions workflow that builds a library's site and publishes it to that library's GitHub Pages.
@@ -296,6 +298,8 @@ The workflow files come from a Copier template, which owns them: never edit `.te
 - [CONTRACT.md](CONTRACT.md): what a library holds for its site, and what the build does with it.
 - [CONTRIBUTING.md](CONTRIBUTING.md): how to set up, build, test and propose a change.
 - [SECURITY.md](SECURITY.md): how to report a vulnerability privately.
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), [GOVERNANCE.md](GOVERNANCE.md) and [ROADMAP.md](ROADMAP.md): how we work together, who decides, and where the project is going.
+- [docs/architecture.md](docs/architecture.md) and [docs/assurance-case.md](docs/assurance-case.md): how the project is built, and why it meets its security requirements.
 - [docs/decisions/](docs/decisions/README.md): the decisions behind the design, the project's and the template's.
 - [CHANGELOG.md](CHANGELOG.md): in the Keep a Changelog format, what the product does until its first stable release, while `AGENTS.md`'s Landing section says `pre-release: untracked`, and what changed in each release from then on.
 - [LICENSE.txt](LICENSE.txt): the license.

@@ -113,8 +113,9 @@ Each input from a library or a caller, and the check it gets before the build us
   `bin` folder that leads out of the library, and the schema check of R5; `test/samples.test.mjs` breaks a copy of the
   fixture in each way a sample or a link can be wrong (R5); `test/build.test.mjs` and `test/links.test.mjs` check the
   base path on the built pages (R5); `test/build.test.mjs` and `test/browser.test.mjs` check that a built page, and the
-  browser that loads it, ask no other origin for anything (R6); `test/vendor.test.mjs` runs the vendored brand files' check,
-  and fails when the theme reads a custom property no vendored stylesheet defines.
+  browser that loads it, ask no other origin for anything (R6); `test/vendor.test.mjs` runs the vendored brand files'
+  check, and fails when the theme reads a custom property no vendored stylesheet defines, or a step of the brand's
+  colour ramps or type scale.
   `test/workflow.test.mjs` reads `.github/workflows/site.yml` and `.npmrc` for R1 to R3: each job's permissions, the
   checkouts that keep no credentials, the deploy job that runs only from the default branch and checks out and runs
   nothing, the toolchain checked out at the pinned commit and the step that stops a run without one, the actions

@@ -274,9 +274,12 @@ The look is NCode's design system, Instrument, from [NCodeGroup/brand](https://g
 `vendor/brand/` holds the files `vendor/brand/brand.lock.json` names from one of its releases, in the release's own
 folders: the tokens, the fonts, `css/starlight.css`, which sets Starlight's own properties from the tokens, the code
 blocks' syntax theme, the marks and the favicons. They are never edited here: `npm run check:vendor`, which the tests
-run, fails when a file differs from the SHA-256 the lock pins. `src/styles/theme.css` restyles Starlight's markup with
-the tokens and `ec.config.mjs` frames the code blocks; neither states a colour of its own, and the tests fail when
-either reads a custom property no vendored stylesheet defines
+run, fails when a file differs from the SHA-256 the lock pins. `src/styles/theme.css` restyles Starlight's markup and
+`ec.config.mjs` frames the code blocks, both with the brand's public tokens alone: its type roles, with running text in
+the `reading` role on the `--nc-measure` column, its colour roles and its measures, and the Starlight properties
+`css/starlight.css` sets. Neither states a colour of its own or reads a step of a colour ramp or of the type scale,
+which a brand release may change, and the tests fail when either reads such a step or a custom property no vendored
+stylesheet defines
 ([ADR-1008](docs/decisions/1008-the-brand-is-vendored-from-an-attested-release-and-the-theme-restyles-only-starlights-markup.md)).
 
 ### Updating and releasing

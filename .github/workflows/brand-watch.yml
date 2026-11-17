@@ -23,6 +23,8 @@ jobs:
     name: Brand watch
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # A manual run from another branch would run that branch's script with issues: write.
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     # Opens, edits and closes the brand-update issue and creates its labels; the only write the workflow needs.
     permissions:
       contents: read

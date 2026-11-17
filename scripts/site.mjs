@@ -37,6 +37,8 @@ import { readSnippets } from '../src/snippets/catalog.mjs';
 
 const COMMANDS = ['build', 'dev', 'preview', 'prepare'];
 
+// CodeQL's js/clear-text-logging flags this console.error, because some problems quote SITE_URL or DOCS_OUT from a copy
+// of process.env. They are a URL and a folder the caller passed, never a secret: its alert is a false positive.
 function usage(problem) {
   console.error(
     `${problem}\n\nUsage: node scripts/site.mjs <${COMMANDS.join('|')}> <library folder> [--content <path>] [--site-url <url>] [--out <folder>] [--port <number>]`,

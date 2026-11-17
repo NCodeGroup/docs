@@ -68,10 +68,19 @@ Each input from a library or a caller, and the check it gets before the build us
 
 ## Secure Design Principles Applied
 
-[//]: # "Maintainers: say how the design applies economy of mechanism, fail-safe defaults, complete mediation, least
-privilege and open design."
-
-Not written yet.
+- **Economy of mechanism:** Starlight's core with one add-on; the samples, links and grammar patch are the project's
+  own code with no dependency of their own; `src/json-schema.mjs` implements only the keywords the schema uses and
+  throws on any other.
+- **Fail-safe defaults:** `deploy` is false unless the caller sets it, and only the default branch publishes; a run
+  that knows no toolchain commit stops instead of taking a branch; an unknown key in `site.config.json` is an error; a
+  sample or a link the build cannot place stops it (R5).
+- **Complete mediation:** every file a samples glob matches is checked by its real path, and after the build every URL
+  attribute of every tag of every built page is read.
+- **Least privilege:** the workflow's top-level permissions are empty; `build` only reads; only `deploy`, which runs
+  nothing of the library or the toolchain, writes to GitHub Pages, with an OIDC token instead of a stored secret; no
+  checkout keeps its credentials; `--omit=dev` installs no devDependency; this repository's CI token only reads.
+- **Open design:** the toolchain, the workflow, the tests and the decision records are public, and no build depends on
+  a secret.
 
 ## Common Weaknesses Countered
 

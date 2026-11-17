@@ -201,7 +201,7 @@ site-search kbd > kbd {
   padding: 0 0.5625rem;
   border-radius: var(--nc-radius-plate);
   background: var(--nc-color-screen);
-  box-shadow: inset 0 var(--nc-travel) 0 rgb(0 0 0 / 0.3);
+  box-shadow: inset 0 var(--nc-travel) 0 var(--nc-color-screen-shade);
   color: var(--nc-color-on-screen);
   font: var(--nc-type-readout);
   font-stretch: var(--nc-type-readout-stretch);
@@ -783,8 +783,10 @@ mobile-starlight-toc .dropdown { border: var(--nc-border-hair) solid var(--nc-co
 
 .expressive-code .frame {
   --ncode-screen-head: 2.5rem;
+  /* A screen is dark in both themes, so a colour role on it, such as a changed line's, takes its dark value. */
+  color-scheme: dark;
   border-radius: var(--nc-radius-panel);
-  box-shadow: inset 0 var(--nc-travel) 0 rgb(0 0 0 / 0.3);
+  box-shadow: inset 0 var(--nc-travel) 0 var(--nc-color-screen-shade);
 }
 .expressive-code pre { font-stretch: var(--nc-type-code-stretch); }
 .expressive-code .frame.has-title:not(.is-terminal) .header { border: 0; background: var(--nc-color-screen); }

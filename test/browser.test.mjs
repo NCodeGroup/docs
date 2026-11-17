@@ -4,7 +4,8 @@
 // The built site in a real browser, served under its base path the way GitHub Pages serves it: a
 // page loads, the search finds a page, a missing URL gets the site's own 404 page, and the browser
 // asks no other origin for anything. In a phone's window no page scrolls sideways and a Markdown
-// table is a stack of labelled rows.
+// table is a stack of labelled rows, and a code listing that scrolls lights its edge and keeps its
+// focus ring in view.
 //
 // The browser is the headless Chromium that the locked playwright-core names. "npm run browser"
 // downloads it, once for each version of playwright-core. Where it is not installed the check is
@@ -24,6 +25,17 @@ try {
       `DOCS_REQUIRE_BROWSER is set, but the browser did not start. Run "npm run browser" first.\n${error.message}`,
     );
   missing = `the browser did not start, and "npm run browser" installs it: ${error.message.split('\n')[0]}`;
+}
+
+/** The colour of the pixel at `x`, `y` of the page's window, as [red, green, blue], read from a screenshot. */
+async function pixel(page, x, y) {
+  const png = await page.screenshot({ clip: { x, y, width: 1, height: 1 } });
+  return page.evaluate(async (data) => {
+    const image = await createImageBitmap(await (await fetch(`data:image/png;base64,${data}`)).blob());
+    const canvas = new OffscreenCanvas(1, 1).getContext('2d');
+    canvas.drawImage(image, 0, 0);
+    return [...canvas.getImageData(0, 0, 1, 1).data.slice(0, 3)];
+  }, png.toString('base64'));
 }
 
 describe('the built site in a browser', { skip: browser ? false : missing }, () => {
@@ -142,6 +154,46 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
       return [getComputedStyle(cell).display, getComputedStyle(cell, '::before').content];
     });
     assert.deepEqual(wide, ['table-cell', 'none']);
+  });
+
+  it('lights the edge of a code listing that has more code past it', async () => {
+    await phone.goto(`${site.origin}${BASE}guides/derive-a-key/`, { waitUntil: 'networkidle' });
+    await phone.evaluate(() => document.fonts.ready);
+    const listing = phone.locator('.expressive-code pre').first();
+    await listing.scrollIntoViewIfNeeded();
+    const box = await listing.boundingBox();
+    // In the listing's top padding, below its rounded corners and above its first line.
+    const y = box.y + 12;
+    const edges = async () => [await pixel(phone, box.x, y), await pixel(phone, box.x + box.width - 1, y)];
+    const [startLeft, startRight] = await edges();
+    await listing.evaluate((pre) => {
+      pre.scrollLeft = pre.scrollWidth;
+    });
+    const [endLeft, endRight] = await edges();
+    assert.deepEqual(startLeft, endRight, 'an edge with no code past it is the plain screen');
+    assert.notDeepEqual(startRight, endRight, 'the right edge is lit while code is hidden past it');
+    assert.notDeepEqual(endLeft, startLeft, 'the left edge is lit once code is hidden past it');
+  });
+
+  it('draws the focus ring of a code listing in the lit colour, inside its edge', async () => {
+    await phone.goto(`${site.origin}${BASE}guides/derive-a-key/`, { waitUntil: 'networkidle' });
+    await phone.evaluate(() => document.fonts.ready);
+    const listing = phone.locator('.expressive-code pre').first();
+    await listing.focus();
+    const ring = await listing.evaluate((pre) => {
+      const probe = document.body.appendChild(document.createElement('span'));
+      probe.style.color = 'var(--color-screen-lit)';
+      const lit = getComputedStyle(probe).color;
+      probe.remove();
+      const style = getComputedStyle(pre);
+      return {
+        visible: pre.matches(':focus-visible'),
+        lit: style.outlineColor === lit,
+        style: style.outlineStyle,
+        inside: Number.parseFloat(style.outlineOffset) < 0,
+      };
+    });
+    assert.deepEqual(ring, { visible: true, lit: true, style: 'solid', inside: true });
   });
 
   it('asks no other origin for anything', () => {

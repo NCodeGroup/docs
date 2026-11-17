@@ -279,8 +279,12 @@ the manifest that names the release, and `node scripts/screenshots.mjs` to look 
 ### Updating and releasing
 
 - **Packages.** Exact versions in `package.json`, and each at least three days old when it is taken: `.npmrc` sets
-  `min-release-age=3`, and Dependabot's cooldown says the same. `shiki` and `@astrojs/markdown-satteri` are pinned to
-  the versions Astro and Starlight resolve, so they move together with them in one pull request.
+  `min-release-age=3`, and Dependabot's cooldown says the same. `npm install <package>@<version>` for a version
+  younger than that stops at once, also with `--force`, with `npm error code ETARGET` and
+  `No matching version found for <package>@<version> with a date before <date>`, where `<date>` is three days ago.
+  The version exists, whatever the error's next line says: npm takes it once it is three days old, so wait until
+  then, or take the newest version npm offers. `shiki` and `@astrojs/markdown-satteri` are pinned to the versions
+  Astro and Starlight resolve, so they move together with them in one pull request.
 - **Checking an update.** `npm ci --ignore-scripts`, `npm run build`, `npm run browser` and `npm run test`, then the
   screenshots: Starlight is 0.x and a minor release may change the markup the theme styles.
 - **Releasing.** A release is a version tag on the default branch, with a GitHub release:

@@ -46,6 +46,9 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Check the decision index
         run: ./.template/Test-AdrIndex.ps1
+      # Each source file starts with the copyright line and the SPDX license line (ADR-0027).
+      - name: Check the file headers
+        run: ./.template/Test-FileHeaders.ps1
       # Biome's formatter and linter, with the rules in biome.json (ADR-0201).
       - name: Lint
         if: hashFiles('package.json') != ''

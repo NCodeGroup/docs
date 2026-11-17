@@ -1,0 +1,3 @@
+# Commits that only change layout, which git blame skips: run `git config blame.ignoreRevsFile .git-blame-ignore-revs` once in a clone.
+# Plan step 4: Format the code with Biome (#10)
+022c5eacee54ec1bb208f66910086fdab9cc96d1

@@ -101,8 +101,8 @@ Each input from a library or a caller, and the check it gets before the build us
 
 ## Evidence
 
-- **Gate:** CI runs Biome's format and lint check (`npm run lint`), the tests and the coverage check below on every
-  pull request (`.github/workflows/ci.yml`).
+- **Gate:** CI runs the file-header check (`./.template/Test-FileHeaders.ps1`), Biome's format and lint check
+  (`npm run lint`), the tests and the coverage check below on every pull request (`.github/workflows/ci.yml`).
 - **Tests and coverage:** `npm run test` builds the fixture library and broken copies of it, and CI fails when the
   tests cover less than 90% of the statements or 80% of the branches of the toolchain's code;
   `.github/workflows/tag-release.yml` runs CI again on each release's commit before it tags it

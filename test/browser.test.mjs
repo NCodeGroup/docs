@@ -182,7 +182,7 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
     await listing.focus();
     const ring = await listing.evaluate((pre) => {
       const probe = document.body.appendChild(document.createElement('span'));
-      probe.style.color = 'var(--color-screen-lit)';
+      probe.style.color = 'var(--nc-color-screen-lit)';
       const lit = getComputedStyle(probe).color;
       probe.remove();
       const style = getComputedStyle(pre);

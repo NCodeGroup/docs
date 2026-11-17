@@ -64,10 +64,10 @@ test('a built page colours the members of an extension block', () => {
   assert.equal(result.code, 0, result.output);
   const html = readFileSync(join(result.out, 'guides/extension-members/index.html'), 'utf8');
   // "extension" and the "public" inside the block are keywords: lit, as "static class" is outside it.
-  assert.match(html, /<span style="--0:var\(--color-screen-lit\)">extension<\/span>/);
+  assert.match(html, /<span style="--0:var\(--nc-color-screen-lit\)">extension<\/span>/);
   assert.match(
     html,
-    /<span style="--0:var\(--color-screen-lit\)">public<\/span><span[^>]*> <\/span><span style="--0:var\(--color-screen-lit\)">void<\/span>/,
+    /<span style="--0:var\(--nc-color-screen-lit\)">public<\/span><span[^>]*> <\/span><span style="--0:var\(--nc-color-screen-lit\)">void<\/span>/,
   );
-  assert.match(html, /<span style="--0:var\(--color-on-screen\)">CopyTo<\/span>/);
+  assert.match(html, /<span style="--0:var\(--nc-color-on-screen\)">CopyTo<\/span>/);
 });

@@ -48,7 +48,7 @@ describe('the source file headers', () => {
     // Each line on its own: a check that stops comparing one of them fails here.
     assert.match(headerProblem('a.astro', `---\n// ${COPYRIGHT}\nconst a = 1;\n---\n`), /^a\.astro: lines 2 and 3/);
     assert.match(headerProblem('a.astro', `---\nconst a = 1;\n// ${LICENSE}\n---\n`), /^a\.astro: lines 2 and 3/);
-    assert.match(headerProblem('a.astro', `// ${COPYRIGHT}\n// ${LICENSE}\n---\n---\n`), /^a\.astro: lines 2 and 3/);
+    assert.match(headerProblem('a.astro', `\n// ${COPYRIGHT}\n// ${LICENSE}\n---\n`), /^a\.astro: lines 2 and 3/);
     assert.match(headerProblem('a.css', `/* ${COPYRIGHT} */\n:root {}\n`), /^a\.css: lines 1 and 2/);
     assert.match(headerProblem('a.css', `:root {}\n/* ${LICENSE} */\n`), /^a\.css: lines 1 and 2/);
     assert.match(headerProblem('a.d.ts', `// ${COPYRIGHT}\ndeclare const a: number;\n`), /^a\.d\.ts: lines 1 and 2/);

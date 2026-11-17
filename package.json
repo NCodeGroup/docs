@@ -14,7 +14,7 @@
     "preview": "node scripts/site.mjs preview",
     "check:vendor": "node scripts/check-vendor.mjs",
     "browser": "playwright-core install --only-shell chromium",
-    "test": "node --test --test-concurrency=1 \"test/*.test.mjs\"",
+    "test": "node --test --test-concurrency=1 --experimental-test-coverage \"--test-coverage-exclude=.work/**\" \"--test-coverage-exclude=test/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info \"test/*.test.mjs\"",
     "lint": "biome ci --error-on-warnings .",
     "format": "biome check --write ."
   },

@@ -20,6 +20,7 @@ Run from the repository root in PowerShell 7.
 - Build: `npm run build` builds the stand-in library in `fixture/` into `dist/`
 - Test: `npm run test` runs every check. `npm run browser` installs the browser its browser check uses, once for each version of `playwright-core`; without it that check is skipped, and `$env:DOCS_REQUIRE_BROWSER = '1'` makes a missing browser a failure, as CI does
 - Lint: `npm run lint` runs Biome's format check and linter and fails on a formatting difference, a lint error or a lint warning, as CI and the Landing gate do; `npm run format` applies Biome's formatting and safe fixes, twice after a large change
+- Coverage: `./.template/Test-Coverage.ps1`, after `npm run test`, which writes the `lcov.info` it reads; it fails below 90% of the statements or 80% of the branches, as CI does
 - A library's site: `npm run site -- build <library folder>` builds it, and `npm run dev -- <library folder>` serves it while its pages are edited
 - Vendored files: `npm run check:vendor`
 - Decision index: `./.template/Test-AdrIndex.ps1`

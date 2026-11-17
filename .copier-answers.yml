@@ -5,7 +5,7 @@ author_name: NCode Group
 build_command: npm run build
 code_review: true
 conduct_contact: ''
-coverage_gate: false
+coverage_gate: true
 file_headers: true
 git_host: github
 license: Apache-2.0

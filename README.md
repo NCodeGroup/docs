@@ -221,6 +221,7 @@ Run from the repository root in PowerShell 7:
 | Test | `npm run test` |
 | Lint | `npm run lint` |
 | Format | `npm run format` |
+| Check the coverage | `./.template/Test-Coverage.ps1` |
 | Check the file headers | `./.template/Test-FileHeaders.ps1` |
 
 `npm run build` builds [`fixture/`](fixture/), a stand-in library, into `dist/`. `npm run test` builds the fixture
@@ -229,6 +230,9 @@ vendored files against their manifest, and loads the built site in a browser.
 
 `npm run lint` checks the code with Biome, as CI does before it builds, and `npm run format` applies Biome's
 formatting and safe fixes; `biome.json` holds the rules.
+
+`npm run test` also writes the coverage of the toolchain's code to `lcov.info`, and `./.template/Test-Coverage.ps1`
+fails below 90% of its statements or 80% of its branches. CI runs it after the tests, and a release waits for it.
 
 `./.template/Test-FileHeaders.ps1` checks that each JavaScript and TypeScript file starts with the copyright line and
 the `SPDX-License-Identifier: Apache-2.0` line, as CI does, and `-Fix` adds them; [CONTRIBUTING.md](CONTRIBUTING.md)

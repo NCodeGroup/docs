@@ -15,9 +15,9 @@ user-facing summary.
   names: the toolchain is checked out at `toolchain-ref` when the caller sets it and otherwise at `job.workflow_sha`,
   with no fallback to a branch, `npm ci --ignore-scripts --omit=dev` installs the packages, and no job restores or
   saves a cache.
-- **R4.** The build reads a library's files only from inside its repository: the content path is a relative folder
-  without `..`, each sample file is checked by its real path with every symbolic link on it followed, and `bin`,
-  `obj`, `node_modules`, `TestResults` and `.git` are never read.
+- **R4.** The build reads a library's sample files only from inside its repository: the content path is a relative
+  path without `..`, each sample file is checked by its real path with every symbolic link on it followed, and no
+  sample is read from `bin`, `obj`, `node_modules`, `TestResults` or `.git`.
 - **R5.** What the build cannot place stops it: a `site.config.json` the schema rejects, a sample that is wrong or
   missing, and a link that is broken, relative, written with the base path or left outside it
   ([ADR-1002](decisions/1002-a-page-includes-a-compiled-sample-by-its-key-when-the-site-is-built.md),
@@ -26,9 +26,10 @@ user-facing summary.
 
 Users must not rely on the toolchain to check a library's pages: the build runs a page and a component as code and
 publishes the HTML they write as written, so a library reviews its pages as it reviews its code. External links are
-published unchecked. Where a library sets `toolchain-ref`, as it must where the `job.workflow_*` properties are
-missing, such as on GitHub Enterprise Server, R3 holds only while it keeps that input equal to its pin: the workflow
-checks the input out as given.
+published unchecked. The content folder is read where its path leads, a symbolic link on that path included: like the
+pages in it, it is the library's own to review. Where a library sets `toolchain-ref`, as it must where the
+`job.workflow_*` properties are missing, such as on GitHub Enterprise Server, R3 holds only while it keeps that input
+equal to its pin: the workflow checks the input out as given.
 
 ## Threat Model
 
@@ -47,7 +48,7 @@ it, and a vulnerability in a dependency itself ([SECURITY.md](../SECURITY.md)).
 | A new or compromised package release runs code when it is installed | Yes | R3: `--ignore-scripts`; `.npmrc`'s `min-release-age=3` and Dependabot's cooldown; every update is a reviewed pull request |
 | An action a workflow uses changes under its tag | Yes | Every action is pinned by full commit SHA, which Dependabot moves |
 | A workflow input injects a command into a step | Yes | `.github/workflows/site.yml` passes its inputs to the script through `env`, never into a command's text |
-| A content path, a samples glob or a symbolic link makes the build read a file outside the library | Yes | R4: `resolveLibrary` in `src/library.mjs` |
+| A content path with `..`, a samples glob, or a symbolic link on a sample file's path makes the build read a file outside the library | Yes | R4: `resolveLibrary` in `src/library.mjs` |
 | A wrong sample or a broken link is published | Yes | R5 |
 | A published site loads code or fonts from another origin, which can change after the build | Yes | R6: the fonts are vendored in `vendor/instrument/`, and the tests check every built page and every request a browser makes |
 | A vendored theme file is edited here and drifts from its source | Yes | `scripts/check-vendor.mjs`, which the tests run, compares each file with the SHA-256 in `manifest.json` |
@@ -59,7 +60,7 @@ Each input from a library or a caller, and the check it gets before the build us
 
 | Input | Check |
 | --- | --- |
-| `content-path` (the workflow's input, `DOCS_CONTENT`, `--content`) | A relative folder inside the library, without `..` (`resolveLibrary` in `src/library.mjs`) |
+| `content-path` (the workflow's input, `DOCS_CONTENT`, `--content`) | A relative path without `..` (`resolveLibrary` in `src/library.mjs`); a symbolic link on it is followed |
 | `deploy` | A boolean, which publishes only together with a run on the default branch |
 | `toolchain-ref` | None: when the caller sets it, it is checked out as given, in place of `job.workflow_sha`; a library sets it only where `job.workflow_sha` is missing, and keeps it equal to its pin |
 | `site.config.json` | Parsed as JSON and checked against `schema/site.config.schema.json` by `src/json-schema.mjs`, which names each problem by its key and rejects an unknown key |

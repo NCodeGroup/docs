@@ -12,7 +12,7 @@ import { root, work } from './helpers.mjs';
 
 const brand = join(root, 'vendor', 'brand');
 const check = (lock) =>
-  spawnSync(process.execPath, [join(root, 'scripts', 'vendor-brand.mjs'), '--check', '--lock', lock], {
+  spawnSync(process.execPath, [join(brand, 'vendoring', 'vendor-brand.mjs'), '--check', '--lock', lock], {
     cwd: root,
     encoding: 'utf8',
   });
@@ -81,10 +81,12 @@ describe('the vendored brand', () => {
     cpSync(brand, copy, { recursive: true });
 
     appendFileSync(join(copy, 'tokens', 'tokens.css'), '\n:root { --nc-brand: red; }\n');
+    appendFileSync(join(copy, 'vendoring', 'vendor-brand.mjs'), '\n// edited\n');
     rmSync(join(copy, 'css', 'fonts.css'));
     const result = check(join(copy, 'brand.lock.json'));
     assert.equal(result.status, 1);
     assert.match(result.stderr, /tokens\/tokens\.css: differs from tokens\/tokens\.css of brand/);
+    assert.match(result.stderr, /vendoring\/vendor-brand\.mjs: differs from vendoring\/vendor-brand\.mjs of brand/);
     assert.match(result.stderr, /css\/fonts\.css: missing/);
   });
 

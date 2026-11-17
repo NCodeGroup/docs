@@ -24,7 +24,9 @@ export const onRequest = defineRouteMiddleware((context) => {
   // The page's file under the content folder, such as guides/derive-a-key.mdx. Astro names it from
   // the toolchain's folder, src/content/docs/guides/derive-a-key.mdx: site.mount is that prefix.
   const filePath = entry.filePath?.replaceAll('\\', '/');
-  // src/pages/404.astro renders the 404 page through StarlightPage, which names every page's file <id>.md.
+  // src/pages/404.astro renders the 404 page through StarlightPage, which names every page's file
+  // <id>.md, so its file is the library's own 404.mdx or 404.md (site.notFoundPage), or undefined
+  // for the toolchain's page, which has no file in the library.
   const file =
     entry.id === '404'
       ? site.notFoundPage
@@ -54,6 +56,7 @@ export const onRequest = defineRouteMiddleware((context) => {
   }
   route.editUrl = undefined;
   route.lastUpdated = undefined;
+  // The 404 page is no page of its own: no edit link and no "last updated" date (CONTRACT.md section 1).
   if (file && entry.id !== '404') {
     if (site.editLinks && entry.data.editUrl !== false) {
       route.editUrl =

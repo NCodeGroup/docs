@@ -21,6 +21,9 @@ PLAN.md
 # The analysis in progress: a local working file, never committed
 ANALYSIS.md
 
+# The OpenSSF Best Practices prompt /best-practices writes: a local working file, never committed
+best-practices-prompt.txt
+
 # Secrets
 .env
 .env.*
@@ -31,6 +34,7 @@ ANALYSIS.md
 node_modules/
 dist/
 coverage/
+lcov.info
 
 # A library's content folder, mounted here for a build (scripts/site.mjs). Nothing of a library is committed.
 /src/content/docs/

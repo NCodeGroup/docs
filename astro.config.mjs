@@ -83,6 +83,9 @@ export default defineConfig({
       // The middleware sets both from the library's repository; see src/route-data.ts.
       lastUpdated: false,
       credits: false,
+      // src/pages/404.astro renders the 404 page; Starlight's own route looks it up among the docs
+      // pages and warns when there is none.
+      disable404Route: true,
       // Fails the build on an internal link that leads nowhere, which is also how a link the
       // base-path plugin could not reach is caught.
       plugins: [starlightLinksValidator()],

@@ -21,10 +21,13 @@ Once in each clone, run `git config core.hooksPath .githooks`. It turns on `.git
 | Test | `npm run test` |
 | Lint and check the formatting | `npm run lint` |
 | Format, with Biome's safe fixes | `npm run format` |
+| Check the coverage, after the tests | `./.template/Test-Coverage.ps1` |
 
 `npm run build` builds the stand-in library in `fixture/`. `npm run test` builds it under a base path and at the root of a domain, breaks a copy of it in each way a sample or a link can be wrong, and loads the built site in a browser. The browser check needs `npm run browser` once for each version of `playwright-core`, and is skipped without it. CI runs the same commands on every pull request, with the browser check required.
 
 Biome formats and lints the JavaScript and TypeScript and lints the Astro components, with the rules in `biome.json` ([the template's decision](docs/decisions/project-template/0201-biome-lints-and-formats-javascript-and-typescript.md), and [ADR-1005](docs/decisions/1005-biome-lints-astro-components-without-formatting-them.md) for the Astro components). `package.json` pins it exactly and holds its `lint` and `format` scripts, and the lock file holds its binary for each platform. After a large change, run `npm run format` twice: the second pass formats what the first pass's fixes left. CI runs `npm run lint` before the build, and so does the Landing `gate` in `AGENTS.md`. A commit that only reformats goes into `.git-blame-ignore-revs`, which GitHub's blame skips, and so does `git blame` after `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
+
+CI fails when the tests cover less than 90% of the statements or 80% of the branches, the OpenSSF Best Practices gold thresholds, as `./.template/Test-Coverage.ps1` reports from the coverage the tests write ([the decision](docs/decisions/project-template/0026-tests-gate-coverage-at-the-gold-thresholds-and-a-release-waits-for-them.md)). `npm run test` writes `lcov.info` with Node.js's test runner, from the toolchain's code that the tests and the builds they start run, leaving out the tests and the sites they build under `.work/`. Run `./.template/Test-Coverage.ps1` after the tests to see the figures.
 
 To see a change on a real site, build or serve a library that is cloned beside this repository: `npm run dev -- ../Buffers`. [README.md](README.md) has the details.
 

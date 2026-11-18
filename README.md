@@ -281,6 +281,7 @@ through a newer one: `npx npm@11 ci --ignore-scripts`. `npm run` works with any 
 | `src/snippets/` | Reads sample regions and fills `snippet=` blocks |
 | `src/includes/` | Reads the repository files pages name and fills `file=` blocks |
 | `src/headings/` | Checks the headings `requiredHeadings` requires |
+| `src/brand/` | Checks the brand tokens a library's components read |
 | `src/links/` | Adds the base path to links; checks the built pages |
 | `src/highlighting/` | C# 14 extension blocks for the C# grammar |
 | `src/tables/` | Labels each Markdown table's cells with their column names, so a table stacks on a phone |

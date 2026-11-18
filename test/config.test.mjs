@@ -100,7 +100,7 @@ describe('the site configuration', () => {
         error.message,
         /site\.url \("https:\/\/ncodegroup\.github\.io\/Fixture\/"\) does not have the form its description gives/,
       );
-      assert.match(error.message, /sidebar\[0\]\.items\[1\]/);
+      assert.match(error.message, /sidebar\[0\]\.items\[2\]/);
       return true;
     });
   });

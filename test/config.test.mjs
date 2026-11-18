@@ -8,32 +8,9 @@ import { mkdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSy
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { resolveLibrary } from '../src/library.mjs';
-import { build, copyOfFixture, fixture, work } from './helpers.mjs';
+import { build, copyOfFixture, fixture, withLinks, work } from './helpers.mjs';
 
 const CONFIG = 'docs/site/site.config.json';
-
-/**
- * Whether this system makes symbolic links. Windows makes one only in Developer Mode or for an
- * administrator, so there a test that needs one is skipped, and says why.
- */
-function makesLinks() {
-  const probe = join(work, 'link-probe');
-  mkdirSync(work, { recursive: true });
-  rmSync(probe, { force: true });
-  try {
-    symlinkSync('.', probe);
-  } catch (error) {
-    if (error.code === 'EPERM') return false;
-    throw error;
-  }
-  rmSync(probe);
-  return true;
-}
-const withLinks = {
-  skip: makesLinks()
-    ? false
-    : 'needs a symbolic link, which Windows makes only in Developer Mode or for an administrator',
-};
 
 /** A copy of the fixture whose configuration `change` has edited. */
 function changedCopy(name, change) {

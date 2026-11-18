@@ -371,6 +371,20 @@ describe('a library whose history git cannot read', () => {
     );
   });
 
+  it('links the branch and warns once that the commit could not be read', () => {
+    const sourceWarning =
+      /^::warning::Source links name the branch main: git could not read the commit of .+unreadable-history: /m;
+    assert.match(result.output, sourceWarning);
+    assert.equal(result.output.split('Source links name the branch').length - 1, 1, result.output);
+    const html = readFileSync(join(result.out, 'guides/ban-apis/index.html'), 'utf8');
+    const captions = [...html.matchAll(/<p class="ncode-source">.*?<\/p>/gs)].map(([paragraph]) => paragraph);
+    assert.equal(captions.length, 3, 'each file block has a caption');
+    for (const caption of captions) {
+      assert.match(caption, /\/blob\/main\//);
+      assert.match(caption, /on main/);
+    }
+  });
+
   it('warns, as a plain line outside GitHub Actions, where git is not installed', (t) => {
     const warn = t.mock.method(console, 'warn', () => {});
     const noGit = join(work, 'no-git');

@@ -344,7 +344,9 @@ itself with the brand's public tokens, each prefixed `--nc-`: the colour roles, 
 elevation and the measures (`var(--nc-color-screen)`, `font: var(--nc-type-value)`, `var(--nc-space-4)`). It never
 states a colour of its own, and never reads a step of a colour ramp or of the type scale, such as `--nc-blue-600` or
 `--nc-text-sm`, which a brand release may change. It puts the class `not-content` on its root element so the page's
-text styles stay off it. It ships no client-side script that loads from another origin.
+text styles stay off it. It ships no client-side script that loads from another origin. The build reads every `.astro`
+and `.css` file under `_components/` before it starts, and stops on a `--nc-` token the brand does not define or on a
+step of a ramp or scale, naming the file and the token.
 
 ## 8. What fails the build
 
@@ -370,6 +372,8 @@ the key or the link:
 6. An import or an image that does not resolve, or MDX that does not parse.
 7. A page without a heading a `requiredHeadings` rule requires, or with them out of order; a rule whose glob matches
    no page, whose exception is not a page it covers, or that lists a heading twice (section 2).
+8. A library's component (an `.astro` or `.css` file under `_components/`) that reads a `--nc-` token the brand does
+   not define, or a step of a colour ramp or of the type scale (section 7).
 
 A message from Astro or one of its plugins names the file it read, which is the toolchain's copy of the content
 folder: `src/content/docs/guides/x.mdx` there is `docs/site/guides/x.mdx` in the library. The link validator names a

@@ -21,11 +21,12 @@ user-facing summary.
   named by a relative path without `.` or `..` segments, has a real path inside the repository that holds no `.git`
   segment, and is at most 1 MiB of UTF-8 text.
 - **R5.** What the build cannot place stops it: a `site.config.json` the schema rejects, a sample that is wrong or
-  missing, an include that is wrong, a page without a heading a `requiredHeadings` rule requires, and a link that is
-  broken, relative, written with the base path or left outside it
+  missing, an include that is wrong, a page without a heading a `requiredHeadings` rule requires, a component that reads
+  a token the brand does not offer, and a link that is broken, relative, written with the base path or left outside it
   ([ADR-1002](decisions/1002-a-page-includes-a-compiled-sample-by-its-key-when-the-site-is-built.md),
   [ADR-1010](decisions/1010-a-page-shows-a-repository-file-or-the-lines-between-two-texts-of-it-when-the-site-is-built.md),
   [ADR-1011](decisions/1011-a-site-can-require-headings-on-the-pages-a-glob-names-and-the-build-fails-a-page-without-them.md),
+  [ADR-1012](decisions/1012-the-build-fails-a-library-component-that-reads-a-token-the-brand-does-not-offer.md),
   [ADR-1003](decisions/1003-links-are-written-from-the-site-root-and-the-build-proves-none-leaves-the-base-path.md)).
 - **R6.** A built site loads its fonts, scripts and styles from its own origin.
 
@@ -73,6 +74,7 @@ Each input from a library or a caller, and the check it gets before the build us
 | `site.config.json` | Parsed as JSON and checked against `schema/site.config.schema.json` by `src/json-schema.mjs`, which names each problem by its key and rejects an unknown key; `requiredHeadings` is also checked against the library's pages before the build (R5) |
 | `samples` globs | Each file a glob matches is checked by its path and its real path (R4) |
 | `file=` blocks | Path form, real path, `.git`, size and UTF-8 (`src/includes/files.mjs`), and `from`/`to` each naming one line |
+| `_components/` files | Each `--nc-` token read is one the brand defines and is no ramp or scale step (`src/brand/tokens.mjs`) |
 | Sample files | `src/snippets/catalog.mjs` checks each marker's spelling, each key's form, and that no key is defined twice and no region is unclosed or empty |
 | Pages | `snippet=` blocks (`src/snippets/code-block.mjs`), frontmatter through Starlight's schema, and links (R5) |
 | `scripts/site.mjs`'s arguments, `SITE_URL` and `DOCS_OUT` | `parseArgs` in strict mode and a known command; `SITE_URL` must parse as a URL; an output folder Astro would misplace stops `build` and `preview` |
@@ -120,7 +122,8 @@ Each input from a library or a caller, and the check it gets before the build us
   `bin` folder that leads out of the library, and the schema check of R5; `test/includes.test.mjs` checks the path,
   link, size and text rules of an included file (R4) and each way an include can be wrong (R5); `test/library.test.mjs`
   and `test/headings.test.mjs` check that a page without a required heading, or with them out of order, and a rule that
-  matches no page stop the build (R5); `test/samples.test.mjs` breaks a copy of the
+  matches no page stop the build (R5); `test/tokens.test.mjs` checks that a component that reads a token the brand
+  does not offer stops the build (R5); `test/samples.test.mjs` breaks a copy of the
   fixture in each way a sample or a link can be wrong (R5); `test/build.test.mjs` and `test/links.test.mjs` check the
   base path on the built pages (R5); `test/build.test.mjs` and `test/browser.test.mjs` check that a built page, and the
   browser that loads it, ask no other origin for anything (R6); `test/vendor.test.mjs` runs the vendored brand files'

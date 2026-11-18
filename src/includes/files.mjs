@@ -200,9 +200,17 @@ export function resolveIncludedFile(library, path, page) {
   if (entry === undefined) fail(names);
   let stats;
   let realPath;
+  let nativePath;
+  let nativeRoot;
   try {
     stats = statSync(absolute);
-    realPath = stats.isFile() ? realpathSync(absolute) : undefined;
+    if (stats.isFile()) {
+      realPath = realpathSync(absolute);
+      // Windows names a folder by aliases (`GIT~1`, `.git::$INDEX_ALLOCATION`) that realpathSync leaves as
+      // written; the native real path gives the name the file system stores, which the .git test needs.
+      nativePath = realpathSync.native(absolute);
+      nativeRoot = realpathSync.native(library.root);
+    }
   } catch (error) {
     fail(`file=${path} could not be read: ${error.message}`);
   }
@@ -214,7 +222,7 @@ export function resolveIncludedFile(library, path, page) {
   if (real === '..' || real.startsWith(`..${sep}`) || isAbsolute(real)) {
     fail(`file=${path} is outside the library through a symbolic link: its real path is ${realPath}.`);
   }
-  if (real.split(sep).some(isGit)) fail(insideGit);
+  if (relative(nativeRoot, nativePath).split(sep).some(isGit)) fail(insideGit);
   if (stats.size > MAX_BYTES) fail(`file=${path} is ${stats.size} bytes; a page includes a file of at most 1 MiB.`);
   return { path, absolute };
 }

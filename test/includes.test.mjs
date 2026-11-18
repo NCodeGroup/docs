@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict';
 import {
   cpSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -276,6 +277,17 @@ describe('the file include, found', () => {
     // A case-insensitive file system resolves these to the same folder; the check holds on any system.
     resolves(library, '.GIT/config', 'file=.GIT/config is inside .git, which the build never reads.');
     resolves(library, '.Git/x.txt', 'file=.Git/x.txt is inside .git, which the build never reads.');
+  });
+
+  // Windows also names the .git folder through its directory stream, which the real path gives as .git.
+  it('refuses a file inside .git through its NTFS directory stream', { skip: process.platform !== 'win32' }, () => {
+    const library = libraryNamed('inside git stream');
+    if (!existsSync(join(library.root, '.git', 'config'))) put(library, '.git/config', 'x');
+    resolves(
+      library,
+      '.git::$INDEX_ALLOCATION/config',
+      'file=.git::$INDEX_ALLOCATION/config is inside .git, which the build never reads.',
+    );
   });
 
   it('refuses a file that is missing', () => {

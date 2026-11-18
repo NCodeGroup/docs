@@ -86,6 +86,14 @@ before anything is built:
 | `samples` | No | Globs of the sample files, under the repository root. Default `["tests/**/*.cs"]` |
 | `editLinks` | No | Default `true` |
 | `lastUpdated` | No | Default `true` |
+| `requiredHeadings` | No | Headings the pages a glob names must have, in order. Default: none |
+
+`requiredHeadings` keeps a skeleton on every page a glob names; the build stops on a page without a listed heading or
+with the headings out of order:
+
+```json
+"requiredHeadings": [{ "pages": ["guides/*"], "headings": ["## Checklist"] }]
+```
 
 [CONTRACT.md](CONTRACT.md) has the full form of each key, `sidebar` items included.
 
@@ -153,7 +161,7 @@ A pull request build needs none of it.
 
 ## Writing a page
 
-A page is an `.mdx` file with a `title`. The rest is in [CONTRACT.md](CONTRACT.md); the three rules that matter most:
+A page is an `.mdx` file with a `title`. The rest is in [CONTRACT.md](CONTRACT.md); the four rules that matter most:
 
 ### Samples
 
@@ -174,6 +182,20 @@ using var keyOwner = BufferFactory.Rent(32, isSensitive: true, out Span<byte> ke
 A key no sample file defines, a key defined twice, a region never closed and a malformed marker each fail the build,
 naming the page or the sample file, and the key. The language comes first in the fence, and the key has no quotes:
 `cs snippet=Key`.
+
+### Repository files
+
+A page never holds a hand copy of a build file either. An empty block with `file=<path>`, a path from the repository
+root, shows the file whole, or from the line that holds `from` to the first line from there that holds `to`:
+
+````mdx
+```xml file=Directory.Build.props from="<ItemGroup Condition=" to="</ItemGroup>"
+```
+````
+
+The build fills the block, titles it with the path, and puts a caption under it that links those lines on GitHub at
+the commit the site was built from. A file that does not exist, text that is on no line or on several, and a
+language the code blocks do not highlight each fail the build. [CONTRACT.md](CONTRACT.md) section 4 has the rest.
 
 ### Links
 
@@ -202,8 +224,8 @@ npm ci --ignore-scripts
 npm run dev -- ../Buffers
 ```
 
-That serves the library's site at `http://localhost:4321/<base path>/` and follows edits to its pages and to its
-sample files. `npm run preview -- ../Buffers` builds the site as CI does and serves the result, with the search
+That serves the library's site at `http://localhost:4321/<base path>/` and follows edits to its pages, its sample
+files and the files its pages include. `npm run preview -- ../Buffers` builds the site as CI does and serves the result, with the search
 working. Both take `--content <path>` for a content folder other than `docs/site`, and `--port <number>`. From the
 library's folder the same commands are `npm --prefix ../docs run dev -- .`. Nothing is written to the library.
 
@@ -257,6 +279,8 @@ through a newer one: `npx npm@11 ci --ignore-scripts`. `npm run` works with any 
 | `vendor/brand/vendoring/vendor-brand.mjs` | Brand's script that vendors a release of NCodeGroup/brand and checks the vendored files, vendored with them |
 | `scripts/brand-watch.mjs`, `.github/workflows/brand-watch.yml` | Checks NCodeGroup/brand every day and keeps one issue open while it has a release newer than the vendored one |
 | `src/snippets/` | Reads sample regions and fills `snippet=` blocks |
+| `src/includes/` | Reads the repository files pages name and fills `file=` blocks |
+| `src/headings/` | Checks the headings `requiredHeadings` requires |
 | `src/links/` | Adds the base path to links; checks the built pages |
 | `src/highlighting/` | C# 14 extension blocks for the C# grammar |
 | `src/tables/` | Labels each Markdown table's cells with their column names, so a table stacks on a phone |

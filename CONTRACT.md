@@ -347,6 +347,11 @@ text styles stay off it. It ships no client-side script that loads from another 
 and `.css` file under `_components/` before it starts, and stops on a `--nc-` token the brand does not define or on a
 step of a ramp or scale, naming the file and the token.
 
+A component's elements fit the page's content column. An element that must scroll sideways by design, such as a long
+strip of bytes, scrolls inside the column, with `overflow-x: auto`, and carries the attribute `data-scrolls`. The
+layout check (section 8) then measures its box, which still fits the column, but not its content. A code block
+scrolls the same way, unmarked.
+
 ## 8. What fails the build
 
 Each of these stops the build, in a pull request as on the default branch, with a message that names the file and
@@ -374,6 +379,11 @@ the key or the link:
 8. A library's component (an `.astro` or `.css` file under `_components/`) that reads a `--nc-` token the brand does
    not define, or a step of a colour ramp or of the type scale (section 7).
 
+After the build, the workflow loads every page in Google Chrome at 1440, 1280, 1024 and 390 px. It fails on an element
+of a page's content that extends past its content column, and on a scroll container in it that hides part of its
+content sideways (a code block and an element marked `data-scrolls` excepted). The message gives each page as its
+source file, the width and the element, with the heading it is under.
+
 A message from Astro or one of its plugins names the file it read, which is the toolchain's copy of the content
 folder: `src/content/docs/guides/x.mdx` there is `docs/site/guides/x.mdx` in the library. The link validator names a
 page by its path under the content folder, and shows a link with the base path already added.
@@ -384,10 +394,15 @@ page by its path under the content folder, and shows a link with the base path a
 node scripts/site.mjs build <library folder> [--content docs/site] [--site-url <url>] [--out <folder>]
 node scripts/site.mjs dev <library folder> [--content docs/site] [--port 4321]
 node scripts/site.mjs preview <library folder> [--content docs/site] [--port 4321]
+node scripts/site.mjs check <library folder> [--content docs/site] [--site-url <url>] [--out <folder>] [--browser <path>]
 ```
 
-`DOCS_LIBRARY`, `DOCS_CONTENT`, `SITE_URL` and `DOCS_OUT` are the same four values as environment variables; an
-argument wins. The script copies the content folder into this toolchain at `src/content/docs/` (ignored by git,
+`check` loads the site `build` wrote and checks it as the workflow does: give it the same `--content`, `--site-url`
+and `--out`. Its browser is `--browser` or `DOCS_BROWSER`, else `CHROME_BIN`, else the Chromium `npm run browser`
+installs; a Chromium-based browser such as Google Chrome or Microsoft Edge.
+
+`DOCS_LIBRARY`, `DOCS_CONTENT`, `SITE_URL`, `DOCS_OUT` and `DOCS_BROWSER` are the same five values as environment
+variables; an argument wins. The script copies the content folder into this toolchain at `src/content/docs/` (ignored by git,
 replaced by the next run), so one checkout of the toolchain builds one library at a time: a second command started
 while a build or a dev server runs in the same checkout stops with a message that names the first. It writes nothing
 to the library.

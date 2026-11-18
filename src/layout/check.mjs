@@ -107,8 +107,12 @@ function measure() {
 
 /**
  * Loads each page at each width and measures it.
- * @param {{ out: string, base: string, pages: { name: string, path: string }[], browser: string, widths?: number[] }} options
- *   `out` is the built site, `base` its base path, `pages` what `sitePages` lists and `browser` the browser's path.
+ * @param {object} options
+ * @param {string} options.out The folder of the built site.
+ * @param {string} options.base Its base path.
+ * @param {{ name: string, path: string }[]} options.pages What `sitePages` lists.
+ * @param {string} options.browser The browser's path.
+ * @param {number[]} [options.widths] The widths to load each page at, `WIDTHS` by default.
  * @returns {Promise<{ page: string, width: number, element: string, heading?: string, problem: string }[]>}
  */
 export async function checkLayout({ out, base, pages, browser, widths = WIDTHS }) {

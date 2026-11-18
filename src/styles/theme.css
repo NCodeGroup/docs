@@ -571,7 +571,8 @@ main:has(h1[data-numbered]) .sl-markdown-content > .sl-heading-wrapper.level-h2:
   line-height: 1.45;
 }
 /* A Markdown table is wrapped in div.ncode-table (src/tables/stacked-tables.mjs): its columns share the whole
-   column, its cells wrap, and the wrapper scrolls a table that still cannot fit. A table written as HTML scrolls itself. */
+   column, its cells wrap, and the wrapper scrolls a table that still cannot fit. A table written as HTML scrolls
+   itself. */
 .sl-markdown-content .ncode-table:not(:where(.not-content *)) { overflow-x: auto; }
 .sl-markdown-content .ncode-table > table:not(:where(.not-content *)) { display: table; border-collapse: separate; overflow: hidden; }
 .sl-markdown-content :is(th, td):not(:where(.not-content *)) {

@@ -5,16 +5,25 @@
 // The one Astro project every NCode library's documentation site is built with. It holds no
 // library's content: scripts/site.mjs (or the reusable workflow) names a library through
 // DOCS_LIBRARY and DOCS_CONTENT, mounts its content folder at src/content/docs/, and runs Astro.
+import { realpathSync } from 'node:fs';
 import { defineConfig } from 'astro/config';
 import { satteri } from '@astrojs/markdown-satteri';
 import starlight from '@astrojs/starlight';
 import starlightLinksValidator from 'starlight-links-validator';
 import { ncodeSite } from './src/integration.mjs';
-import { libraryPath, ownNotFoundPage, readLastUpdated, resolveLibrary } from './src/library.mjs';
+import { findIncludedFiles, includesDigest } from './src/includes/files.mjs';
+import {
+  libraryPath,
+  listPages,
+  ownNotFoundPage,
+  readCommit,
+  readLastUpdated,
+  resolveLibrary,
+} from './src/library.mjs';
 import { baseLinks } from './src/links/base-links.mjs';
 import { checkBuiltLinks } from './src/links/built-links.mjs';
 import { readSnippets } from './src/snippets/catalog.mjs';
-import { snippetsPlugin, watchSnippetSources } from './src/snippets/satteri.mjs';
+import { snippetsPlugin, watchLibraryFiles } from './src/snippets/satteri.mjs';
 import { stackedTables } from './src/tables/stacked-tables.mjs';
 
 const library = resolveLibrary();
@@ -34,6 +43,18 @@ const describePage = (file) => libraryPath(library, file);
 // region or a malformed marker stops the build here, before any page is read.
 const snippets = readSnippets({ files: library.sampleFiles, relativeTo: library.root });
 
+// The files the pages include with `file=<path>`, and the commit their captions link to. A block
+// that names a file the library does not have stops the build when its page renders.
+const pages = listPages(library);
+const includeRoot = { root: library.root, realRoot: realpathSync(library.root) };
+const included = findIncludedFiles(includeRoot, pages);
+const { commit, reason } = readCommit(library);
+if (!commit && reason && included.length > 0) {
+  const message = `Source links name the branch ${config.repository.branch}: git could not read the commit of ${library.root}: ${reason}`;
+  // A workflow command's data escapes "%" (and line breaks, which a first line has none of).
+  console.warn(process.env.GITHUB_ACTIONS === 'true' ? `::warning::${message.replaceAll('%', '%25')}` : message);
+}
+
 export default defineConfig({
   site: siteUrl.origin,
   base,
@@ -44,12 +65,17 @@ export default defineConfig({
   publicDir: './vendor/brand/logo/ncode/favicon',
   markdown: {
     processor: satteri({
-      mdastPlugins: [snippetsPlugin(snippets, { describePage })],
+      mdastPlugins: [
+        snippetsPlugin(snippets, {
+          describePage,
+          includes: { library: includeRoot, repository: config.repository, commit, digest: includesDigest(included) },
+        }),
+      ],
       hastPlugins: [baseLinks(base, { describePage }), stackedTables()],
     }),
   },
   integrations: [
-    watchSnippetSources(library.sampleFiles),
+    watchLibraryFiles([...library.sampleFiles, ...included]),
     ncodeSite({
       title: config.title,
       product: config.product,

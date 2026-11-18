@@ -6,8 +6,9 @@ name: Documentation site (reusable)
 #
 # Two jobs, so the job that runs the site's packages and the library's pages never holds a publishing permission:
 #   - build checks out the calling repository and this repository, installs exactly what package-lock.json locks,
-#     builds the site and uploads it. Its token only reads: the two repositories, and the Pages settings that name the
-#     site's URL. A pull request, from a fork too, runs this job and nothing else;
+#     builds the site, uploads it, and checks its layout in the runner's Google Chrome. Its token only reads: the
+#     two repositories, and the Pages settings that name the site's URL. A pull request, from a fork too, runs this
+#     job and nothing else;
 #   - deploy runs only when the caller asks for it and only on the caller's default branch, in the github-pages
 #     environment, and hands the uploaded artifact to GitHub Pages. It checks out nothing and runs no code of the
 #     library or of the toolchain.
@@ -123,6 +124,20 @@ jobs:
         with:
           path: site/
           retention-days: 7
+      # Loads every page of the built site at 1440, 1280, 1024 and 390 px, and fails on an element that leaves its
+      # content column or hides part of its content sideways (CONTRACT.md, sections 7 and 8). The browser is the
+      # Google Chrome of GitHub's Ubuntu image, which CHROME_BIN names, so nothing is installed or downloaded. It runs
+      # after the upload, so a failing pull request's site can still be browsed, and its failure still stops the
+      # deploy job.
+      - name: Check the layout
+        working-directory: toolchain
+        env:
+          DOCS_LIBRARY: ${{ github.workspace }}/library
+          DOCS_CONTENT: ${{ inputs.content-path }}
+          DOCS_OUT: ${{ github.workspace }}/site
+          # Such as https://ncodegroup.github.io/Buffers; empty unless this run deploys.
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
+        run: node scripts/site.mjs check
 
   # Publishes the artifact the build job uploaded. A pull request's ref is refs/pull/<number>/merge, so only a push to
   # the caller's default branch, or a run started by hand on it, gets here; the github-pages environment, which an

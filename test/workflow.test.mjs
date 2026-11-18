@@ -73,6 +73,14 @@ describe('the site workflow and the npm settings', () => {
     assert.doesNotMatch(workflow, /actions\/cache@/);
   });
 
+  it("check the layout of the built site in the runner's browser, after the upload", () => {
+    const build = job('build');
+    const upload = build.indexOf('actions/upload-pages-artifact@');
+    assert.ok(upload >= 0, 'the build job does not upload the site');
+    assert.ok(build.search(/^ +run: node scripts\/site\.mjs check$/m) > upload);
+    assert.doesNotMatch(build, /playwright|npx /);
+  });
+
   it('take only releases at least three days old, with an npm that honours it (R3)', () => {
     assert.match(npmrc, /^min-release-age=3$/m);
     assert.match(npmrc, /^engine-strict=true$/m);

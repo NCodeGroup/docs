@@ -10,16 +10,17 @@ root unless they start with `src/`, `scripts/` or `schema/`, which are in this r
 ## 1. Files
 
 ```text
-docs/site/                     the content folder (the workflow's content-path input names another)
-  site.config.json             required: the site's settings (section 2)
-  index.mdx                    the landing page, served at the site's root
-  quick-start.mdx              a page, served at /quick-start/
-  guides/derive-a-key.mdx      a page, served at /guides/derive-a-key/
-  404.mdx                      optional: the page a missing URL gets (or 404.md)
-  _components/Diagram.astro    optional: the library's own components
-  _assets/lifecycle.png        optional: the library's own images
-tests/**/*.cs                  the sample files (the samples setting names other globs)
-.github/workflows/docs.yml     the workflow that calls the toolchain (README.md)
+docs/site/                                the content folder (the workflow's content-path input names another)
+  site.config.json                        required: the site's settings (section 2)
+  index.mdx                               the landing page, served at the site's root
+  quick-start.mdx                         a page, served at /quick-start/
+  guides/derive-a-key.mdx                 a page, served at /guides/derive-a-key/
+  404.mdx                                 optional: the page a missing URL gets (or 404.md)
+  _components/Diagram.astro               optional: the library's own components
+  _assets/lifecycle.png                   optional: the library's own images
+tests/**/*.cs                             the sample files (the samples setting names other globs)
+Directory.Build.props, BannedSymbols.txt  any file of the repository a page shows (section 4)
+.github/workflows/docs.yml                the workflow that calls the toolchain (README.md)
 ```
 
 - A page is an `.mdx` file. Its URL is its path under the content folder, lower-cased, without the extension, with a
@@ -57,6 +58,7 @@ wrong value stops the build with a message that names the key. For editor suppor
 | `samples` | No | Globs of the files that hold sample regions, under the repository root. Default `["tests/**/*.cs"]` |
 | `editLinks` | No | Whether each page links to its source. Default `true` |
 | `lastUpdated` | No | Whether each page shows the date of the last commit that changed it. Default `true` |
+| `requiredHeadings` | No | Headings the pages a glob names must have, in order (below). Default: none |
 
 The "last updated" date comes from the library's git history: `git log` for the content folder. A page shows a date
 once its file is committed, and the date is that of the newest commit that changed the file. A page that is not
@@ -88,6 +90,41 @@ A slug is a page's path under the content folder without the extension. A folder
 `sidebar.order` frontmatter, then by file name. A `badge` is a string, or `{ "text", "variant" }` with variant `note`,
 `tip`, `caution`, `danger`, `success` or `default`. A slug that names no page stops the build.
 
+### requiredHeadings
+
+An array of rules, for a library whose pages of one kind keep one skeleton:
+
+```json
+"requiredHeadings": [
+  { "pages": ["guides/*"], "headings": ["## The usual code", "## Checklist"], "except": ["guides/review-checklist"] },
+  { "pages": ["guides/ban-leaky-apis"], "headings": ["## Check your work"] }
+]
+```
+
+| Field | Required | Meaning |
+| --- | --- | --- |
+| `pages` | Yes | At least one glob of page slugs: the pages the rule covers |
+| `headings` | Yes | At least one heading: `##` to `######`, a space, and the text a reader sees |
+| `except` | No | At least one slug of a page the rule leaves out |
+
+- A slug is a page's path under the content folder without the extension, lower-cased, as in the sidebar:
+  `guides/derive-a-key`. A glob is matched against the slug: `*` stands for any characters but `/`, `?` for one
+  character but `/`, and `**` for any number of folders, so `guides/*` covers the pages directly in `guides/` and
+  `guides/**` every page below it. Every page of the content folder has a slug, whether or not the sidebar lists it;
+  the 404 page has none.
+- A covered page has every heading of the rule, and their first appearances come in the listed order. Other headings
+  may come between them. A heading is matched by its level and its text, exactly and case-sensitively, as the page
+  shows it: `## Checklist` is not `### Checklist` or `## checklist`.
+- A heading written in a fenced code block, rendered by a component or written as HTML does not count. A heading
+  written in Markdown inside a component's children does.
+- Rules are independent: a page may be covered by several, and each checks its own headings. `except` leaves a page out
+  of its own rule only.
+- The build stops, naming the page, the rule and `site.config.json`, on a covered page that lacks a heading (the
+  message says to add it, or to add the page's slug to the rule's `except`) and on a covered page whose headings
+  are out of order. It stops before the pages are built on a rule with a glob that matches no page, on an `except`
+  that is not a page the rule's globs match, and on a heading a rule lists twice. When several of these are wrong, the
+  one message lists each.
+
 ## 3. Frontmatter
 
 | Key | Required | Meaning |
@@ -108,7 +145,9 @@ These are Starlight's frontmatter keys plus `numbered`.
 key and the ones this table leaves out. A key with a wrong value stops the build; an unknown key is ignored without a
 word, so check its spelling.
 
-## 4. Samples
+## 4. Samples and repository files
+
+### Samples
 
 A page never holds a copy of library code that must compile. It includes a region of a sample file by key:
 
@@ -161,6 +200,63 @@ using var keyOwner = BufferFactory.Rent(32, isSensitive: true, out Span<byte> ke
 
 To show the marker syntax itself on a page, put it in an ordinary fenced block: only the `snippet=` attribute makes a
 block a sample.
+
+### Repository files
+
+A page never holds a hand copy of a file of the library's repository either. It names the file, and the lines it
+shows by their text, in an empty fenced block, and the build fills the block, titles it with the path, and puts a
+caption under it that links those lines on GitHub:
+
+````mdx
+```txt file=BannedSymbols.txt
+```
+
+```xml file=Directory.Build.props from="<ItemGroup Condition=" to="</ItemGroup>"
+```
+````
+
+| Info string | Shows |
+| --- | --- |
+| `txt file=BannedSymbols.txt` | The whole file |
+| `txt file=BannedSymbols.txt to="P:System.Text.Encoding.Default;"` | From the first line to the line that holds the `to` text |
+| `xml file=Directory.Build.props from="<ItemGroup Condition=" to="</ItemGroup>"` | From the line that holds `from` to the first line from there that holds `to` |
+| `yaml file=.github/workflows/docs.yml from="jobs:"` | From the line that holds `from` to the end |
+
+- The fence is empty; its language comes first. The language is one that the code blocks highlight (a language's name
+  or alias in Shiki's list, written as Shiki spells it, in lower case), or `txt`, `text`, `plaintext` or `plain` for
+  plain text.
+- A value is bare, with no white space and no quote (`file=BannedSymbols.txt`), or quoted with `"`, holding no `"`,
+  or with `'`, holding no `'`. A value that holds white space is quoted. `from` and `to` are written once each.
+- `from` and `to` match as a case-sensitive substring of one line. `from` is on exactly one line of the file: when its
+  text is on several, give longer text. `to` is the first line at or after the `from` line, or at or after the first
+  line without `from`, that holds it; when it is on the `from` line, the page shows that one line. Without `from` the
+  page starts at the first line, and without `to` it runs to the end of the file.
+- `lines=` does not exist. A range of line numbers shows other lines once the file changes, and the build still
+  passes; the text a page names is text the file holds, and a change to it stops the build, naming it.
+- The path is relative to the library's repository root: no leading `/` or `\`, no drive, no backslash, and no empty,
+  `.` or `..` segment. It names a file that exists and is neither a folder nor in `.git`; its real path, with every
+  symbolic link followed, is under the repository's real path, and a link that leads out stops the build. `bin`,
+  `obj`, `node_modules` and `TestResults` are allowed here, unlike in a `samples` glob. The file is at most 1 MiB, is
+  UTF-8 text without a null character, and is not empty.
+- The page shows the file's lines from the first to the last selected, without the blank lines at either end, and
+  with the longest run of spaces and tabs that starts every non-blank line removed from each of them. Blank lines
+  inside are kept, and a selection of blank lines only stops the build.
+- Everything else in the info string is passed on to the code block: `title="…"`, marked lines `{4}`, `ins={…}`,
+  `del={…}`, `"marked text"` and `wrap`. The line numbers of marked lines count from the first line shown. A block
+  with no `title=` is titled with the path as written.
+- The caption is a link under the block, `<repository url>/blob/<commit>/<path>`, with `#L7-L10` for lines 7 to 10 of
+  the file, `#L4` for line 4 alone and no fragment for the whole file; the numbers are the file's own, not the
+  block's. Its label is the path, the lines and the commit's first seven characters, such as
+  `Directory.Build.props, lines 7–10 at 589501c`, `src/X.cs, line 4 at 589501c` and `BannedSymbols.txt at 589501c`.
+- The commit is the library's `HEAD` when the site is built. A pull request's build links the merge commit GitHub
+  makes for it, which is the commit its checkout is at. An edit that is not committed shows on the page and not at the
+  link. When git cannot read the commit, the caption links the default branch, labelled `on main` where the branch is
+  `main`, and the build prints a warning with the reason once, as an annotation in GitHub Actions; the build still
+  passes.
+- A block takes `snippet=` or `file=`, not both, and `from=` and `to=` only with `file=`.
+
+`file=` is for build files, banned-symbol lists and data files, which no test compiles. Code that must compile stays
+a sample, so the page shows what the library's tests ran.
 
 ## 5. Links
 
@@ -261,10 +357,18 @@ the key or the link:
    empty region: named by sample file and line.
 3. A page that uses `snippet=Key` for a key no sample file defines (the message lists the keys that exist), that puts
    code of its own in a `snippet=` block, whose block has no language, or whose block's language is not the sample's.
+   A page with a `file=` block that has no language or a language the code blocks do not highlight, that holds code of
+   its own, that also has `snippet=`, or that has `from=` or `to=` without `file=`; a block with `lines=`, a name
+   given twice, a quote never closed, or an empty `from` or `to`; a path that is empty, absolute, holds a backslash or
+   an empty, `.` or `..` segment, or is inside `.git`; a file that does not exist, is a folder, leads out of the
+   library through a symbolic link or cannot be read, is over 1 MiB, is not UTF-8 text, or is empty; a `from` or `to`
+   that is on no line, a `from` that is on several, and a selection of blank lines only (section 4).
 4. A link to a page or heading that does not exist, a relative link, a link without its trailing slash, a link
    written with the base path, and a site-absolute link the build could not put the base path on (section 5).
 5. Frontmatter with a missing `title` or a wrong value; a `sidebar` slug that names no page.
 6. An import or an image that does not resolve, or MDX that does not parse.
+7. A page without a heading a `requiredHeadings` rule requires, or with them out of order; a rule whose glob matches
+   no page, whose exception is not a page it covers, or that lists a heading twice (section 2).
 
 A message from Astro or one of its plugins names the file it read, which is the toolchain's copy of the content
 folder: `src/content/docs/guides/x.mdx` there is `docs/site/guides/x.mdx` in the library. The link validator names a
@@ -288,3 +392,6 @@ The built site goes to `dist/` in this toolchain unless `--out` names another fo
 whose path starts with the toolchain's, such as `../docs-site` beside a toolchain at `../docs`, stops `build` and
 `preview` before anything is built: Astro would take it for a folder inside the toolchain, and that build could not
 find the toolchain's packages.
+
+The dev server (`npm run dev`) follows edits to pages, sample files and the files pages include; a file a page starts
+including, and a page a `requiredHeadings` rule starts covering, are followed from the server's next start.

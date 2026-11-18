@@ -64,6 +64,18 @@ function measure() {
       .filter((name) => !name.startsWith('astro-'))
       .map((name) => `.${name}`)
       .join('');
+  // A Markdown table has no id or class of its author's, so it is named by its first columns, and it must fit (ADR-1015).
+  const name = (element) => {
+    if (!element.matches('.ncode-table')) return describe(element);
+    const columns = [...element.querySelectorAll(':scope > table > thead > tr:first-child > th')].map((cell) =>
+      cell.textContent.replace(/\s+/g, ' ').trim(),
+    );
+    return `Markdown table "${[...columns.slice(0, 3), ...(columns.length > 3 ? ['…'] : [])].join(' | ')}"`;
+  };
+  const advice = (element) =>
+    element.matches('.ncode-table')
+      ? ': a Markdown table must fit the column, so lay it out as a card per entry or give it fewer columns'
+      : '';
   const under = (element) =>
     headings
       .filter((heading) => heading.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING)
@@ -82,17 +94,17 @@ function measure() {
       const hidden = element.scrollWidth - element.clientWidth;
       if (past > 1) {
         found.push({
-          element: describe(element),
+          element: name(element),
           heading: under(element),
-          problem: `extends ${past} px past the content column`,
+          problem: `extends ${past} px past the content column${advice(element)}`,
         });
       } else if (element.matches('.expressive-code, [data-scrolls]')) {
         // It fits the column. Its content scrolls by design, so it is not measured (CONTRACT.md, section 7).
       } else if (getComputedStyle(element).overflowX !== 'visible' && hidden > 1) {
         found.push({
-          element: describe(element),
+          element: name(element),
           heading: under(element),
-          problem: `hides ${hidden} px of its content sideways`,
+          problem: `hides ${hidden} px of its content sideways${advice(element)}`,
         });
       } else {
         visit(element, column);
@@ -154,6 +166,6 @@ export function layoutMessage(problems) {
       `  ${page} at ${width} px: ${element}${heading === undefined ? '' : `, under "${heading}"`}, ${problem}`,
   );
   const last =
-    "Each element of a page fits its content column, about 36rem at 1280 px (CONTRACT.md, section 7): let a table's cells wrap, lay wide data out as a card per entry, and mark an element that scrolls sideways by design with data-scrolls.";
+    'Each element of a page fits its content column, about 36rem at 1280 px (CONTRACT.md, section 7): a Markdown table must fit it too, so give a wide one fewer columns or lay its data out as a card per entry, and mark a component that scrolls sideways by design with data-scrolls.';
   return [first, ...lines, last].join('\n');
 }

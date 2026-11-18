@@ -7,8 +7,9 @@
 // `ncode-stacked`, which the CSS targets. A cell under an empty head cell gets no label and shows
 // its value alone. A table written as HTML reaches the plugin as a JSX element in an `.mdx` page and
 // as raw text in a `.md` page, so it is never matched and keeps its columns. The plugin also wraps the
-// table in a `div.ncode-table`, which scrolls a table too wide for the content column even with its
-// cells wrapped.
+// table in a `div.ncode-table`. A table too wide for the content column even with its cells wrapped
+// scrolls sideways inside it, as a last resort that the layout check (src/layout/check.mjs) fails,
+// naming the table: a Markdown table must fit the column (ADR-1015).
 const STACKED = 'ncode-stacked';
 const WRAPPER = 'ncode-table';
 

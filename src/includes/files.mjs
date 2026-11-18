@@ -3,8 +3,19 @@
 
 // A library page shows a file of the library's repository from an empty fenced block whose info
 // string carries file=<path>, and optionally from="<text>" and to="<text>". This module reads that
-// info string and selects the lines the page shows. Every failure is an error that names the page
+// info string, finds the file in the library's repository, reads it and selects the lines the page
+// shows. Every failure is an error that names the page
 // and the block's path, so the site build fails instead of publishing a wrong or missing file.
+import { createHash } from 'node:crypto';
+import { lstatSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { isAbsolute, join, relative, sep } from 'node:path';
+
+// The largest file a page includes, in bytes.
+const MAX_BYTES = 1_048_576;
+// A path that starts at a root: a leading slash or backslash, or a drive.
+const ROOTED = /^(?:[/\\]|[A-Za-z]:)/;
+// A line that opens a fenced code block whose info string holds file=<path>.
+const FILE_FENCE = /^\s*(?:>\s*)*(?:`{3,}|~{3,})\s*\S.*?(?:^|\s)file=(?:"([^"]*)"|'([^']*)'|([^\s"']+))/;
 
 // One token of an info string: name=value, a quoted string, a brace group, or any other word.
 const TOKEN = /([A-Za-z][\w-]*)=(?:"([^"]*)"|'([^']*)'|([^\s"']+))|"[^"]*"|'[^']*'|\{[^}]*\}|\S+/g;
@@ -142,4 +153,128 @@ export function selectLines(text, { path, from, to }, page) {
   const indent = commonIndent(shown.filter((line) => !BLANK.test(line)));
   const code = shown.map((line) => (BLANK.test(line) ? '' : line.slice(indent.length))).join('\n');
   return { code, first: first + 1, last: last + 1, whole: from === undefined && to === undefined };
+}
+
+/**
+ * Finds the file a block names, applying the path rules: a path from the repository root, no
+ * `.git`, a file that exists, really inside the library, and at most 1 MiB.
+ *
+ * @param {{ root: string, realRoot: string }} library The library's root, and the root's real path.
+ * @param {string} path The path as the author wrote it.
+ * @param {string} page The page as the library has it, which names it in an error.
+ * @returns {{ path: string, absolute: string }} The path as written and the file's absolute path.
+ */
+export function resolveIncludedFile(library, path, page) {
+  const fail = (message) => {
+    throw new Error(`${page}: ${message}`);
+  };
+  const segments = path.split('/');
+  if (
+    path === '' ||
+    ROOTED.test(path) ||
+    path.includes('\\') ||
+    segments.some((s) => s === '' || s === '.' || s === '..')
+  ) {
+    fail(
+      `file=${path} must be a path from the repository root, such as Directory.Build.props: no leading "/", "\\" or drive, no backslash, and no empty, "." or ".." segment.`,
+    );
+  }
+  const insideGit = `file=${path} is inside .git, which the build never reads.`;
+  if (segments.includes('.git')) fail(insideGit);
+
+  const absolute = join(library.root, ...segments);
+  // A missing file has no entry at all, or a file where a folder should be (ENOTDIR). An entry that
+  // statSync cannot follow is a link that leads nowhere or around in a loop: it exists, and cannot be read.
+  const names = `file=${path} names no file in the library.`;
+  let entry;
+  try {
+    entry = lstatSync(absolute, { throwIfNoEntry: false });
+  } catch (error) {
+    if (error.code === 'ENOTDIR') fail(names);
+    fail(`file=${path} could not be read: ${error.message}`);
+  }
+  if (entry === undefined) fail(names);
+  let stats;
+  let realPath;
+  try {
+    stats = statSync(absolute);
+    realPath = stats.isFile() ? realpathSync(absolute) : undefined;
+  } catch (error) {
+    fail(`file=${path} could not be read: ${error.message}`);
+  }
+  if (stats.isDirectory()) fail(`file=${path} is a folder; name a file.`);
+  if (!stats.isFile()) fail(names);
+
+  // A path under the root still leads out of it when the file, or a folder on its path, is a link.
+  const real = relative(library.realRoot, realPath);
+  if (real === '..' || real.startsWith(`..${sep}`) || isAbsolute(real)) {
+    fail(`file=${path} is outside the library through a symbolic link: its real path is ${realPath}.`);
+  }
+  if (real.split(sep).includes('.git')) fail(insideGit);
+  if (stats.size > MAX_BYTES) fail(`file=${path} is ${stats.size} bytes; a page includes a file of at most 1 MiB.`);
+  return { path, absolute };
+}
+
+/**
+ * Finds a file a block names, as `resolveIncludedFile` does, and reads it as UTF-8 text.
+ *
+ * @param {{ root: string, realRoot: string }} library The library's root, and the root's real path.
+ * @param {string} path The path as the author wrote it.
+ * @param {string} page The page as the library has it, which names it in an error.
+ * @returns {{ path: string, absolute: string, text: string }} The path, the file's absolute path and its text.
+ */
+export function readIncludedFile(library, path, page) {
+  const { absolute } = resolveIncludedFile(library, path, page);
+  const bytes = readFileSync(absolute);
+  let text;
+  try {
+    text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch {
+    throw new Error(`${page}: file=${path} is not UTF-8 text.`);
+  }
+  // A U+0000 is no text a page shows: it marks a binary file that happens to decode.
+  if (text.includes('\0')) throw new Error(`${page}: file=${path} is not UTF-8 text.`);
+  if (text === '') throw new Error(`${page}: file=${path} is empty.`);
+  return { path, absolute, text };
+}
+
+/**
+ * Lists the files the pages' code blocks include, so a change to one rebuilds the site. A block
+ * whose file cannot be placed is skipped here: the build stops on it when the page renders.
+ *
+ * @param {{ root: string, realRoot: string }} library The library's root, and the root's real path.
+ * @param {{ file: string }[]} pages The library's pages, as `listPages` gives them.
+ * @returns {string[]} The included files' absolute paths, sorted and without repeats.
+ */
+export function findIncludedFiles(library, pages) {
+  const found = new Set();
+  for (const { file } of pages) {
+    for (const line of readFileSync(file, 'utf8').split(LINE_BREAK)) {
+      const match = FILE_FENCE.exec(line);
+      if (!match) continue;
+      try {
+        found.add(resolveIncludedFile(library, match[1] ?? match[2] ?? match[3], file).absolute);
+      } catch {
+        // The page's render reports it.
+      }
+    }
+  }
+  return [...found].sort();
+}
+
+/**
+ * A short digest of the included files' paths and bytes, which changes when one of them does.
+ *
+ * @param {string[]} paths The files' absolute paths, in a fixed order.
+ * @returns {string} The first 16 hex digits of a SHA-256.
+ */
+export function includesDigest(paths) {
+  const hash = createHash('sha256');
+  for (const path of paths) {
+    hash.update(path);
+    hash.update('\0');
+    hash.update(readFileSync(path));
+    hash.update('\0');
+  }
+  return hash.digest('hex').slice(0, 16);
 }

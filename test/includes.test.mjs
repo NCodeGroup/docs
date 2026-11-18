@@ -3,8 +3,18 @@
 
 // The file include: reading a code block's file reference and selecting the lines it shows.
 import assert from 'node:assert/strict';
+import { mkdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { describe, it } from 'node:test';
-import { parseFileReference, selectLines } from '../src/includes/files.mjs';
+import {
+  findIncludedFiles,
+  includesDigest,
+  parseFileReference,
+  readIncludedFile,
+  resolveIncludedFile,
+  selectLines,
+} from '../src/includes/files.mjs';
+import { work, withLinks } from './helpers.mjs';
 
 const page = 'docs/site/guides/x.mdx';
 const rejects = (meta, message) =>
@@ -178,5 +188,190 @@ describe('the file include, selected', () => {
   it('refuses a selection of only blank lines', () => {
     selects(' \n\n\t\n', { path: 'a.txt' }, 'file=a.txt shows only blank lines (lines 1–3).');
     selects('a\n \n\t\nb\n', { path: 'a.txt', from: ' ', to: '\t' }, 'file=a.txt shows only blank lines (lines 2–3).');
+  });
+});
+
+// A library of its own under .work/includes/<name>, empty, with the real path of its root.
+function libraryNamed(name) {
+  const root = join(work, 'includes', name);
+  rmSync(root, { recursive: true, force: true });
+  mkdirSync(root, { recursive: true });
+  return { root, realRoot: realpathSync(root) };
+}
+const put = (library, path, content) => {
+  const file = join(library.root, ...path.split('/'));
+  mkdirSync(join(file, '..'), { recursive: true });
+  writeFileSync(file, content);
+  return file;
+};
+const resolves = (library, path, message) =>
+  assert.throws(() => resolveIncludedFile(library, path, page), { message: `${page}: ${message}` });
+const reads = (library, path, message) =>
+  assert.throws(() => readIncludedFile(library, path, page), { message: `${page}: ${message}` });
+const BAD_PATH = (path) =>
+  `file=${path} must be a path from the repository root, such as Directory.Build.props: no leading "/", "\\" or drive, no backslash, and no empty, "." or ".." segment.`;
+
+describe('the file include, found', () => {
+  it('refuses a path that is not from the repository root', () => {
+    const library = libraryNamed('bad path');
+    for (const path of [
+      '',
+      '/a.txt',
+      '\\a.txt',
+      'C:/a.txt',
+      'c:a.txt',
+      'a\\b.txt',
+      'a//b.txt',
+      './a.txt',
+      'a/./b.txt',
+      '../a.txt',
+      'a/../b.txt',
+      'a/',
+    ]) {
+      resolves(library, path, BAD_PATH(path));
+    }
+  });
+
+  it('refuses a file inside .git', () => {
+    const library = libraryNamed('inside git');
+    put(library, '.git/config', 'x');
+    put(library, 'sub/.git/config', 'x');
+    resolves(library, '.git/config', 'file=.git/config is inside .git, which the build never reads.');
+    resolves(library, 'sub/.git/config', 'file=sub/.git/config is inside .git, which the build never reads.');
+  });
+
+  it('refuses a file that is missing', () => {
+    const library = libraryNamed('missing');
+    put(library, 'a.txt', 'x');
+    resolves(library, 'nope.txt', 'file=nope.txt names no file in the library.');
+    resolves(library, 'no/such/dir.txt', 'file=no/such/dir.txt names no file in the library.');
+    resolves(library, 'a.txt/b.txt', 'file=a.txt/b.txt names no file in the library.');
+  });
+
+  it('refuses a folder', () => {
+    const library = libraryNamed('folder');
+    mkdirSync(join(library.root, 'sub'));
+    resolves(library, 'sub', 'file=sub is a folder; name a file.');
+  });
+
+  it('allows a file in bin', () => {
+    const library = libraryNamed('bin');
+    const file = put(library, 'bin/x.txt', 'x');
+    assert.deepEqual(resolveIncludedFile(library, 'bin/x.txt', page), { path: 'bin/x.txt', absolute: file });
+  });
+
+  it('refuses a file of more than 1 MiB and takes one of exactly 1 MiB', () => {
+    const library = libraryNamed('size');
+    put(library, 'big.txt', Buffer.alloc(1_048_577, 0x61));
+    put(library, 'edge.txt', Buffer.alloc(1_048_576, 0x61));
+    resolves(library, 'big.txt', 'file=big.txt is 1048577 bytes; a page includes a file of at most 1 MiB.');
+    assert.equal(readIncludedFile(library, 'edge.txt', page).text.length, 1_048_576);
+  });
+
+  it('refuses a file that is not UTF-8 text', () => {
+    const library = libraryNamed('not utf-8');
+    put(library, 'nul.bin', Buffer.from([0x50, 0, 0x4b]));
+    put(library, 'bad.bin', Buffer.from([0xff]));
+    reads(library, 'nul.bin', 'file=nul.bin is not UTF-8 text.');
+    reads(library, 'bad.bin', 'file=bad.bin is not UTF-8 text.');
+  });
+
+  it('refuses an empty file', () => {
+    const library = libraryNamed('empty');
+    put(library, 'a.txt', '');
+    reads(library, 'a.txt', 'file=a.txt is empty.');
+  });
+
+  it('reads a file as written', () => {
+    const library = libraryNamed('read');
+    const file = put(library, 'src/a.txt', 'héllo\n');
+    assert.deepEqual(readIncludedFile(library, 'src/a.txt', page), {
+      path: 'src/a.txt',
+      absolute: file,
+      text: 'héllo\n',
+    });
+  });
+
+  it('refuses a link that leads out of the library', withLinks, () => {
+    const library = libraryNamed('link out');
+    const outside = put({ root: join(library.root, '..', 'link out outside') }, 'secret.txt', 'x');
+    symlinkSync(outside, join(library.root, 'link.txt'));
+    symlinkSync(join(outside, '..'), join(library.root, 'dir'), 'dir');
+    const real = realpathSync(outside);
+    resolves(
+      library,
+      'link.txt',
+      `file=link.txt is outside the library through a symbolic link: its real path is ${real}.`,
+    );
+    resolves(
+      library,
+      'dir/secret.txt',
+      `file=dir/secret.txt is outside the library through a symbolic link: its real path is ${real}.`,
+    );
+  });
+
+  it('refuses a link that leads nowhere or around in a loop', withLinks, () => {
+    const library = libraryNamed('link broken');
+    symlinkSync(resolve(library.root, 'gone.txt'), join(library.root, 'dangling.txt'));
+    symlinkSync(join(library.root, 'b.txt'), join(library.root, 'a.txt'));
+    symlinkSync(join(library.root, 'a.txt'), join(library.root, 'b.txt'));
+    for (const path of ['dangling.txt', 'a.txt']) {
+      assert.throws(
+        () => resolveIncludedFile(library, path, page),
+        (error) => {
+          assert.ok(error.message.startsWith(`${page}: file=${path} could not be read: `), error.message);
+          return true;
+        },
+      );
+    }
+  });
+
+  it('reads a link that stays inside the library', withLinks, () => {
+    const library = libraryNamed('link in');
+    const target = put(library, 'real/a.txt', 'x\n');
+    symlinkSync(target, join(library.root, 'link.txt'));
+    assert.equal(readIncludedFile(library, 'link.txt', page).text, 'x\n');
+  });
+
+  it('refuses a link into .git', withLinks, () => {
+    const library = libraryNamed('link git');
+    const target = put(library, '.git/config', 'x');
+    symlinkSync(target, join(library.root, 'config.txt'));
+    resolves(library, 'config.txt', 'file=config.txt is inside .git, which the build never reads.');
+  });
+
+  it('finds the files a page includes and skips those it cannot place', () => {
+    const library = libraryNamed('find');
+    const present = put(library, 'a.txt', 'x');
+    put(library, '.git/config', 'x');
+    const pageFile = put(
+      library,
+      'docs/site/x.mdx',
+      [
+        '```txt file=a.txt',
+        '```',
+        '',
+        '> ```txt file="missing.txt"',
+        '> ```',
+        '',
+        '~~~txt file=.git/config',
+        '~~~',
+        '',
+        '```txt file=a.txt',
+        '```',
+        '',
+      ].join('\n'),
+    );
+    assert.deepEqual(findIncludedFiles(library, [{ file: pageFile }]), [present]);
+  });
+
+  it('changes its digest when an included file changes', () => {
+    const library = libraryNamed('digest');
+    const file = put(library, 'a.txt', 'one');
+    const before = includesDigest([file]);
+    assert.match(before, /^[0-9a-f]{16}$/);
+    assert.equal(includesDigest([file]), before);
+    put(library, 'a.txt', 'two');
+    assert.notEqual(includesDigest([file]), before);
   });
 });

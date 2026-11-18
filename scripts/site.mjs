@@ -46,6 +46,7 @@ import {
   mountPath,
   ownNotFoundPage,
   resolveLibrary,
+  siteBase,
   toolchainRoot,
 } from '../src/library.mjs';
 import { checkComponentTokens } from '../src/brand/tokens.mjs';
@@ -221,10 +222,11 @@ const finished = (child) => new Promise((done) => child.on('exit', (code, signal
 async function checkBuiltSite(library, environment) {
   const out = environment.DOCS_OUT || join(toolchainRoot, 'dist');
   if (!existsSync(join(out, 'index.html'))) {
+    // CodeQL's js/clear-text-logging flags this, as it does usage(): out is the folder the caller passed, never a secret.
     console.error(`No built site in ${out}: build it first, with the same --out.`);
     return 1;
   }
-  const base = new URL(environment.SITE_URL || library.config.siteUrl).pathname;
+  const base = siteBase(library, environment);
   const pages = sitePages(library, out);
   try {
     const browser = await findBrowser(environment);

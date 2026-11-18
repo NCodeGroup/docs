@@ -182,6 +182,16 @@ export function resolveLibrary(environment = process.env) {
 }
 
 /**
+ * The site's base path, without a final slash, '/' for a site at the root: from SITE_URL, else
+ * site.url of site.config.json.
+ * @param {{ config: { siteUrl: string } }} library
+ * @param {Record<string, string | undefined>} [environment]
+ */
+export function siteBase(library, environment = process.env) {
+  return new URL(environment.SITE_URL || library.config.siteUrl).pathname.replace(/\/$/, '') || '/';
+}
+
+/**
  * A page's path as its author knows it: relative to the library's root, whether `file` is the
  * mounted copy or the original.
  */

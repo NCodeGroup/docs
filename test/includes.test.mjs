@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, it } from 'node:test';
+import { fillFileBlock } from '../src/includes/code-block.mjs';
 import {
   findIncludedFiles,
   includesDigest,
@@ -373,5 +374,137 @@ describe('the file include, found', () => {
     assert.equal(includesDigest([file]), before);
     put(library, 'a.txt', 'two');
     assert.notEqual(includesDigest([file]), before);
+  });
+});
+
+const COMMIT = '589501c0123456789abcdef0123456789abcdef0';
+const REPOSITORY = { url: 'https://github.com/NCodeGroup/Example', branch: 'main' };
+// A third argument, even `undefined`, replaces the commit.
+const filled = (library, node, ...commit) =>
+  fillFileBlock({ value: '', ...node }, page, {
+    library,
+    repository: REPOSITORY,
+    commit: commit.length > 0 ? commit[0] : COMMIT,
+  });
+const fills = (library, node, message) =>
+  assert.throws(() => filled(library, node), { message: `${page}: ${message}` });
+const captionOf = (result) => result.caption.children[0];
+
+describe('the file include, filled', () => {
+  it('captions a whole file with its path and the commit', () => {
+    const library = libraryNamed('whole file');
+    put(library, 'BannedSymbols.txt', 'one\ntwo\n');
+    const result = filled(library, { lang: 'txt', meta: 'file=BannedSymbols.txt' });
+    assert.equal(result.value, 'one\ntwo');
+    assert.equal(result.meta, 'title="BannedSymbols.txt"');
+    assert.deepEqual(result.caption, {
+      type: 'paragraph',
+      data: { hName: 'p', hProperties: { className: ['ncode-source'] } },
+      children: [
+        {
+          type: 'link',
+          url: 'https://github.com/NCodeGroup/Example/blob/589501c0123456789abcdef0123456789abcdef0/BannedSymbols.txt',
+          children: [{ type: 'text', value: 'BannedSymbols.txt at 589501c' }],
+        },
+      ],
+    });
+  });
+
+  it('links one line and a range of lines', () => {
+    const library = libraryNamed('lines');
+    put(library, 'src/X.cs', 'a\nb\nc\nd\ne\n');
+    const one = captionOf(filled(library, { lang: 'cs', meta: 'file=src/X.cs from="d" to="d"' }));
+    assert.equal(one.url, `${REPOSITORY.url}/blob/${COMMIT}/src/X.cs#L4`);
+    assert.equal(one.children[0].value, 'src/X.cs, line 4 at 589501c');
+    const range = captionOf(filled(library, { lang: 'cs', meta: 'file=src/X.cs from="b" to="d"' }));
+    assert.equal(range.url, `${REPOSITORY.url}/blob/${COMMIT}/src/X.cs#L2-L4`);
+    assert.equal(range.children[0].value, 'src/X.cs, lines 2–4 at 589501c');
+  });
+
+  it('names the branch when the commit is unknown', () => {
+    const library = libraryNamed('no commit');
+    put(library, 'src/X.cs', 'a\nb\nc\n');
+    const whole = filled(library, { lang: 'cs', meta: 'file=src/X.cs' }, undefined);
+    assert.equal(captionOf(whole).url, `${REPOSITORY.url}/blob/main/src/X.cs`);
+    assert.equal(captionOf(whole).children[0].value, 'src/X.cs on main');
+    const range = filled(library, { lang: 'cs', meta: 'file=src/X.cs from="b"' }, undefined);
+    assert.equal(captionOf(range).url, `${REPOSITORY.url}/blob/main/src/X.cs#L2-L3`);
+    assert.equal(captionOf(range).children[0].value, 'src/X.cs, lines 2–3 on main');
+  });
+
+  it('encodes a path in the link and shows it as written in the label and the title', () => {
+    const library = libraryNamed('encoded');
+    put(library, 'my docs/a b.txt', 'x');
+    const quoted = filled(library, { lang: 'txt', meta: 'file="my docs/a b.txt"' });
+    assert.equal(captionOf(quoted).url, `${REPOSITORY.url}/blob/${COMMIT}/my%20docs/a%20b.txt`);
+    assert.equal(captionOf(quoted).children[0].value, 'my docs/a b.txt at 589501c');
+    assert.equal(quoted.meta, 'title="my docs/a b.txt"');
+  });
+
+  it('titles the block with the path unless the author gives a title', () => {
+    const library = libraryNamed('titles');
+    put(library, 'a.txt', 'x');
+    assert.equal(filled(library, { lang: 'txt', meta: 'file=a.txt' }).meta, 'title="a.txt"');
+    assert.equal(filled(library, { lang: 'txt', meta: 'file=a.txt title="Mine"' }).meta, 'title="Mine"');
+  });
+
+  it('passes the other attributes on to Expressive Code', () => {
+    const library = libraryNamed('passed on');
+    put(library, 'a.txt', 'x');
+    assert.equal(filled(library, { lang: 'txt', meta: 'file=a.txt wrap {2}' }).meta, 'title="a.txt" wrap {2}');
+  });
+
+  it('leaves a block without a file reference alone', () => {
+    const library = libraryNamed('no reference');
+    assert.equal(filled(library, { lang: 'cs', meta: 'title="x.cs" {2}', value: 'code' }), undefined);
+    assert.equal(filled(library, { lang: null, meta: null, value: 'code' }), undefined);
+  });
+
+  it('asks for the language first', () => {
+    const library = libraryNamed('no language');
+    fills(
+      library,
+      { lang: 'file=a.txt', meta: null },
+      'a code block with file=a.txt needs its language first, as in ```txt file=a.txt',
+    );
+    fills(
+      library,
+      { lang: 'file=a.txt', meta: 'from="x"' },
+      'a code block with file=a.txt needs its language first, as in ```txt file=a.txt',
+    );
+    fills(
+      library,
+      { lang: 'from=x', meta: null },
+      'from= and to= select lines of the file that file= names; this code block has no file=.',
+    );
+  });
+
+  it('refuses a language the code blocks do not highlight', () => {
+    const library = libraryNamed('unknown language');
+    put(library, 'a.txt', 'x');
+    fills(
+      library,
+      { lang: 'nosuchlang', meta: 'file=a.txt' },
+      'file=a.txt says nosuchlang, which is not a language the code blocks highlight; use txt for plain text.',
+    );
+    for (const lang of ['txt', 'text', 'plaintext', 'plain', 'csharp', 'cs', 'yml']) {
+      assert.equal(filled(library, { lang, meta: 'file=a.txt' }).value, 'x');
+    }
+  });
+
+  it('refuses a block that has code of its own', () => {
+    const library = libraryNamed('code of its own');
+    put(library, 'a.txt', 'x');
+    fills(
+      library,
+      { lang: 'txt', meta: 'file=a.txt', value: 'mine' },
+      'a code block with file=a.txt must be empty; its text comes from the file.',
+    );
+  });
+
+  it('refuses a block that takes a sample and a file', () => {
+    const library = libraryNamed('snippet and file');
+    put(library, 'a.txt', 'x');
+    fills(library, { lang: 'txt', meta: 'file=a.txt snippet=Key' }, 'a code block takes snippet= or file=, not both.');
   });
 });

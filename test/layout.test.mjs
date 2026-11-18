@@ -72,6 +72,16 @@ describe('the layout check', { skip: executable ? false : missing }, () => {
     await assert.rejects(launchBrowser(join(work, 'no-such-browser')), /did not start/);
   });
 
+  it('fails a command the browser does not answer in time', async () => {
+    const browser = await launchBrowser(executable, { commandTimeout: 1000 });
+    try {
+      const page = await browser.newPage();
+      await assert.rejects(page.evaluate('new Promise(() => {})'), /did not answer Runtime\.evaluate in 1 s/);
+    } finally {
+      await browser.close();
+    }
+  });
+
   it('finds the browser the environment names, else the one the toolchain installs', async () => {
     assert.equal(await findBrowser({ DOCS_BROWSER: 'a', CHROME_BIN: 'b' }), 'a');
     assert.equal(await findBrowser({ CHROME_BIN: 'b' }), 'b');

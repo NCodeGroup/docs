@@ -13,15 +13,22 @@ import { join } from 'node:path';
 const LOAD_TIMEOUT = 30_000;
 /** How long the browser may take to exit after it is asked to close, in milliseconds. */
 const CLOSE_TIMEOUT = 10_000;
+/**
+ * How long one DevTools command may take to answer, in milliseconds. A page's script that never settles is
+ * caught by it.
+ */
+const COMMAND_TIMEOUT = 60_000;
 
 /**
  * Starts the browser in a fresh profile folder. Rejects with a message naming the browser when it does not
  * start.
  *
  * @param {string} executable The path of a Chromium-based browser, or its command on PATH.
+ * @param {{ commandTimeout?: number }} [options] commandTimeout: how long one command may take, COMMAND_TIMEOUT by
+ *   default.
  * @returns {Promise<{ newPage: () => Promise<object>, close: () => Promise<void> }>}
  */
-export async function launchBrowser(executable) {
+export async function launchBrowser(executable, { commandTimeout = COMMAND_TIMEOUT } = {}) {
   const profile = mkdtempSync(join(tmpdir(), 'ncode-layout-'));
   // Windows can hold the profile's files for a moment after the browser exits, so the removal retries.
   const removeProfile = () => rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
@@ -47,7 +54,10 @@ export async function launchBrowser(executable) {
   /** Rejects every pending command; later commands reject at once. */
   function fail(reason) {
     failure ??= reason;
-    for (const { reject } of pending.values()) reject(new Error(failure));
+    for (const { reject, timer } of pending.values()) {
+      clearTimeout(timer);
+      reject(new Error(failure));
+    }
     pending.clear();
   }
 
@@ -75,7 +85,8 @@ export async function launchBrowser(executable) {
       if (message.id === undefined) {
         for (const listener of [...listeners]) listener(message);
       } else if (pending.has(message.id)) {
-        const { resolve, reject } = pending.get(message.id);
+        const { resolve, reject, timer } = pending.get(message.id);
+        clearTimeout(timer);
         pending.delete(message.id);
         if (message.error) reject(new Error(message.error.message));
         else resolve(message.result);
@@ -88,7 +99,11 @@ export async function launchBrowser(executable) {
     if (failure) return Promise.reject(new Error(failure));
     return new Promise((resolve, reject) => {
       const id = ++nextId;
-      pending.set(id, { resolve, reject });
+      const timer = setTimeout(
+        () => fail(`the browser did not answer ${method} in ${commandTimeout / 1000} s`),
+        commandTimeout,
+      );
+      pending.set(id, { resolve, reject, timer });
       toBrowser.write(`${JSON.stringify({ id, method, params, sessionId })}\0`, (error) => {
         if (error) fail(error.message);
       });
@@ -97,7 +112,13 @@ export async function launchBrowser(executable) {
 
   /** Stops the browser, and deletes its profile folder. */
   async function close() {
-    await send('Browser.close').catch(() => {});
+    if (failure) {
+      // A browser that failed may not answer Browser.close: stop it at once.
+      child.kill();
+    } else {
+      // The browser may have exited already; the exit is awaited next.
+      await send('Browser.close').catch(() => {});
+    }
     const timer = setTimeout(() => child.kill(), CLOSE_TIMEOUT);
     await exited;
     clearTimeout(timer);
@@ -138,8 +159,9 @@ export async function launchBrowser(executable) {
             if (message.sessionId === sessionId && message.method === 'Page.loadEventFired') resolve();
           };
           listeners.add(listener);
-          timer = setTimeout(() => reject(new Error(`${url} did not load in 30 s`)), LOAD_TIMEOUT);
+          timer = setTimeout(() => reject(new Error(`${url} did not load in ${LOAD_TIMEOUT / 1000} s`)), LOAD_TIMEOUT);
         });
+        // Marks the rejection handled until it is awaited below, which surfaces it.
         loaded.catch(() => {});
         try {
           const { errorText } = await send('Page.navigate', { url }, sessionId);

@@ -101,8 +101,9 @@ Each input from a library or a caller, and the check it gets before the build us
 
 - CWE-20, improper input validation: R5 and [Input Validation](#input-validation).
 - CWE-22 and CWE-59, path traversal and link following: R4.
-- CWE-78 and CWE-94, command and code injection: `scripts/site.mjs` and `src/library.mjs` start Astro and git, and `src/layout/browser.mjs` starts the browser, with a
-  list of arguments and no shell, and the workflow's inputs reach the script through `env`.
+- CWE-78 and CWE-94, command and code injection: `scripts/site.mjs` and `src/library.mjs` start Astro and git, and
+  `src/layout/browser.mjs` starts the browser, with a list of arguments and no shell, and the workflow's inputs reach
+  the script through `env`.
 - CWE-117, improper output neutralization for logs: `readLastUpdated` in `src/library.mjs` writes only the first line
   of git's message, with `%` escaped, as a workflow command.
 - CWE-250, execution with unnecessary privileges: R1 and R2.

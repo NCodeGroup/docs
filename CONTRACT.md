@@ -418,10 +418,10 @@ and `--out`. Its browser is `--browser` or `DOCS_BROWSER`, else `CHROME_BIN`, el
 installs; a Chromium-based browser such as Google Chrome or Microsoft Edge.
 
 `DOCS_LIBRARY`, `DOCS_CONTENT`, `SITE_URL`, `DOCS_OUT` and `DOCS_BROWSER` are the same five values as environment
-variables; an argument wins. The script copies the content folder into this toolchain at `src/content/docs/` (ignored by git,
-replaced by the next run), so one checkout of the toolchain builds one library at a time: a second command started
-while a build or a dev server runs in the same checkout stops with a message that names the first. It writes nothing
-to the library.
+variables; an argument wins. The script copies the content folder into this toolchain at `src/content/docs/` (ignored
+by git, replaced by the next run), so one checkout of the toolchain builds one library at a time: a second command
+started while a build or a dev server runs in the same checkout stops with a message that names the first. It writes
+nothing to the library.
 
 The built site goes to `dist/` in this toolchain unless `--out` names another folder. A folder outside the toolchain
 whose path starts with the toolchain's, such as `../docs-site` beside a toolchain at `../docs`, stops `build` and

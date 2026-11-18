@@ -87,6 +87,7 @@ function measure() {
           problem: `extends ${past} px past the content column`,
         });
       } else if (element.matches('.expressive-code, [data-scrolls]')) {
+        // It fits the column. Its content scrolls by design, so it is not measured (CONTRACT.md, section 7).
       } else if (getComputedStyle(element).overflowX !== 'visible' && hidden > 1) {
         found.push({
           element: describe(element),

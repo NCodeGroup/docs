@@ -612,15 +612,14 @@ describe('a wrong file include fails the build', () => {
 
   it('a symbolic link to a file outside the library', withLinks, () => {
     const target = join(work, 'libraries', 'include-link-target.txt');
+    // The expected message holds the target's real path, so the target exists before `failsWith` is called.
+    mkdirSync(join(work, 'libraries'), { recursive: true });
+    writeFileSync(target, 'outside\n');
     failsWith(
       'include-link',
       '```txt file=linked.txt\n```',
       `file=linked.txt is outside the library through a symbolic link: its real path is ${realpathSync(target)}.`,
-      (library) => {
-        mkdirSync(join(work, 'libraries'), { recursive: true });
-        writeFileSync(target, 'outside\n');
-        symlinkSync(target, join(library, 'linked.txt'));
-      },
+      (library) => symlinkSync(target, join(library, 'linked.txt')),
     );
   });
 

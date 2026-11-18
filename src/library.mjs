@@ -65,7 +65,7 @@ const isNeverRead = (inLibrary) => inLibrary.split('/').some((segment) => NEVER_
 export function resolveLibrary(environment = process.env) {
   if (!environment.DOCS_LIBRARY) {
     throw new Error(
-      'No library to build: set DOCS_LIBRARY to the library\'s repository folder, or run "npm run build -- <folder>".',
+      "No library to build: set DOCS_LIBRARY to the library's repository folder, or run \"npm run site '--' build <folder>\".",
     );
   }
   const root = resolve(environment.DOCS_LIBRARY);

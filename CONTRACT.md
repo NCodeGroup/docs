@@ -235,10 +235,9 @@ caption under it that links those lines on GitHub:
   passes; the text a page names is text the file holds, and a change to it stops the build, naming it.
 - The path is relative to the library's repository root: no leading `/` or `\`, no drive, no backslash, and no empty,
   `.` or `..` segment. It names a file that exists and is neither a folder nor in `.git`, whatever the letter case of
-  the folder's name; its real path, with every
-  symbolic link followed, is under the repository's real path, and a link that leads out stops the build. `bin`,
-  `obj`, `node_modules` and `TestResults` are allowed here, unlike in a `samples` glob. The file is at most 1 MiB, is
-  UTF-8 text without a null character, and is not empty.
+  the folder's name; its real path, with every symbolic link followed, is under the repository's real path, and a link
+  that leads out stops the build. `bin`, `obj`, `node_modules` and `TestResults` are allowed here, unlike in a
+  `samples` glob. The file is at most 1 MiB, is UTF-8 text without a null character, and is not empty.
 - The page shows the file's lines from the first to the last selected, without the blank lines at either end, and
   with the longest run of spaces and tabs that starts every non-blank line removed from each of them. Blank lines
   inside are kept, and a selection of blank lines only stops the build.

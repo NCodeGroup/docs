@@ -34,11 +34,12 @@ control which tokens are read.
 5. A primitive is a name of a colour ramp step (`--nc-blue-600`) or of a type scale step (`--nc-text-sm`), by the
    pattern `test/vendor.test.mjs` uses. A primitive is reported as one even when the brand defines it.
 6. A name is reported once per file, in the order of its first read, with the file as the library has it
-   (`docs/site/_components/ByteGrid.astro`). A primitive gives `<path> reads <name>, a step of the brand's colour ramps
-   or type scale, which a brand release may change; read a colour role or a type role instead.` and an undefined name
-   gives `<path> reads <name>, which the brand does not define.`
-7. With one problem the message is that problem alone; with several, it is `The library's components read custom
-   properties the brand does not offer:` and each problem on its own line after two spaces.
+   (`docs/site/_components/ByteGrid.astro`). A primitive gives
+   `<path> reads <name>, a step of the brand's colour ramps or type scale, which a brand release may change; read a colour role or a type role instead.`
+   and an undefined name gives `<path> reads <name>, which the brand does not define.`
+7. With one problem the message is that problem alone; with several, it is
+   `The library's components read custom properties the brand does not offer:` and each problem on its own line after
+   two spaces.
 
 ## Options considered
 

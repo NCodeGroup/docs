@@ -23,14 +23,15 @@ it that links those lines on GitHub at the commit the site was built from. A blo
 build.**
 
 1. A page includes a file with a fenced block whose info string starts with the language and carries `file=<path>`, and
-   optionally `from="<text>"` and `to="<text>"`, such as `xml file=Directory.Build.props from="<ItemGroup Condition="
-   to="</ItemGroup>"`. A value is bare (no white space, no quote), or quoted with `"` or `'`. `from` and `to` match as a
-   case-sensitive substring of one line. `from` is on exactly one line; `to` is the first line at or after the `from`
-   line (or the first line, without `from`) that holds it, and on the `from` line it gives one line. Without `from`
-   the block starts at the first line, and without `to` it runs to the end. `lines=` is refused, because a range shows
-   other lines once the file changes. The rest of the info string (`title="…"`, `{4}`, `ins={…}`, `del={…}`, marked
-   text, `wrap`) goes on to Expressive Code, and marked line numbers count from the first line shown. The language is
-   required and is one Shiki highlights, or `txt`, `text`, `plaintext` or `plain`.
+   optionally `from="<text>"` and `to="<text>"`, such as
+   `xml file=Directory.Build.props from="<ItemGroup Condition=" to="</ItemGroup>"`. A value is bare (no white space, no
+   quote), or quoted with `"` or `'`. `from` and `to` match as a case-sensitive substring of one line. `from` is on
+   exactly one line; `to` is the first line at or after the `from` line (or the first line, without `from`) that holds
+   it, and on the `from` line it gives one line. Without `from` the block starts at the first line, and without `to` it
+   runs to the end. `lines=` is refused, because a range shows other lines once the file changes. The rest of the info
+   string (`title="…"`, `{4}`, `ins={…}`, `del={…}`, marked text, `wrap`) goes on to Expressive Code, and marked line
+   numbers count from the first line shown. The language is required and is one Shiki highlights, or `txt`, `text`,
+   `plaintext` or `plain`.
 2. The path is relative to the library's repository root, with no leading `/`, `\` or drive, no backslash, and no
    empty, `.` or `..` segment. It names a file that exists, is at most 1 MiB, is UTF-8 text without U+0000, and is not
    empty. It is never inside `.git`, and its real path, after symbolic links, is under the library's real root.

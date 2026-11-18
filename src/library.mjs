@@ -193,6 +193,21 @@ export function libraryPath(library, file) {
 }
 
 /**
+ * Prints a warning: as an annotation in GitHub Actions (when `GITHUB_ACTIONS` is `'true'`), else as
+ * the message itself. A workflow command's data escapes `%`, CR and LF, because an unescaped line
+ * break ends the command early.
+ * @param {string} message
+ * @param {Record<string, string | undefined>} [environment]
+ */
+export function warn(message, environment = process.env) {
+  console.warn(
+    environment.GITHUB_ACTIONS === 'true'
+      ? `::warning::${message.replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A')}`
+      : message,
+  );
+}
+
+/**
  * The time of the newest commit that changed each file of the content folder, in milliseconds, by
  * the file's path under that folder. Empty when the library is not in a git repository. A shallow
  * clone gives every file the date of its one commit, which is why the workflow fetches all history.
@@ -223,8 +238,7 @@ export function readLastUpdated(library, environment = process.env) {
     if (!inRepository(library.root)) return {};
     const reason = log.error?.message ?? (log.stderr.trim().split(/\r?\n/)[0] || `git exited with code ${log.status}`);
     const message = `No page shows a "last updated" date: git could not read the history of ${library.root}: ${reason}`;
-    // A workflow command's data escapes "%" (and line breaks, which a first line has none of).
-    console.warn(environment.GITHUB_ACTIONS === 'true' ? `::warning::${message.replaceAll('%', '%25')}` : message);
+    warn(message, environment);
     return {};
   }
   const dates = {};

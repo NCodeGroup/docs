@@ -18,10 +18,10 @@ import {
   libraryPath,
   listPages,
   ownNotFoundPage,
-  pageSlug,
   readCommit,
   readLastUpdated,
   resolveLibrary,
+  warn,
 } from './src/library.mjs';
 import { baseLinks } from './src/links/base-links.mjs';
 import { checkBuiltLinks } from './src/links/built-links.mjs';
@@ -46,8 +46,7 @@ const describePage = (file) => libraryPath(library, file);
 // region or a malformed marker stops the build here, before any page is read.
 const snippets = readSnippets({ files: library.sampleFiles, relativeTo: library.root });
 
-// The files the pages include with `file=<path>`, and the commit their captions link to. A block
-// that names a file the library does not have stops the build when its page renders.
+// The library's pages, which the heading rules and the includes are checked against.
 const pages = listPages(library);
 // The headings the pages a rule names must have. A rule that matches no page stops the build here;
 // a page that lacks a heading stops it when the page renders.
@@ -55,14 +54,17 @@ const headingRules = resolveHeadingRules(config.requiredHeadings, pages, library
 // A component that reads a token the brand does not define, or a step of a ramp or scale, stops the
 // build here, before any page renders.
 checkComponentTokens(library);
-const slugOf = (file) => pageSlug(libraryPath(library, file).slice(library.contentPath.length + 1));
+// A page added while the dev server runs has no slug, so no rule, until the server's next start.
+const slugs = new Map(pages.map((page) => [`${library.contentPath}/${page.path}`, page.slug]));
+const slugOf = (file) => slugs.get(libraryPath(library, file));
+// The files the pages include with `file=<path>`, and the commit their captions link to. A block
+// that names a file the library does not have stops the build when its page renders.
 const includeRoot = { root: library.root, realRoot: realpathSync(library.root) };
 const included = findIncludedFiles(includeRoot, pages);
 const { commit, reason } = readCommit(library);
 if (!commit && reason && included.length > 0) {
   const message = `Source links name the branch ${config.repository.branch}: git could not read the commit of ${library.root}: ${reason}`;
-  // A workflow command's data escapes "%" (and line breaks, which a first line has none of).
-  console.warn(process.env.GITHUB_ACTIONS === 'true' ? `::warning::${message.replaceAll('%', '%25')}` : message);
+  warn(message);
 }
 
 export default defineConfig({

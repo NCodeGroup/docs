@@ -7,8 +7,8 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { describe, it } from 'node:test';
-import { listPages, pageSlug, readCommit, resolveLibrary } from '../src/library.mjs';
+import { afterEach, describe, it, mock } from 'node:test';
+import { listPages, pageSlug, readCommit, resolveLibrary, warn as warnMessage } from '../src/library.mjs';
 import { copyOfFixture, fixture, root, work } from './helpers.mjs';
 
 const FIXTURE_PAGES = [
@@ -90,5 +90,21 @@ describe('a library', () => {
     const result = readCommit(resolveLibrary({ DOCS_LIBRARY: fixture }), { PATH: noGit });
     assert.equal(result.commit, undefined);
     assert.ok(result.reason?.endsWith('spawnSync git ENOENT'), result.reason);
+  });
+});
+
+describe('a warning', () => {
+  afterEach(() => mock.restoreAll());
+
+  it('is a workflow command in GitHub Actions, with %, CR and LF escaped', () => {
+    const warn = mock.method(console, 'warn', () => {});
+    warnMessage('a%b\r\nc', { GITHUB_ACTIONS: 'true' });
+    assert.deepEqual(warn.mock.calls[0].arguments, ['::warning::a%25b%0D%0Ac']);
+  });
+
+  it('is its message elsewhere', () => {
+    const warn = mock.method(console, 'warn', () => {});
+    warnMessage('a%b', {});
+    assert.deepEqual(warn.mock.calls[0].arguments, ['a%b']);
   });
 });

@@ -29,7 +29,7 @@ export function resolveHeadingRules(rules, pages, { configName, contentPath }) {
     }
     const except = rule.except ?? [];
     for (const slug of except) {
-      if (!rule.pages.some((glob) => matches(glob, slug)))
+      if (!pages.some((page) => page.slug === slug) || !rule.pages.some((glob) => matches(glob, slug)))
         problems.push(`${at}.except "${slug}" is not a page that ${at}.pages matches.`);
     }
     const seen = new Set();

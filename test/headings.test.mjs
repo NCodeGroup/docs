@@ -61,6 +61,28 @@ describe('resolveHeadingRules', () => {
     );
   });
 
+  it('refuses an exception that matches a glob but is no page', () => {
+    assert.throws(
+      () =>
+        resolveHeadingRules(
+          [{ pages: ['guides/*'], headings: ['## Checklist'], except: ['guides/deleted'] }],
+          PAGES,
+          LIBRARY,
+        ),
+      {
+        message:
+          'docs/site/site.config.json: requiredHeadings[0].except "guides/deleted" is not a page that requiredHeadings[0].pages matches.',
+      },
+    );
+    const bySlug = resolveHeadingRules(
+      [{ pages: ['guides/*'], headings: ['## Checklist'], except: ['guides/review-checklist'] }],
+      PAGES,
+      LIBRARY,
+    );
+    assert.equal(bySlug.has('guides/review-checklist'), false);
+    assert.equal(bySlug.has('guides/verify-a-mac'), true);
+  });
+
   it('refuses a heading listed twice, once, at its second listing', () => {
     assert.throws(
       () =>

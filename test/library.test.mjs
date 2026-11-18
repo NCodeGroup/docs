@@ -13,6 +13,7 @@ import { copyOfFixture, fixture, root, work } from './helpers.mjs';
 
 const FIXTURE_PAGES = [
   'concepts/how-sealing-works.mdx',
+  'guides/ban-apis.mdx',
   'guides/derive-a-key.mdx',
   'guides/extension-members.mdx',
   'index.mdx',
@@ -41,7 +42,7 @@ describe('a library', () => {
       pages.map((page) => page.path),
       FIXTURE_PAGES,
     );
-    assert.deepEqual(pages[1], {
+    assert.deepEqual(pages[2], {
       file: join(fixture, 'docs', 'site', 'guides', 'derive-a-key.mdx'),
       path: 'guides/derive-a-key.mdx',
       slug: 'guides/derive-a-key',

@@ -116,6 +116,7 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
       'quick-start/',
       'guides/derive-a-key/',
       'guides/extension-members/',
+      'guides/ban-apis/',
       'concepts/how-sealing-works/',
       'reference/api/',
     ]) {

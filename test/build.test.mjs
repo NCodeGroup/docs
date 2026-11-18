@@ -15,6 +15,7 @@ import { build, copyOfFixture, pages, root, siteAbsoluteUrls, work } from './hel
 const EXPECTED_PAGES = [
   '404.html',
   'concepts/how-sealing-works/index.html',
+  'guides/ban-apis/index.html',
   'guides/derive-a-key/index.html',
   'guides/extension-members/index.html',
   'index.html',
@@ -56,6 +57,45 @@ function checkSamples(out) {
   }
 }
 
+function checkIncludes(out) {
+  const html = readFileSync(join(out, 'guides/ban-apis/index.html'), 'utf8');
+  const shown = text(html);
+  assert.ok(
+    shown.includes(`<ItemGroup Condition="!$(MSBuildProjectName.EndsWith('.Tests'))">`),
+    'the lines of Directory.Build.props are on the page',
+  );
+  assert.match(shown, /<AdditionalFiles Include=/);
+  assert.match(shown, /Directory\.Build\.props/, 'the block is titled with its path');
+  assert.match(shown, /The banned symbols/, "an author's title is kept");
+  assert.match(shown, /uses: NCodeGroup\/docs\//, 'the lines of the workflow are on the page');
+
+  const workflow = readFileSync(join(root, 'fixture', '.github', 'workflows', 'docs.yml'), 'utf8').split(/\r\n|\r|\n/);
+  const usesLine = workflow.findIndex((line) => line.includes('uses: NCodeGroup/docs/')) + 1;
+  assert.ok(usesLine > 0, 'the fixture workflow has the line the page selects');
+
+  const captions = [...html.matchAll(/<p class="ncode-source">.*?<\/p>/gs)].map(([paragraph]) => paragraph);
+  assert.equal(captions.length, 3, 'each file block has a caption');
+  assert.match(
+    captions[0],
+    /https:\/\/github\.com\/NCodeGroup\/Fixture\/blob\/[0-9a-f]{40}\/Directory\.Build\.props#L3-L5"/,
+  );
+  assert.match(captions[1], /https:\/\/github\.com\/NCodeGroup\/Fixture\/blob\/[0-9a-f]{40}\/BannedSymbols\.txt"/);
+  assert.match(
+    captions[2],
+    new RegExp(
+      `https://github\\.com/NCodeGroup/Fixture/blob/[0-9a-f]{40}/\\.github/workflows/docs\\.yml#L${usesLine}"`,
+    ),
+  );
+
+  const head = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim();
+  assert.match(head, /^[0-9a-f]{40}$/, 'git reads the commit of the repository');
+  assert.ok(shown.includes(`Directory.Build.props, lines 3–5 at ${head.slice(0, 7)}`), 'the caption names the commit');
+
+  for (const { file, html: built } of pages(out)) {
+    assert.doesNotMatch(text(built), /file=/, `${file} shows a file reference`);
+  }
+}
+
 describe('the fixture under the base path /Fixture/', () => {
   const result = build('fixture');
 
@@ -76,6 +116,8 @@ describe('the fixture under the base path /Fixture/', () => {
   });
 
   it('includes the samples and never a marker line', () => checkSamples(result.out));
+
+  it('shows the repository files a page includes, linked at the commit', () => checkIncludes(result.out));
 
   it('links nowhere outside the base', () => {
     let checked = 0;
@@ -156,6 +198,8 @@ describe('the fixture at the root of a domain', () => {
   });
 
   it('includes the samples and never a marker line', () => checkSamples(result.out));
+
+  it('shows the repository files a page includes, linked at the commit', () => checkIncludes(result.out));
 
   it('has no trace of another base path', () => {
     for (const { file, html } of pages(result.out)) {

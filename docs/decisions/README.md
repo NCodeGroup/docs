@@ -72,9 +72,10 @@ records are indexed in [project-template/](project-template/README.md).
 | [ADR-1004](1004-the-csharp-grammar-is-patched-at-build-time-for-extension-blocks.md) | The C# grammar is patched at build time for extension blocks | Accepted |
 | [ADR-1005](1005-biome-lints-astro-components-without-formatting-them.md) | Biome lints the Astro components without formatting them | Accepted |
 | [ADR-1006](1006-the-toolchain-renders-the-404-page-and-supplies-one-when-a-library-has-none.md) | The toolchain renders the 404 page, and supplies one when a library has none | Accepted |
-| [ADR-1007](1007-a-markdown-table-stacks-on-a-phone-with-its-cells-labelled-when-the-site-is-built.md) | A Markdown table stacks on a phone, with its cells labelled when the site is built | Accepted |
+| [ADR-1007](1007-a-markdown-table-stacks-on-a-phone-with-its-cells-labelled-when-the-site-is-built.md) | A Markdown table stacks on a phone, with its cells labelled when the site is built | Accepted (amended by 1014) |
 | [ADR-1008](1008-the-brand-is-vendored-from-an-attested-release-and-the-theme-restyles-only-starlights-markup.md) | The brand is vendored from an attested release, and the theme restyles only Starlight's markup (amends 1000) | Accepted (amended by 1009) |
 | [ADR-1009](1009-brands-vendoring-script-is-vendored-and-pinned-in-the-brand-lock.md) | Brand's vendoring script is vendored and pinned in the brand lock (amends 1008) | Accepted |
 | [ADR-1010](1010-a-page-shows-a-repository-file-or-the-lines-between-two-texts-of-it-when-the-site-is-built.md) | A page shows a repository file, or the lines between two texts of it, when the site is built | Accepted |
 | [ADR-1011](1011-a-site-can-require-headings-on-the-pages-a-glob-names-and-the-build-fails-a-page-without-them.md) | A site can require headings on the pages a glob names, and the build fails a page without them | Accepted |
 | [ADR-1012](1012-the-build-fails-a-library-component-that-reads-a-token-the-brand-does-not-offer.md) | The build fails a library component that reads a token the brand does not offer | Accepted |
+| [ADR-1014](1014-a-markdown-table-wraps-its-cells-to-fit-the-content-column-and-scrolls-inside-it-when-it-cannot.md) | A Markdown table wraps its cells to fit the content column, and scrolls inside it when it cannot (amends 1007) | Accepted |

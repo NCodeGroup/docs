@@ -44,4 +44,37 @@ describe('the documented npm commands', () => {
       `A documented npm command writes a bare --, which PowerShell drops; write '--' in:\n${bare.join('\n')}`,
     );
   });
+
+  it('find a bare separator and pass a quoted one', () => {
+    // The bare forms are built from BARE so this file's own lines never match the scan.
+    const BARE = '--';
+    for (const line of [
+      `npm run dev ${BARE} ../Buffers`,
+      `npm --prefix ../docs run site ${BARE} build .`,
+      `npm run browser ${BARE}`,
+    ]) {
+      assert.ok(BARE_SEPARATOR.test(line), line);
+    }
+    for (const line of [
+      "npm run dev '--' ../Buffers",
+      "npm --prefix ../docs run site '--' build .",
+      'npm ci --ignore-scripts',
+      'npm run build',
+    ]) {
+      assert.ok(!BARE_SEPARATOR.test(line), line);
+    }
+  });
+
+  it('scan the documents that hold the commands', () => {
+    for (const file of [
+      'README.md',
+      'AGENTS.md',
+      'CONTRIBUTING.md',
+      'CHANGELOG.md',
+      '.github/workflows/ci.yml',
+      'src/library.mjs',
+    ]) {
+      assert.ok(files.includes(file), file);
+    }
+  });
 });

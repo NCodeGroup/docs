@@ -25,8 +25,8 @@ fails, and the check names the table and says how to make it fit.**
 1. `div.ncode-table` keeps `overflow-x: auto`, so a published page that has such a table stays readable, and carries no
    `data-scrolls`. The check exempts no `.ncode-table`.
 2. The check names a failing wrapper `Markdown table "<first> | <second> | <third> | …"` from the head cells of the
-   table's first head row, the first three, with `…` when there are more, and appends `: a Markdown table must fit the
-   column, so lay it out as a card per entry or give it fewer columns` to the problem.
+   table's first head row, the first three, with `…` when there are more, and appends
+   `: a Markdown table must fit the column, so lay it out as a card per entry or give it fewer columns` to the problem.
 3. The message's last line says a Markdown table must fit too, and that a component which scrolls sideways by design is
    marked `data-scrolls`.
 4. A library that keeps a wide table on purpose renders it in a component of its own whose root is marked

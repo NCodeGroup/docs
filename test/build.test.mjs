@@ -21,6 +21,7 @@ const EXPECTED_PAGES = [
   'index.html',
   'quick-start/index.html',
   'reference/api/index.html',
+  'reference/behaviour/index.html',
 ];
 
 /** A page's text as a reader sees it: tags removed, entities decoded, whitespace collapsed. */

@@ -19,6 +19,7 @@ const FIXTURE_PAGES = [
   'index.mdx',
   'quick-start.mdx',
   'reference/api.mdx',
+  'reference/behaviour.mdx',
 ];
 
 /** Writes a file under a copy of the fixture, with the folders it needs. */

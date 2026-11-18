@@ -1,0 +1,13 @@
+---
+title: Behaviour of each member
+description: What each member of Vault does with each input, and the test that proves it.
+---
+
+Each row is one test of the library: the member it calls, the input, what happens, and the test's name.
+
+| Test that proves it | Member | Input | What happens | Why it matters |
+| --- | --- | --- | --- | --- |
+| `Rent_LengthLessThanNegativeOne_ThrowsArgumentOutOfRangeException` | `Vault.Rent(int, out Span<byte>)` | `-2` | Throws `ArgumentOutOfRangeException` | A negative length names no buffer |
+| `Rent_LengthZero_ReturnsAnEmptySpanThatIsStillSealed` | `Vault.Rent(int, out Span<byte>)` | `0` | Returns an empty span, sealed | An empty secret still needs its owner disposed |
+| `Wrap_CallerOwnedMemory_ZeroesItOnDisposeWithoutReturningItToThePool` | `Vault.Wrap(Span<byte>)` | `stackalloc byte[32]` | Zeroes the memory on dispose | The caller's memory never reaches the pool |
+| `Dispose_CalledTwice_ZeroesOnceAndDoesNotThrowObjectDisposedException` | `Vault.Dispose()` | A disposed vault | Does nothing | `using` and an explicit `Dispose` can both run |

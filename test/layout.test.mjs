@@ -9,13 +9,13 @@
 // as CI sets it.
 import assert from 'node:assert/strict';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { describe, it } from 'node:test';
+import { before, describe, it } from 'node:test';
 import { join } from 'node:path';
 import { chromium } from 'playwright-core';
 import { launchBrowser } from '../src/layout/browser.mjs';
-import { findBrowser, layoutMessage, sitePages } from '../src/layout/check.mjs';
+import { checkLayout, findBrowser, layoutMessage, sitePages } from '../src/layout/check.mjs';
 import { resolveLibrary } from '../src/library.mjs';
-import { fixture, work } from './helpers.mjs';
+import { build, copyOfFixture, fixture, work } from './helpers.mjs';
 
 let executable;
 let missing;
@@ -83,5 +83,88 @@ describe('the layout check', { skip: executable ? false : missing }, () => {
     );
     assert.ok(message.includes('\n  docs/site/b.mdx at 1280 px: div.y, hides 12 px of content sideways\n'));
     assert.ok(message.includes('data-scrolls'));
+  });
+
+  describe('on a built site', () => {
+    const BASE = '/Fixture/';
+
+    before(() => {
+      const result = build('layout');
+      assert.equal(result.code, 0, result.output);
+    });
+
+    it('passes every page of the fixture at every width', async () => {
+      const out = join(work, 'out', 'layout');
+      const problems = await checkLayout({
+        out,
+        base: BASE,
+        pages: sitePages(resolveLibrary({ DOCS_LIBRARY: fixture }), out),
+        browser: executable,
+      });
+      assert.deepEqual(problems, []);
+    });
+
+    it('reports an element past the column and a box that hides its content, and leaves a marked scroller alone', async () => {
+      const library = copyOfFixture('layout-wide');
+      const names = [
+        'One',
+        'Two',
+        'Three',
+        'Four',
+        'Five',
+        'Six',
+        'Seven',
+        'Eight',
+        'Nine',
+        'Ten',
+        'Eleven',
+        'Twelve',
+        'Thirteen',
+        'Fourteen',
+        'Fifteen',
+        'Sixteen',
+      ];
+      const table = [
+        `| ${names.join(' | ')} |`,
+        `| ${names.map(() => '---').join(' | ')} |`,
+        `| ${names.map(() => 'alpha').join(' | ')} |`,
+      ].join('\n');
+      writeFileSync(
+        join(library, 'docs', 'site', 'guides', 'wide.md'),
+        [
+          '---',
+          'title: Wide',
+          '---',
+          '',
+          '<div class="too-wide" style="width: 72rem">A row wider than any content column.</div>',
+          '',
+          '<div class="hides" style="overflow-x: auto"><div style="width: 72rem">Content past the right edge.</div></div>',
+          '',
+          '<div class="marked" data-scrolls style="overflow-x: auto"><div style="width: 72rem">Content that scrolls by design.</div></div>',
+          '',
+          table,
+          '',
+        ].join('\n'),
+      );
+      const result = build('layout-wide', { library });
+      assert.equal(result.code, 0, result.output);
+      const problems = await checkLayout({
+        out: result.out,
+        base: BASE,
+        pages: [{ name: 'docs/site/guides/wide.md', path: 'guides/wide/' }],
+        browser: executable,
+      });
+      for (const problem of problems) {
+        assert.equal(problem.heading, 'Wide');
+        assert.match(
+          problem.problem,
+          /^(extends \d+ px past the content column|hides \d+ px of its content sideways)$/,
+        );
+      }
+      const at = (width) => problems.filter((problem) => problem.width === width).map((problem) => problem.element);
+      for (const width of [1440, 1280, 1024])
+        assert.deepEqual(at(width), ['div.too-wide', 'div.hides', 'div.ncode-table']);
+      assert.deepEqual(at(390), ['div.too-wide', 'div.hides']);
+    });
   });
 });

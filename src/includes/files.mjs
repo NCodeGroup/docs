@@ -263,7 +263,13 @@ export function resolveIncludedFile(library, path, page) {
  */
 export function readIncludedFile(library, path, page) {
   const { absolute } = resolveIncludedFile(library, path, page);
-  const bytes = readFileSync(absolute);
+  let bytes;
+  try {
+    bytes = readFileSync(absolute);
+  } catch (error) {
+    // A file that stats can still refuse to open (no permission); the author needs the page and the path.
+    throw new Error(`${page}: file=${path} could not be read: ${error.message}`);
+  }
   let text;
   try {
     text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);

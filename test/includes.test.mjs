@@ -4,6 +4,7 @@
 // The file include: reading a code block's file reference and selecting the lines it shows.
 import assert from 'node:assert/strict';
 import {
+  chmodSync,
   cpSync,
   existsSync,
   mkdirSync,
@@ -216,6 +217,12 @@ describe('the file include, selected', () => {
     );
   });
 
+  it('matches from and to in the letter case written', () => {
+    const lines = 'alpha\nbeta\n';
+    selects(lines, { path: 'a.txt', from: 'ALPHA' }, 'file=a.txt from="ALPHA" is on no line of the file.');
+    selects(lines, { path: 'a.txt', to: 'BETA' }, 'file=a.txt to="BETA" is on no line from line 1 on.');
+  });
+
   it('refuses a to on no line, from line 1 or from the from line', () => {
     selects(text, { path: 'a.txt', to: 'gamma' }, 'file=a.txt to="gamma" is on no line from line 1 on.');
     selects(text, { path: 'a.txt', from: 'beta', to: 'alpha' }, 'file=a.txt to="alpha" is on no line from line 5 on.');
@@ -330,6 +337,29 @@ describe('the file include, found', () => {
     const library = libraryNamed('empty');
     put(library, 'a.txt', '');
     reads(library, 'a.txt', 'file=a.txt is empty.');
+  });
+
+  const cannotOpen =
+    process.platform === 'win32'
+      ? 'Windows does not apply the mode bits chmod sets'
+      : process.getuid?.() === 0
+        ? 'root opens a file whatever its mode'
+        : false;
+  it('names the page and the path of a file that cannot be opened', { skip: cannotOpen }, () => {
+    const library = libraryNamed('no permission');
+    const file = put(library, 'locked.txt', 'x\n');
+    chmodSync(file, 0o000);
+    try {
+      assert.throws(
+        () => readIncludedFile(library, 'locked.txt', page),
+        (error) => {
+          assert.ok(error.message.startsWith(`${page}: file=locked.txt could not be read: EACCES`), error.message);
+          return true;
+        },
+      );
+    } finally {
+      chmodSync(file, 0o644);
+    }
   });
 
   it('reads a file as written', () => {

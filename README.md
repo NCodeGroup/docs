@@ -234,9 +234,9 @@ formatting and safe fixes; `biome.json` holds the rules.
 `npm run test` also writes the coverage of the toolchain's code to `lcov.info`, and `./.template/Test-Coverage.ps1`
 fails below 90% of its statements or 80% of its branches. CI runs it after the tests, and a release waits for it.
 
-`./.template/Test-FileHeaders.ps1` checks that each JavaScript and TypeScript file starts with the copyright line and
-the `SPDX-License-Identifier: Apache-2.0` line, as CI does, and `-Fix` adds them; [CONTRIBUTING.md](CONTRIBUTING.md)
-says where the lines go in the files it skips: Astro components, stylesheets and `.d.ts` files.
+`./.template/Test-FileHeaders.ps1` checks that each JavaScript, TypeScript and Astro file and each stylesheet starts
+with the copyright line and the `SPDX-License-Identifier: Apache-2.0` line, as CI does, and `-Fix` adds them;
+[CONTRIBUTING.md](CONTRIBUTING.md) says where the lines go in an Astro component and a stylesheet.
 
 The browser is the headless Chromium that the locked `playwright-core` drives. `npm run browser` downloads it, once
 for each version of `playwright-core`; on Linux, `npm run browser -- --with-deps` also installs the system libraries

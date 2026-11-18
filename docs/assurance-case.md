@@ -121,9 +121,10 @@ Each input from a library or a caller, and the check it gets before the build us
   checkouts that keep no credentials, the deploy job that runs only from the default branch and checks out and runs
   nothing, the toolchain checked out at the pinned commit and the step that stops a run without one, the actions
   pinned by commit, the install without scripts or a cache, and npm's three-day minimum release age.
-- **Static analysis:** with CodeQL's default setup configured, the repository ruleset blocks a pull request that adds a
-  CodeQL alert at warning level or above, or a security alert of any severity
-  ([ADR-0005](decisions/project-template/0005-the-default-branch-accepts-changes-only-through-pull-requests.md)).
+- **Static analysis:** with CodeQL's default setup configured and analyzing at least one language, the repository
+  ruleset blocks a pull request that adds a CodeQL alert at warning level or above, or a security alert of any severity
+  ([ADR-0005](decisions/project-template/0005-the-default-branch-accepts-changes-only-through-pull-requests.md),
+  [ADR-0030](decisions/project-template/0030-the-code-scanning-rule-is-added-only-where-codeql-analyzes-a-language.md)).
 - **Review:** every change reaches the default branch through a pull request with passing CI and every conversation
   resolved, and the ruleset refuses force pushes and deletion
   ([ADR-0005](decisions/project-template/0005-the-default-branch-accepts-changes-only-through-pull-requests.md),

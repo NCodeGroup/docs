@@ -415,6 +415,44 @@ describe('the file include, found', () => {
     assert.deepEqual(findIncludedFiles(library, [{ file: pageFile }]), [present]);
   });
 
+  it('finds no file in a block inside a longer fence', () => {
+    const library = libraryNamed('find nested');
+    put(library, 'a.txt', 'x');
+    const pageFile = put(library, 'docs/site/x.mdx', ['````md', '```txt file=a.txt', '```', '````', ''].join('\n'));
+    assert.deepEqual(findIncludedFiles(library, [{ file: pageFile }]), []);
+  });
+
+  it('reads the file of a block the way the parser does', () => {
+    const library = libraryNamed('find tokens');
+    put(library, 'b.txt', 'x');
+    const pageFile = put(library, 'docs/site/x.mdx', ['```txt title="a file=b.txt"', '```', ''].join('\n'));
+    assert.deepEqual(findIncludedFiles(library, [{ file: pageFile }]), []);
+  });
+
+  it('finds the file of a tilde fence and of a fence in a block quote', () => {
+    const library = libraryNamed('find fences');
+    const c = put(library, 'c.txt', 'x');
+    const d = put(library, 'd.txt', 'x');
+    const pageFile = put(
+      library,
+      'docs/site/x.mdx',
+      ['~~~txt file=c.txt', '~~~', '', '> ```txt file=d.txt', '> ```', ''].join('\n'),
+    );
+    assert.deepEqual(findIncludedFiles(library, [{ file: pageFile }]), [c, d]);
+  });
+
+  it('finds a block after a fence has closed', () => {
+    const library = libraryNamed('find after');
+    const a = put(library, 'a.txt', 'x');
+    const e = put(library, 'e.txt', 'x');
+    const pageFile = put(
+      library,
+      'docs/site/x.mdx',
+      ['```txt file=a.txt', '```', '', '```txt', 'code', '```', '', '```txt file=e.txt', '```', ''].join('\n'),
+    );
+    assert.deepEqual(findIncludedFiles(library, [{ file: pageFile }]), [a, e]);
+  });
+
   it('changes its digest when an included file changes', () => {
     const library = libraryNamed('digest');
     const file = put(library, 'a.txt', 'one');

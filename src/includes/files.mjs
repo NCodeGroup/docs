@@ -17,8 +17,10 @@ const ROOTED = /^(?:[/\\]|[A-Za-z]:)/;
 // A line that opens a fenced code block whose info string holds file=<path>.
 const FILE_FENCE = /^\s*(?:>\s*)*(?:`{3,}|~{3,})\s*\S.*?(?:^|\s)file=(?:"([^"]*)"|'([^']*)'|([^\s"']+))/;
 
-// One token of an info string: name=value, a quoted string, a brace group, or any other word.
-const TOKEN = /([A-Za-z][\w-]*)=(?:"([^"]*)"|'([^']*)'|([^\s"']+))|"[^"]*"|'[^']*'|\{[^}]*\}|\S+/g;
+// One token of an info string: name=value, a quoted string, a brace group, or any other word. A name
+// written with no value (the last alternative of the value, which holds only before white space or the
+// end, never before a quote) is a token with the value '', so the build can refuse it by name.
+const TOKEN = /([A-Za-z][\w-]*)=(?:"([^"]*)"|'([^']*)'|([^\s"']+)|(?=\s|$))|"[^"]*"|'[^']*'|\{[^}]*\}|\S+/g;
 const OWN_NAMES = new Set(['file', 'from', 'to', 'lines']);
 // A token that opens a quote after one of this module's names, and so is one whose quote never closed.
 const UNCLOSED = /^(file|from|to|lines)=(["'])/;
@@ -42,7 +44,7 @@ export function parseFileReference(meta, page) {
   for (const match of meta.matchAll(TOKEN)) {
     const name = match[1];
     if (name !== undefined && OWN_NAMES.has(name)) {
-      taken.push({ name, value: match[2] ?? match[3] ?? match[4] });
+      taken.push({ name, value: match[2] ?? match[3] ?? match[4] ?? '' });
       continue;
     }
     const open = UNCLOSED.exec(match[0]);

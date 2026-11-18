@@ -75,6 +75,30 @@ describe('the file include, read', () => {
     assert.equal(parseFileReference('file=a.txt', page).path, 'a.txt');
   });
 
+  it('reads a name written with no value as an empty value', () => {
+    assert.deepEqual(parseFileReference('file=', page), { path: '', from: undefined, to: undefined, rest: '' });
+    assert.equal(parseFileReference('txt file= from=x', page).path, '');
+  });
+
+  it('refuses an empty from, to or lines written with no value', () => {
+    rejects('txt file=a.txt from=', 'from="" names no text.');
+    rejects('txt file=a.txt to=', 'to="" names no text.');
+    rejects(
+      'txt file=a.txt lines=',
+      'lines= is not supported: a line range shows other lines once the file changes. Name the first and last lines by their text, with from="…" and to="…".',
+    );
+  });
+
+  it('still refuses a quote that is never closed after a name', () => {
+    rejects('txt file="a', 'file="… has no closing quote.');
+  });
+
+  it('keeps a title with no value for Expressive Code', () => {
+    const reference = parseFileReference('txt title= file=a.txt', page);
+    assert.equal(reference.path, 'a.txt');
+    assert.equal(reference.rest, 'txt title=');
+  });
+
   it('refuses a name given twice', () => {
     rejects('txt file=a.txt file=b.txt', 'file= is given twice.');
     rejects('txt file=a.txt from=x from=y to=z to=w', 'from= is given twice.');
@@ -512,6 +536,14 @@ describe('the file include, filled', () => {
     );
   });
 
+  it('names the page when the language is file= with no path', () => {
+    const library = libraryNamed('language is file=');
+    assert.throws(
+      () => filled(library, { lang: 'file=', meta: '', value: '' }),
+      (error) => error instanceof Error && !(error instanceof TypeError) && error.message.startsWith(`${page}: `),
+    );
+  });
+
   it('refuses a block that takes a sample and a file', () => {
     const library = libraryNamed('snippet and file');
     put(library, 'a.txt', 'x');
@@ -553,6 +585,10 @@ describe('a wrong file include fails the build', () => {
       '```txt file=.git/config\n```',
       'file=.git/config is inside .git, which the build never reads.',
     );
+  });
+
+  it('a file= with no path', () => {
+    failsWith('include-empty-path', '```txt file=\n```', BAD_PATH(''));
   });
 
   it('a folder', () => {

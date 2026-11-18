@@ -8,11 +8,14 @@
 // Where it is not installed the tests are skipped and say so; DOCS_REQUIRE_BROWSER=1 makes that a failure,
 // as CI sets it.
 import assert from 'node:assert/strict';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { join } from 'node:path';
 import { chromium } from 'playwright-core';
 import { launchBrowser } from '../src/layout/browser.mjs';
-import { work } from './helpers.mjs';
+import { findBrowser, layoutMessage, sitePages } from '../src/layout/check.mjs';
+import { resolveLibrary } from '../src/library.mjs';
+import { fixture, work } from './helpers.mjs';
 
 let executable;
 let missing;
@@ -43,5 +46,42 @@ describe('the layout check', { skip: executable ? false : missing }, () => {
 
   it('says when the browser does not start', async () => {
     await assert.rejects(launchBrowser(join(work, 'no-such-browser')), /did not start/);
+  });
+
+  it('finds the browser the environment names, else the one the toolchain installs', async () => {
+    assert.equal(await findBrowser({ DOCS_BROWSER: 'a', CHROME_BIN: 'b' }), 'a');
+    assert.equal(await findBrowser({ CHROME_BIN: 'b' }), 'b');
+    assert.equal(await findBrowser({}), executable);
+  });
+
+  it('lists the pages that the build wrote', () => {
+    const folder = join(work, 'layout-pages');
+    rmSync(folder, { recursive: true, force: true });
+    mkdirSync(join(folder, 'quick-start'), { recursive: true });
+    writeFileSync(join(folder, 'index.html'), '');
+    writeFileSync(join(folder, 'quick-start', 'index.html'), '');
+    assert.deepEqual(sitePages(resolveLibrary({ DOCS_LIBRARY: fixture }), folder), [
+      { name: 'docs/site/index.mdx', path: '' },
+      { name: 'docs/site/quick-start.mdx', path: 'quick-start/' },
+    ]);
+  });
+
+  it('words the problems the check found', () => {
+    const message = layoutMessage([
+      {
+        page: 'docs/site/a.mdx',
+        width: 390,
+        element: 'table.x',
+        heading: 'Reference',
+        problem: 'is 40 px past the column',
+      },
+      { page: 'docs/site/b.mdx', width: 1280, element: 'div.y', problem: 'hides 12 px of content sideways' },
+    ]);
+    assert.ok(message.startsWith('The layout check found 2 problems:\n'));
+    assert.ok(
+      message.includes('\n  docs/site/a.mdx at 390 px: table.x, under "Reference", is 40 px past the column\n'),
+    );
+    assert.ok(message.includes('\n  docs/site/b.mdx at 1280 px: div.y, hides 12 px of content sideways\n'));
+    assert.ok(message.includes('data-scrolls'));
   });
 });

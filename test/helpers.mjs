@@ -3,8 +3,9 @@
 
 // Shared by the tests: build a library's site into a folder of its own, make a changed copy of the
 // fixture library, read the built pages, and serve a built site the way GitHub Pages does.
+import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,6 +16,29 @@ export const root = fileURLToPath(new URL('..', import.meta.url));
 export const fixture = join(root, 'fixture');
 /** Everything the tests write, ignored by git. */
 export const work = join(root, '.work');
+
+/**
+ * Whether this system makes symbolic links. Windows makes one only in Developer Mode or for an
+ * administrator, so there a test that needs one is skipped, and says why.
+ */
+export function makesLinks() {
+  const probe = join(work, 'link-probe');
+  mkdirSync(work, { recursive: true });
+  rmSync(probe, { force: true });
+  try {
+    symlinkSync('.', probe);
+  } catch (error) {
+    if (error.code === 'EPERM') return false;
+    throw error;
+  }
+  rmSync(probe);
+  return true;
+}
+export const withLinks = {
+  skip: makesLinks()
+    ? false
+    : 'needs a symbolic link, which Windows makes only in Developer Mode or for an administrator',
+};
 
 /**
  * Runs `node scripts/site.mjs build` for a library.
@@ -53,6 +77,17 @@ export function copyOfFixture(name) {
   cpSync(fixture, copy, { recursive: true });
   return copy;
 }
+
+/** Builds a copy of the fixture after `change` has edited it, and expects the build to fail. */
+export function failingBuild(name, change) {
+  const library = copyOfFixture(name);
+  change(library);
+  const result = build(name, { library });
+  assert.notEqual(result.code, 0, `the build should have failed:\n${result.output}`);
+  return result.output;
+}
+
+export const page = (body) => `---\ntitle: A broken page\n---\n\n${body}\n`;
 
 /** Every built page under `out`: its path with forward slashes, and its HTML. */
 export function pages(out) {

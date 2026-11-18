@@ -27,5 +27,6 @@
   "social": [
     { "label": "GitHub", "href": "https://github.com/NCodeGroup/Fixture" }
   ],
-  "samples": ["tests/**/*.cs"]
+  "samples": ["tests/**/*.cs"],
+  "requiredHeadings": [{ "pages": ["guides/derive-*", "guides/ban-*"], "headings": ["## Checklist"] }]
 }

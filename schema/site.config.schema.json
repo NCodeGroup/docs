@@ -103,6 +103,48 @@
     "lastUpdated": {
       "description": "Whether each page shows the date of the last commit that changed it. Default: true.",
       "type": "boolean"
+    },
+    "requiredHeadings": {
+      "description": "Headings that the pages a rule names must have, in the order listed, such as a Checklist section on every guide. A page without a listed heading, or with them out of order, stops the build, and so does a rule whose glob matches no page or whose exception names a page it does not cover. Default: no rule.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["pages", "headings"],
+        "properties": {
+          "pages": {
+            "description": "Globs of page slugs, each a page's path under the content folder without its extension, lower-cased, such as guides/* or reference/**. * and ? stay within a folder; ** crosses folders.",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "description": "A glob of page slugs, with forward slashes and no leading slash, such as guides/*.",
+              "type": "string",
+              "pattern": "^[^/\\s][^\\s]*$"
+            }
+          },
+          "headings": {
+            "description": "Headings as written in Markdown, from ## to ######, with the heading's text as a reader sees it, such as ## Checklist. A page has each, in this order.",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "description": "A heading as written in Markdown: ## to ######, a space and the text a reader sees, such as ## Checklist.",
+              "type": "string",
+              "pattern": "^#{2,6} \\S(.*\\S)?$"
+            }
+          },
+          "except": {
+            "description": "Slugs of pages the globs match that the rule leaves out, such as guides/review-checklist.",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "description": "The slug of one page, without glob characters, such as guides/review-checklist.",
+              "type": "string",
+              "pattern": "^[^/\\s*?\\[\\]{}][^\\s*?\\[\\]{}]*$"
+            }
+          }
+        }
+      }
     }
   },
   "$defs": {

@@ -1,0 +1,335 @@
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
+// A library page shows a file of the library's repository from an empty fenced block whose info
+// string carries file=<path>, and optionally from="<text>" and to="<text>". This module reads that
+// info string, finds the file in the library's repository, reads it and selects the lines the page
+// shows. Every failure is an error that names the page and the block's path, so the site build
+// fails instead of publishing a wrong or missing file.
+import { createHash } from 'node:crypto';
+import { lstatSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { isAbsolute, join, relative, sep } from 'node:path';
+
+// The largest file a page includes, in bytes.
+const MAX_BYTES = 1_048_576;
+// A path that starts at a root: a leading slash or backslash, or a drive.
+const ROOTED = /^(?:[/\\]|[A-Za-z]:)/;
+// One token of an info string: name=value, a quoted string, a brace group, or any other word. A name
+// written with no value (the last alternative of the value, which holds only before white space or the
+// end, never before a quote) is a token with the value '', so the build can refuse it by name.
+const TOKEN = /([A-Za-z][\w-]*)=(?:"([^"]*)"|'([^']*)'|([^\s"']+)|(?=\s|$))|"[^"]*"|'[^']*'|\{[^}]*\}|\S+/g;
+const OWN_NAMES = new Set(['file', 'from', 'to', 'lines']);
+// A token that opens a quote after one of this module's names, and so is one whose quote never closed.
+const UNCLOSED = /^(file|from|to|lines)=(["'])/;
+const LINE_BREAK = /\r\n|\r|\n/;
+const BLANK = /^\s*$/;
+
+/**
+ * Reads the file reference of a code block's info string.
+ *
+ * @param {string} meta The block's language and meta text, as `txt file=BannedSymbols.txt`.
+ * @param {string} page The page as the library has it, which names it in an error.
+ * @returns {{ path: string | undefined, from: string | undefined, to: string | undefined, rest: string } | undefined}
+ *   `undefined` when the string holds no `file=`, `from=`, `to=` or `lines=`; otherwise the
+ *   path, the `from` and `to` texts, and every other token of the string joined with one space,
+ *   which Expressive Code reads.
+ */
+export function parseFileReference(meta, page) {
+  const taken = [];
+  const unclosed = [];
+  const rest = [];
+  for (const match of meta.matchAll(TOKEN)) {
+    const name = match[1];
+    if (name !== undefined && OWN_NAMES.has(name)) {
+      taken.push({ name, value: match[2] ?? match[3] ?? match[4] ?? '' });
+      continue;
+    }
+    const open = UNCLOSED.exec(match[0]);
+    if (open) {
+      unclosed.push({ name: open[1], quote: open[2] });
+      continue;
+    }
+    rest.push(match[0]);
+  }
+  if (taken.length === 0 && unclosed.length === 0) return undefined;
+
+  const fail = (message) => {
+    throw new Error(`${page}: ${message}`);
+  };
+  const seen = new Set();
+  for (const { name } of taken) {
+    if (seen.has(name)) fail(`${name}= is given twice.`);
+    seen.add(name);
+  }
+  if (unclosed.length > 0) {
+    const { name, quote } = unclosed[0];
+    fail(`${name}=${quote}… has no closing quote.`);
+  }
+  const value = (name) => taken.find((entry) => entry.name === name)?.value;
+  const path = value('file');
+  const from = value('from');
+  const to = value('to');
+  const lines = value('lines');
+  if (from === '') fail('from="" names no text.');
+  if (to === '') fail('to="" names no text.');
+  if (lines !== undefined) {
+    fail(
+      `lines=${lines} is not supported: a line range shows other lines once the file changes. Name the first and last lines by their text, with from="…" and to="…".`,
+    );
+  }
+  if (path === undefined) {
+    fail('from= and to= select lines of the file that file= names; this code block has no file=.');
+  }
+  return { path, from, to, rest: rest.join(' ') };
+}
+
+/**
+ * The path of the first `file=` an info string holds, read with the same tokens as `parseFileReference`.
+ *
+ * @param {string} info A fence's info string.
+ * @returns {string | undefined} The path, or `undefined` when the string has no `file=` with a value.
+ */
+function fileValue(info) {
+  for (const match of info.matchAll(TOKEN)) {
+    if (match[1] !== 'file') continue;
+    const value = match[2] ?? match[3] ?? match[4];
+    if (value !== undefined && value !== '') return value;
+  }
+  return undefined;
+}
+
+/** `3`, `3 and 7`, `3, 7 and 9`. */
+function listNumbers(numbers) {
+  if (numbers.length < 2) return numbers.join('');
+  return `${numbers.slice(0, -1).join(', ')} and ${numbers.at(-1)}`;
+}
+
+/** The longest string of spaces and tabs that starts every one of the lines. */
+function commonIndent(lines) {
+  let indent;
+  for (const line of lines) {
+    const own = /^[ \t]*/.exec(line)[0];
+    if (indent === undefined) {
+      indent = own;
+      continue;
+    }
+    let length = 0;
+    while (length < indent.length && length < own.length && indent[length] === own[length]) length++;
+    indent = indent.slice(0, length);
+  }
+  return indent ?? '';
+}
+
+/**
+ * Selects the lines of a file a page shows: from the line that holds `from` (or the first line) to
+ * the first line from there that holds `to` (or the last line), without blank lines at either end,
+ * and without the indentation every line shares.
+ *
+ * @param {string} text The file's text.
+ * @param {{ path: string, from?: string, to?: string }} reference The block's file reference.
+ * @param {string} page The page as the library has it, which names it in an error.
+ * @returns {{ code: string, first: number, last: number, whole: boolean }} The text to show, the
+ *   file's own 1-based numbers of the first and last lines shown, and whether it is the whole file.
+ */
+export function selectLines(text, { path, from, to }, page) {
+  const fail = (message) => {
+    throw new Error(`${page}: file=${path} ${message}`);
+  };
+  const lines = (text.charCodeAt(0) === 0xfeff ? text.slice(1) : text).split(LINE_BREAK);
+  // A line break ends a line; it does not start an empty one.
+  if (lines.length > 0 && lines.at(-1) === '') lines.pop();
+
+  let start = 0;
+  if (from !== undefined) {
+    const found = [];
+    lines.forEach((line, index) => {
+      if (line.includes(from)) found.push(index + 1);
+    });
+    if (found.length === 0) fail(`from="${from}" is on no line of the file.`);
+    if (found.length > 1) fail(`from="${from}" is on lines ${listNumbers(found)}; give text that is on one line only.`);
+    start = found[0] - 1;
+  }
+  let end = lines.length - 1;
+  if (to !== undefined) {
+    let index = start;
+    while (index < lines.length && !lines[index].includes(to)) index++;
+    if (index === lines.length) fail(`to="${to}" is on no line from line ${start + 1} on.`);
+    end = index;
+  }
+
+  let first = start;
+  let last = end;
+  while (first <= last && BLANK.test(lines[first])) first++;
+  while (last >= first && BLANK.test(lines[last])) last--;
+  if (first > last) fail(`shows only blank lines (lines ${start + 1}–${end + 1}).`);
+
+  const shown = lines.slice(first, last + 1);
+  const indent = commonIndent(shown.filter((line) => !BLANK.test(line)));
+  const code = shown.map((line) => (BLANK.test(line) ? '' : line.slice(indent.length))).join('\n');
+  return { code, first: first + 1, last: last + 1, whole: from === undefined && to === undefined };
+}
+
+/**
+ * Applies the path rules to a block's path: a path from the repository root, no `.git`, a file that
+ * exists, really inside the library, and at most 1 MiB.
+ *
+ * @param {{ root: string, realRoot: string }} library The library's root, and the root's real path.
+ * @param {string} path The path as the author wrote it.
+ * @returns {{ absolute: string } | { problem: string }} The file's absolute path, or what is wrong
+ *   with the path, as the text an error says after the page.
+ */
+function placeIncludedFile(library, path) {
+  const segments = path.split('/');
+  if (
+    path === '' ||
+    ROOTED.test(path) ||
+    path.includes('\\') ||
+    segments.some((s) => s === '' || s === '.' || s === '..')
+  ) {
+    return {
+      problem: `file=${path} must be a path from the repository root, such as Directory.Build.props: no leading "/", "\\" or drive, no backslash, and no empty, "." or ".." segment.`,
+    };
+  }
+  const insideGit = { problem: `file=${path} is inside .git, which the build never reads.` };
+  // Windows and macOS file systems ignore letter case, so `.GIT` names the same folder as `.git`.
+  const isGit = (segment) => segment.toLowerCase() === '.git';
+  if (segments.some(isGit)) return insideGit;
+
+  const absolute = join(library.root, ...segments);
+  // A missing file has no entry at all, or a file where a folder should be (ENOTDIR). An entry that
+  // statSync cannot follow is a link that leads nowhere or around in a loop: it exists, and cannot be read.
+  const names = { problem: `file=${path} names no file in the library.` };
+  let entry;
+  try {
+    entry = lstatSync(absolute, { throwIfNoEntry: false });
+  } catch (error) {
+    if (error.code === 'ENOTDIR') return names;
+    return { problem: `file=${path} could not be read: ${error.message}` };
+  }
+  if (entry === undefined) return names;
+  let stats;
+  let realPath;
+  let nativePath;
+  let nativeRoot;
+  try {
+    stats = statSync(absolute);
+    if (stats.isFile()) {
+      realPath = realpathSync(absolute);
+      // Windows names a folder by aliases (`GIT~1`, `.git::$INDEX_ALLOCATION`) that realpathSync leaves as
+      // written; the native real path gives the name the file system stores, which the .git test needs.
+      nativePath = realpathSync.native(absolute);
+      nativeRoot = realpathSync.native(library.root);
+    }
+  } catch (error) {
+    return { problem: `file=${path} could not be read: ${error.message}` };
+  }
+  if (stats.isDirectory()) return { problem: `file=${path} is a folder; name a file.` };
+  if (!stats.isFile()) return names;
+
+  // A path under the root still leads out of it when the file, or a folder on its path, is a link.
+  const real = relative(library.realRoot, realPath);
+  if (real === '..' || real.startsWith(`..${sep}`) || isAbsolute(real)) {
+    return { problem: `file=${path} is outside the library through a symbolic link: its real path is ${realPath}.` };
+  }
+  if (relative(nativeRoot, nativePath).split(sep).some(isGit)) return insideGit;
+  if (stats.size > MAX_BYTES) {
+    return { problem: `file=${path} is ${stats.size} bytes; a page includes a file of at most 1 MiB.` };
+  }
+  return { absolute };
+}
+
+/**
+ * Finds the file a block names, applying the path rules: a path from the repository root, no
+ * `.git`, a file that exists, really inside the library, and at most 1 MiB.
+ *
+ * @param {{ root: string, realRoot: string }} library The library's root, and the root's real path.
+ * @param {string} path The path as the author wrote it.
+ * @param {string} page The page as the library has it, which names it in an error.
+ * @returns {{ path: string, absolute: string }} The path as written and the file's absolute path.
+ */
+export function resolveIncludedFile(library, path, page) {
+  const { absolute, problem } = placeIncludedFile(library, path);
+  if (problem !== undefined) throw new Error(`${page}: ${problem}`);
+  return { path, absolute };
+}
+
+/**
+ * Finds a file a block names, as `resolveIncludedFile` does, and reads it as UTF-8 text.
+ *
+ * @param {{ root: string, realRoot: string }} library The library's root, and the root's real path.
+ * @param {string} path The path as the author wrote it.
+ * @param {string} page The page as the library has it, which names it in an error.
+ * @returns {{ path: string, absolute: string, text: string }} The path, the file's absolute path and its text.
+ */
+export function readIncludedFile(library, path, page) {
+  const { absolute } = resolveIncludedFile(library, path, page);
+  let bytes;
+  try {
+    bytes = readFileSync(absolute);
+  } catch (error) {
+    // A file that stats can still refuse to open (no permission); the author needs the page and the path.
+    throw new Error(`${page}: file=${path} could not be read: ${error.message}`);
+  }
+  let text;
+  try {
+    text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch {
+    throw new Error(`${page}: file=${path} is not UTF-8 text.`);
+  }
+  // A U+0000 is no text a page shows: it marks a binary file that happens to decode.
+  if (text.includes('\0')) throw new Error(`${page}: file=${path} is not UTF-8 text.`);
+  if (text === '') throw new Error(`${page}: file=${path} is empty.`);
+  return { path, absolute, text };
+}
+
+/**
+ * Lists the files the pages' code blocks include, so a change to one rebuilds the site. A block
+ * is read as the parser reads it: an info string's `file=` is the first token of that name, and a
+ * block inside another fenced block is that block's text, not an include. A block whose file
+ * cannot be placed is skipped here: the build stops on it when the page renders.
+ *
+ * @param {{ root: string, realRoot: string }} library The library's root, and the root's real path.
+ * @param {{ file: string }[]} pages The library's pages, as `listPages` gives them.
+ * @returns {string[]} The included files' absolute paths, sorted and without repeats.
+ */
+export function findIncludedFiles(library, pages) {
+  const found = new Set();
+  for (const { file } of pages) {
+    let fence;
+    for (const line of readFileSync(file, 'utf8').split(LINE_BREAK)) {
+      // A block quote or a list's indentation comes before the fence's marker.
+      const text = line.replace(/^\s*(?:>\s*)*/, '');
+      if (fence === undefined) {
+        const match = /^(`{3,}|~{3,})(.*)$/.exec(text);
+        // A backtick fence's info string holds no backtick: the line is inline code then.
+        if (!match || (match[1][0] === '`' && match[2].includes('`'))) continue;
+        fence = { char: match[1][0], length: match[1].length };
+        const path = fileValue(match[2].trim());
+        if (path === undefined) continue;
+        const { absolute } = placeIncludedFile(library, path);
+        if (absolute !== undefined) found.add(absolute);
+      } else {
+        const match = /^(`{3,}|~{3,})\s*$/.exec(text);
+        if (match && match[1][0] === fence.char && match[1].length >= fence.length) fence = undefined;
+      }
+    }
+  }
+  return [...found].sort();
+}
+
+/**
+ * A short digest of the included files' paths and bytes, which changes when one of them does.
+ *
+ * @param {string[]} paths The files' absolute paths, in a fixed order.
+ * @returns {string} The first 16 hex digits of a SHA-256.
+ */
+export function includesDigest(paths) {
+  const hash = createHash('sha256');
+  for (const path of paths) {
+    hash.update(path);
+    hash.update('\0');
+    hash.update(readFileSync(path));
+    hash.update('\0');
+  }
+  return hash.digest('hex').slice(0, 16);
+}

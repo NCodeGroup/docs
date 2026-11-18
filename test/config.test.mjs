@@ -8,32 +8,9 @@ import { mkdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSy
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { resolveLibrary } from '../src/library.mjs';
-import { build, copyOfFixture, fixture, work } from './helpers.mjs';
+import { build, copyOfFixture, fixture, withLinks, work } from './helpers.mjs';
 
 const CONFIG = 'docs/site/site.config.json';
-
-/**
- * Whether this system makes symbolic links. Windows makes one only in Developer Mode or for an
- * administrator, so there a test that needs one is skipped, and says why.
- */
-function makesLinks() {
-  const probe = join(work, 'link-probe');
-  mkdirSync(work, { recursive: true });
-  rmSync(probe, { force: true });
-  try {
-    symlinkSync('.', probe);
-  } catch (error) {
-    if (error.code === 'EPERM') return false;
-    throw error;
-  }
-  rmSync(probe);
-  return true;
-}
-const withLinks = {
-  skip: makesLinks()
-    ? false
-    : 'needs a symbolic link, which Windows makes only in Developer Mode or for an administrator',
-};
 
 /** A copy of the fixture whose configuration `change` has edited. */
 function changedCopy(name, change) {
@@ -74,6 +51,9 @@ describe('the site configuration', () => {
     assert.equal(library.config.title, 'NCode.Fixture');
     assert.equal(library.config.repository.branch, 'main');
     assert.equal(library.config.editLinks, true);
+    assert.deepEqual(library.config.requiredHeadings, [
+      { pages: ['guides/derive-*', 'guides/ban-*'], headings: ['## Checklist'] },
+    ]);
     assert.deepEqual(library.sampleFiles.map(relativeTo(fixture)), [
       'tests/NCode.Fixture.Tests/ExtensionSamples.cs',
       'tests/NCode.Fixture.Tests/QuickStartSamples.cs',
@@ -82,7 +62,8 @@ describe('the site configuration', () => {
 
   it('needs only its required keys', () => {
     const resolve = resolveChanged('config-minimal', (config) => {
-      for (const key of ['$schema', 'product', 'mark', 'version', 'social', 'samples']) delete config[key];
+      for (const key of ['$schema', 'product', 'mark', 'version', 'social', 'samples', 'requiredHeadings'])
+        delete config[key];
       delete config.repository.branch;
     });
     const { config } = resolve();
@@ -90,6 +71,7 @@ describe('the site configuration', () => {
     assert.equal(config.mark, 'ncode');
     assert.deepEqual(config.social, [{ label: 'GitHub', href: 'https://github.com/NCodeGroup/Fixture' }]);
     assert.deepEqual(config.samples, ['tests/**/*.cs']);
+    assert.deepEqual(config.requiredHeadings, []);
   });
 
   it('rejects an unknown key by name', () => {
@@ -119,6 +101,26 @@ describe('the site configuration', () => {
         /site\.url \("https:\/\/ncodegroup\.github\.io\/Fixture\/"\) does not have the form its description gives/,
       );
       assert.match(error.message, /sidebar\[0\]\.items\[1\]/);
+      return true;
+    });
+  });
+
+  it('rejects a required-headings rule of the wrong form, by name', () => {
+    const resolve = resolveChanged('config-headings', (config) => {
+      config.requiredHeadings = [{ pages: [], headings: ['Checklist'], exempt: [] }];
+    });
+    assert.throws(resolve, (error) => {
+      assert.ok(error.message.includes('requiredHeadings[0].pages must have at least 1 entry'), error.message);
+      assert.ok(
+        error.message.includes(
+          'requiredHeadings[0].headings[0] ("Checklist") does not have the form its description gives: A heading as written in Markdown: ## to ######, a space and the text a reader sees, such as ## Checklist.',
+        ),
+        error.message,
+      );
+      assert.ok(
+        error.message.includes('requiredHeadings[0] has an unknown key "exempt" (known: pages, headings, except)'),
+        error.message,
+      );
       return true;
     });
   });

@@ -23,10 +23,12 @@ flowchart LR
 | Component | Role |
 | --- | --- |
 | Reusable workflow (`.github/workflows/site.yml`) | Two jobs: `build` checks out the library and the toolchain at the pinned commit, installs, builds and uploads the site; `deploy` hands the artifact to GitHub Pages, from the library's default branch only |
-| Site script (`scripts/site.mjs`) | Checks its arguments, resolves the library, checks the samples before Astro reads them, takes the checkout's lock, copies the content folder to `src/content/docs/`, with the toolchain's 404 page when the library has none, and runs `astro build --force`, `dev` or `preview` |
-| Library settings (`src/library.mjs`, `src/json-schema.mjs`, `schema/site.config.schema.json`) | Reads `DOCS_LIBRARY` and `DOCS_CONTENT`, checks `site.config.json` against the schema, resolves the sample globs to files inside the library, and dates each page with one `git log` |
+| Site script (`scripts/site.mjs`) | Checks its arguments, resolves the library, checks the samples, the `requiredHeadings` rules and the components' tokens before Astro starts, takes the checkout's lock, copies the content folder to `src/content/docs/`, with the toolchain's 404 page when the library has none, and runs `astro build --force`, `dev` or `preview` |
+| Library settings (`src/library.mjs`, `src/json-schema.mjs`, `schema/site.config.schema.json`) | Reads `DOCS_LIBRARY` and `DOCS_CONTENT`, checks `site.config.json` against the schema, resolves the sample globs to files inside the library, lists the pages (`listPages`, `pageSlug`), reads the commit the site is built from (`readCommit`), and dates each page with one `git log` |
 | Astro project (`astro.config.mjs`, `src/integration.mjs`, `src/content.config.ts`, `src/pages/404.astro`) | Configures Starlight from the library's settings: the base path from `SITE_URL` or `site.url`, the Markdown plugins, the link checks, and the import aliases `@ncodegroup/docs/components`, `@site/components/` and `@site/assets/`; and renders the 404 page, the library's or the toolchain's, in place of Starlight's own 404 route ([ADR-1006](decisions/1006-the-toolchain-renders-the-404-page-and-supplies-one-when-a-library-has-none.md)) |
-| Samples (`src/snippets/`) | Reads the regions of the sample files and fills each `snippet=Key` block ([ADR-1002](decisions/1002-a-page-includes-a-compiled-sample-by-its-key-when-the-site-is-built.md)) |
+| Samples and repository files (`src/snippets/`, `src/includes/`) | Reads the regions of the sample files and fills each `snippet=Key` block, and reads the repository files pages name and fills each `file=` block with a link to its lines ([ADR-1002](decisions/1002-a-page-includes-a-compiled-sample-by-its-key-when-the-site-is-built.md), [ADR-1010](decisions/1010-a-page-shows-a-repository-file-or-the-lines-between-two-texts-of-it-when-the-site-is-built.md)) |
+| Required headings (`src/headings/`) | Checks the rules of `requiredHeadings` against the library's pages before Astro starts, and each rendered page's headings against them ([ADR-1011](decisions/1011-a-site-can-require-headings-on-the-pages-a-glob-names-and-the-build-fails-a-page-without-them.md)) |
+| Component tokens (`src/brand/`) | Checks the brand tokens a library's components (`_components/`) read before Astro starts ([ADR-1012](decisions/1012-the-build-fails-a-library-component-that-reads-a-token-the-brand-does-not-offer.md)) |
 | Links (`src/links/`, `starlight-links-validator`) | Adds the base path to the links an author writes, fails the build on a broken link, and reads every built page for a link outside the base path ([ADR-1003](decisions/1003-links-are-written-from-the-site-root-and-the-build-proves-none-leaves-the-base-path.md)) |
 | Route middleware (`src/route-data.ts`) | Adds the base path to frontmatter links, and sets each page's edit link and "last updated" date from the library's repository |
 | Code blocks (`ec.config.mjs`, `src/highlighting/`) | Expressive Code's syntax theme, the brand's `syntax/instrument-screen.json`, a frame styled from the brand's public tokens, with an inserted or deleted line in its success or danger colours, and Shiki's C# grammar with two rules for C# 14 extension blocks ([ADR-1004](decisions/1004-the-csharp-grammar-is-patched-at-build-time-for-extension-blocks.md)) |
@@ -47,9 +49,12 @@ flowchart LR
 - No job restores or saves a cache, and every build is a full build
   ([ADR-1001](decisions/1001-the-toolchain-lives-in-this-repository-and-a-library-calls-it-by-one-pinned-commit.md),
   [ADR-1002](decisions/1002-a-page-includes-a-compiled-sample-by-its-key-when-the-site-is-built.md)).
-- A sample or a link the build cannot place fails the build, never a warning, and the message names the file as its
-  author knows it
+- A sample, an included file, a required heading, a component token or a link the build cannot place fails the build,
+  never a warning, and the message names the file as its author knows it
   ([ADR-1002](decisions/1002-a-page-includes-a-compiled-sample-by-its-key-when-the-site-is-built.md),
+  [ADR-1010](decisions/1010-a-page-shows-a-repository-file-or-the-lines-between-two-texts-of-it-when-the-site-is-built.md),
+  [ADR-1011](decisions/1011-a-site-can-require-headings-on-the-pages-a-glob-names-and-the-build-fails-a-page-without-them.md),
+  [ADR-1012](decisions/1012-the-build-fails-a-library-component-that-reads-a-token-the-brand-does-not-offer.md),
   [ADR-1003](decisions/1003-links-are-written-from-the-site-root-and-the-build-proves-none-leaves-the-base-path.md)).
 - Sites use Starlight's core with one add-on, the link validator, and a package is added only for what every library's
   site needs

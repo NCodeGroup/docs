@@ -513,6 +513,19 @@ main:has(h1[data-numbered]) .sl-markdown-content > .sl-heading-wrapper.level-h2:
   }
 }
 
+/* A file a page includes is captioned with its link to GitHub, under the code block. */
+.sl-markdown-content .ncode-source {
+  margin-top: var(--nc-space-2);
+  color: var(--nc-color-text-muted);
+  font: var(--nc-type-value);
+  font-size: var(--sl-text-2xs);
+  font-stretch: var(--nc-type-value-stretch);
+  letter-spacing: var(--nc-type-value-tracking);
+  overflow-wrap: anywhere;
+}
+.sl-markdown-content .ncode-source a { color: inherit; }
+.sl-markdown-content .ncode-source a:hover { color: var(--nc-color-primary-text); }
+
 /* ---- Callouts: an alert with a signal bar; caution wears hazard tape. */
 .starlight-aside {
   position: relative;

@@ -5,16 +5,28 @@
 // The one Astro project every NCode library's documentation site is built with. It holds no
 // library's content: scripts/site.mjs (or the reusable workflow) names a library through
 // DOCS_LIBRARY and DOCS_CONTENT, mounts its content folder at src/content/docs/, and runs Astro.
+import { realpathSync } from 'node:fs';
 import { defineConfig } from 'astro/config';
 import { satteri } from '@astrojs/markdown-satteri';
 import starlight from '@astrojs/starlight';
 import starlightLinksValidator from 'starlight-links-validator';
 import { ncodeSite } from './src/integration.mjs';
-import { libraryPath, ownNotFoundPage, readLastUpdated, resolveLibrary } from './src/library.mjs';
+import { checkComponentTokens } from './src/brand/tokens.mjs';
+import { headingsPlugin, resolveHeadingRules } from './src/headings/required-headings.mjs';
+import { findIncludedFiles, includesDigest } from './src/includes/files.mjs';
+import {
+  libraryPath,
+  listPages,
+  ownNotFoundPage,
+  readCommit,
+  readLastUpdated,
+  resolveLibrary,
+  warn,
+} from './src/library.mjs';
 import { baseLinks } from './src/links/base-links.mjs';
 import { checkBuiltLinks } from './src/links/built-links.mjs';
 import { readSnippets } from './src/snippets/catalog.mjs';
-import { snippetsPlugin, watchSnippetSources } from './src/snippets/satteri.mjs';
+import { snippetsPlugin, watchLibraryFiles } from './src/snippets/satteri.mjs';
 import { stackedTables } from './src/tables/stacked-tables.mjs';
 
 const library = resolveLibrary();
@@ -34,6 +46,27 @@ const describePage = (file) => libraryPath(library, file);
 // region or a malformed marker stops the build here, before any page is read.
 const snippets = readSnippets({ files: library.sampleFiles, relativeTo: library.root });
 
+// The library's pages, which the heading rules and the includes are checked against.
+const pages = listPages(library);
+// The headings the pages a rule names must have. A rule that matches no page stops the build here;
+// a page that lacks a heading stops it when the page renders.
+const headingRules = resolveHeadingRules(config.requiredHeadings, pages, library);
+// A component that reads a token the brand does not define, or a step of a ramp or scale, stops the
+// build here, before any page renders.
+checkComponentTokens(library);
+// A page added while the dev server runs has no slug, so no rule, until the server's next start.
+const slugs = new Map(pages.map((page) => [`${library.contentPath}/${page.path}`, page.slug]));
+const slugOf = (file) => slugs.get(libraryPath(library, file));
+// The files the pages include with `file=<path>`, and the commit their captions link to. A block
+// that names a file the library does not have stops the build when its page renders.
+const includeRoot = { root: library.root, realRoot: realpathSync(library.root) };
+const included = findIncludedFiles(includeRoot, pages);
+const { commit, reason } = readCommit(library);
+if (!commit && reason && included.length > 0) {
+  const message = `Source links name the branch ${config.repository.branch}: git could not read the commit of ${library.root}: ${reason}`;
+  warn(message);
+}
+
 export default defineConfig({
   site: siteUrl.origin,
   base,
@@ -44,12 +77,18 @@ export default defineConfig({
   publicDir: './vendor/brand/logo/ncode/favicon',
   markdown: {
     processor: satteri({
-      mdastPlugins: [snippetsPlugin(snippets, { describePage })],
+      mdastPlugins: [
+        snippetsPlugin(snippets, {
+          describePage,
+          includes: { library: includeRoot, repository: config.repository, commit, digest: includesDigest(included) },
+        }),
+        headingsPlugin(headingRules, { describePage, slugOf, configName: library.configName }),
+      ],
       hastPlugins: [baseLinks(base, { describePage }), stackedTables()],
     }),
   },
   integrations: [
-    watchSnippetSources(library.sampleFiles),
+    watchLibraryFiles([...library.sampleFiles, ...included]),
     ncodeSite({
       title: config.title,
       product: config.product,

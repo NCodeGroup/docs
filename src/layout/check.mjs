@@ -64,7 +64,8 @@ function measure() {
       .filter((name) => !name.startsWith('astro-'))
       .map((name) => `.${name}`)
       .join('');
-  // A Markdown table has no id or class of its author's, so it is named by its first columns, and it must fit (ADR-1015).
+  // A Markdown table has no id or class of its author's, so it is named by its first columns,
+  // and it must fit (ADR-1015).
   const name = (element) => {
     if (!element.matches('.ncode-table')) return describe(element);
     const columns = [...element.querySelectorAll(':scope > table > thead > tr:first-child > th')].map((cell) =>

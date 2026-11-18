@@ -4,16 +4,19 @@
 
 // Builds, serves or previews one library's documentation site.
 //
-//   node scripts/site.mjs <build|dev|preview|prepare> <library folder> [options]
+//   node scripts/site.mjs <build|dev|preview|prepare|check> <library folder> [options]
 //
 //   --content <path>    the content folder inside the library (default docs/site)
 //   --site-url <url>    the URL the site is served at, base path included; replaces site.url of the
 //                       library's site.config.json (the workflow passes the Pages URL this way)
 //   --out <folder>      where the built site goes (default dist/ in this toolchain)
 //   --port <number>     the port for dev and preview (default 4321)
+//   --browser <path>    a Chromium-based browser for check, which loads the site that build wrote into
+//                       --out and fails on content wider than its column
 //
 // The library folder and the content path may also come from DOCS_LIBRARY and DOCS_CONTENT, the site
-// URL from SITE_URL and the output folder from DOCS_OUT; an argument wins over its variable.
+// URL from SITE_URL, the output folder from DOCS_OUT and the browser from DOCS_BROWSER; an argument
+// wins over its variable.
 //
 // What it does: checks the library's site.config.json, mounts the content folder into this toolchain
 // (a copy at src/content/docs/, see mount() below), and runs Astro with the library named in the
@@ -47,9 +50,10 @@ import {
 } from '../src/library.mjs';
 import { checkComponentTokens } from '../src/brand/tokens.mjs';
 import { resolveHeadingRules } from '../src/headings/required-headings.mjs';
+import { checkLayout, findBrowser, layoutMessage, sitePages, WIDTHS } from '../src/layout/check.mjs';
 import { readSnippets } from '../src/snippets/catalog.mjs';
 
-const COMMANDS = ['build', 'dev', 'preview', 'prepare'];
+const COMMANDS = ['build', 'dev', 'preview', 'prepare', 'check'];
 // The page mounted as 404.mdx when the library has none of its own.
 const DEFAULT_NOT_FOUND = join(toolchainRoot, 'src', 'defaults', '404.mdx');
 
@@ -57,7 +61,7 @@ const DEFAULT_NOT_FOUND = join(toolchainRoot, 'src', 'defaults', '404.mdx');
 // of process.env. They are a URL and a folder the caller passed, never a secret: its alert is a false positive.
 function usage(problem) {
   console.error(
-    `${problem}\n\nUsage: node scripts/site.mjs <${COMMANDS.join('|')}> <library folder> [--content <path>] [--site-url <url>] [--out <folder>] [--port <number>]`,
+    `${problem}\n\nUsage: node scripts/site.mjs <${COMMANDS.join('|')}> <library folder> [--content <path>] [--site-url <url>] [--out <folder>] [--port <number>] [--browser <path>]`,
   );
   process.exit(2);
 }
@@ -209,6 +213,34 @@ function runAstro(args, environment) {
 
 const finished = (child) => new Promise((done) => child.on('exit', (code, signal) => done(code ?? (signal ? 1 : 0))));
 
+/**
+ * Loads the pages that `build` wrote into the output folder in a browser, at each width of the
+ * layout check, and fails on content that leaves its column (ADR-1013). It reads the built site
+ * and writes nothing, so it neither locks the checkout nor mounts the library.
+ */
+async function checkBuiltSite(library, environment) {
+  const out = environment.DOCS_OUT || join(toolchainRoot, 'dist');
+  if (!existsSync(join(out, 'index.html'))) {
+    console.error(`No built site in ${out}: build it first, with the same --out.`);
+    return 1;
+  }
+  const base = new URL(environment.SITE_URL || library.config.siteUrl).pathname;
+  const pages = sitePages(library, out);
+  try {
+    const browser = await findBrowser(environment);
+    const problems = await checkLayout({ out, base, pages, browser });
+    if (problems.length > 0) {
+      console.error(layoutMessage(problems));
+      return 1;
+    }
+  } catch (error) {
+    console.error(error.message);
+    return 1;
+  }
+  console.log(`The layout of ${pages.length} pages fits their content columns at ${WIDTHS.join(', ')} px.`);
+  return 0;
+}
+
 async function main() {
   let parsed;
   try {
@@ -219,6 +251,7 @@ async function main() {
         'site-url': { type: 'string' },
         out: { type: 'string' },
         port: { type: 'string' },
+        browser: { type: 'string' },
       },
     });
   } catch (error) {
@@ -244,6 +277,9 @@ async function main() {
   if (parsed.values['site-url']) environment.SITE_URL = parsed.values['site-url'];
   if (parsed.values.out) environment.DOCS_OUT = resolve(from, parsed.values.out);
   else if (environment.DOCS_OUT) environment.DOCS_OUT = resolve(from, environment.DOCS_OUT);
+  // A browser with a separator is a path, relative to where the command was typed; one without is a command on PATH.
+  const browser = parsed.values.browser ?? environment.DOCS_BROWSER;
+  if (browser) environment.DOCS_BROWSER = /[\\/]/.test(browser) ? resolve(from, browser) : browser;
   if (environment.SITE_URL && !URL.canParse(environment.SITE_URL)) usage(`"${environment.SITE_URL}" is not a URL.`);
   // dev and prepare build nothing, so they leave the output folder alone.
   const outProblem =
@@ -273,6 +309,7 @@ async function main() {
     console.error(error.message);
     process.exit(1);
   }
+  if (command === 'check') return checkBuiltSite(library, environment);
   lock(library);
   mount(library);
   console.log(`Mounted ${library.contentPath}/ of ${library.root}`);

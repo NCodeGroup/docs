@@ -8,14 +8,15 @@
 // Where it is not installed the tests are skipped and say so; DOCS_REQUIRE_BROWSER=1 makes that a failure,
 // as CI sets it.
 import assert from 'node:assert/strict';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { before, describe, it } from 'node:test';
 import { join } from 'node:path';
 import { chromium } from 'playwright-core';
 import { launchBrowser } from '../src/layout/browser.mjs';
 import { checkLayout, findBrowser, layoutMessage, sitePages } from '../src/layout/check.mjs';
 import { resolveLibrary } from '../src/library.mjs';
-import { build, copyOfFixture, fixture, work } from './helpers.mjs';
+import { build, copyOfFixture, fixture, root, work } from './helpers.mjs';
 
 let executable;
 let missing;
@@ -32,6 +33,28 @@ try {
 }
 
 describe('the layout check', { skip: executable ? false : missing }, () => {
+  // Runs `node scripts/site.mjs check` on a built site, as the workflow does.
+  function check(library, out) {
+    const environment = { ...process.env, NO_COLOR: '1' };
+    // A site URL, a library or a browser in the environment of whoever runs the tests is not the tests' input.
+    for (const key of [
+      'SITE_URL',
+      'DOCS_LIBRARY',
+      'DOCS_CONTENT',
+      'DOCS_OUT',
+      'DOCS_BROWSER',
+      'CHROME_BIN',
+      'INIT_CWD',
+    ])
+      delete environment[key];
+    const result = spawnSync(
+      process.execPath,
+      [join(root, 'scripts', 'site.mjs'), 'check', library, '--out', out, '--browser', executable],
+      { cwd: root, env: environment, encoding: 'utf8', timeout: 180_000 },
+    );
+    return { code: result.status ?? 1, output: `${result.stdout}\n${result.stderr}` };
+  }
+
   it('opens a page at a width', async () => {
     const browser = await launchBrowser(executable);
     try {
@@ -165,6 +188,40 @@ describe('the layout check', { skip: executable ? false : missing }, () => {
       for (const width of [1440, 1280, 1024])
         assert.deepEqual(at(width), ['div.too-wide', 'div.hides', 'div.ncode-table']);
       assert.deepEqual(at(390), ['div.too-wide', 'div.hides']);
+    });
+
+    it('passes the fixture from the command line', () => {
+      const result = check(fixture, join(work, 'out', 'layout'));
+      assert.equal(result.code, 0, result.output);
+      assert.match(result.output, /fits their content columns/);
+    });
+
+    it('fails from the command line, naming the page, the width and the element', () => {
+      const library = copyOfFixture('layout-cli');
+      const component = join(library, 'docs', 'site', '_components', 'MemoryMap.astro');
+      const text = readFileSync(component, 'utf8');
+      // The attribute, not the comment above it that also names data-scrolls.
+      const changed = text.replace(' data-scrolls tabindex', ' tabindex');
+      assert.notEqual(changed, text);
+      writeFileSync(component, changed);
+      const built = build('layout-cli', { library });
+      assert.equal(built.code, 0, built.output);
+      const result = check(library, built.out);
+      assert.equal(result.code, 1, result.output);
+      assert.match(
+        result.output,
+        /docs\/site\/concepts\/how-sealing-works\.mdx at 1440 px: section\.memory-map\.not-content, under "Layout in memory", hides \d+ px of its content sideways/,
+      );
+      assert.match(result.output, /data-scrolls/);
+    });
+
+    it('says when the site is not built', () => {
+      const empty = join(work, 'layout-empty');
+      rmSync(empty, { recursive: true, force: true });
+      mkdirSync(empty, { recursive: true });
+      const result = check(fixture, empty);
+      assert.equal(result.code, 1, result.output);
+      assert.match(result.output, /No built site in/);
     });
   });
 });

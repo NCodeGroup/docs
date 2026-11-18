@@ -897,6 +897,12 @@ mobile-starlight-toc .dropdown { border: var(--nc-border-hair) solid var(--nc-co
   box-shadow: none;
 }
 :root[data-has-hero]:not([data-has-sidebar]) { --sl-content-width: 81rem; }
+/* Beside the sidebar the content column is too narrow for the hero's two columns until it reaches its full width,
+   50rem: until then the hero is one column. */
+:root[data-has-hero][data-has-sidebar] .content-panel:has(> .sl-container > .hero) { container-type: inline-size; }
+@container (max-width: 49.99rem) {
+  .hero { grid-template-columns: minmax(0, 1fr); }
+}
 [data-has-hero] .content-panel { padding-inline: var(--nc-space-4); }
 @media (min-width: 50rem) {
   [data-has-hero] .content-panel { padding-inline: var(--nc-space-6); }

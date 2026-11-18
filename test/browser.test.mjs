@@ -175,6 +175,21 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
     }
   });
 
+  it('keeps the navigation on the landing page, and its hero one column until the column is 50rem wide', async () => {
+    const landing = async (width) => {
+      const tab = await browser.newPage({ viewport: { width, height: 900 } });
+      await tab.goto(`${site.origin}${BASE}`, { waitUntil: 'networkidle' });
+      const found = await tab.evaluate(() => ({
+        sidebar: document.documentElement.hasAttribute('data-has-sidebar'),
+        columns: getComputedStyle(document.querySelector('.hero')).gridTemplateColumns.split(' ').length,
+      }));
+      await tab.close();
+      return found;
+    };
+    assert.deepEqual(await landing(1024), { sidebar: true, columns: 1 });
+    assert.deepEqual(await landing(1440), { sidebar: true, columns: 2 });
+  });
+
   it('lights the edge of a code listing that has more code past it', async () => {
     await phone.goto(`${site.origin}${BASE}guides/derive-a-key/`, { waitUntil: 'networkidle' });
     await phone.evaluate(() => document.fonts.ready);

@@ -348,6 +348,21 @@ text styles stay off it. It ships no client-side script that loads from another 
 and `.css` file under `_components/` before it starts, and stops on a `--nc-` token the brand does not define or on a
 step of a ramp or scale, naming the file and the token.
 
+A page's content column is as wide as the window leaves it, beside the sidebar and, from 72rem (1152 px), the "On this
+page" panel. Measured on the fixture in headless Chromium, 2026-11-18:
+
+| Window | Content column |
+| --- | --- |
+| 1440 px | about 44rem (710 px), beside the "On this page" panel |
+| 1280 px | about 36rem (586 px), beside the panel |
+| 1024 px | about 38rem (614 px); the panel is a menu in the header |
+| 390 px | about 20rem (332 px) |
+
+The column is never wider than 50rem (800 px), which a page without the panel (`tableOfContents: false`) reaches from
+72rem up. Design a component for a column of about 36rem. Lay out data with more than three or four columns, or with
+long identifiers, as a card per entry with its fields labelled, not as a wide table. Never give an element a
+`min-width` wider than the column.
+
 A component's elements fit the page's content column. An element that must scroll sideways by design, such as a long
 strip of bytes, scrolls inside the column, with `overflow-x: auto`, and carries the attribute `data-scrolls`. The
 layout check (section 8) then measures its box, which still fits the column, but not its content. A code block

@@ -4,8 +4,8 @@
 // The built site in a real browser, served under its base path the way GitHub Pages serves it: a
 // page loads, the search finds a page, a missing URL gets the site's own 404 page, and the browser
 // asks no other origin for anything. In a phone's window no page scrolls sideways and a Markdown
-// table is a stack of labelled rows, and a code listing that scrolls lights its edge and keeps its
-// focus ring in view.
+// table is a stack of labelled rows, from 40rem up a wide one fits the content column, and a code
+// listing that scrolls lights its edge and keeps its focus ring in view.
 //
 // The browser is the headless Chromium that the locked playwright-core names. "npm run browser"
 // downloads it, once for each version of playwright-core. Where it is not installed the check is
@@ -119,6 +119,7 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
       'guides/ban-apis/',
       'concepts/how-sealing-works/',
       'reference/api/',
+      'reference/behaviour/',
     ]) {
       await phone.goto(`${site.origin}${BASE}${path}`, { waitUntil: 'networkidle' });
       await phone.evaluate(() => document.fonts.ready);
@@ -155,6 +156,23 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
       return [getComputedStyle(cell).display, getComputedStyle(cell, '::before').content];
     });
     assert.deepEqual(wide, ['table-cell', 'none']);
+  });
+
+  it('keeps a wide Markdown table inside the content column at 1440, 1280 and 1024 px', async () => {
+    for (const width of [1440, 1280, 1024]) {
+      const tab = await browser.newPage({ viewport: { width, height: 900 } });
+      await tab.goto(`${site.origin}${BASE}reference/behaviour/`, { waitUntil: 'networkidle' });
+      await tab.evaluate(() => document.fonts.ready);
+      const [past, hidden] = await tab.evaluate(() => {
+        const column = document.querySelector('.sl-markdown-content').getBoundingClientRect();
+        const table = document.querySelector('.sl-markdown-content table');
+        const box = table.closest('.ncode-table') ?? table;
+        return [Math.round(table.getBoundingClientRect().right - column.right), box.scrollWidth - box.clientWidth];
+      });
+      await tab.close();
+      assert.ok(past <= 1, `at ${width} px the table extends ${past} px past the content column`);
+      assert.ok(hidden <= 1, `at ${width} px the table hides ${hidden} px sideways`);
+    }
   });
 
   it('lights the edge of a code listing that has more code past it', async () => {

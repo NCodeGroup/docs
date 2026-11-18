@@ -1,0 +1,27 @@
+---
+title: Ban the shared pools
+description: Bind the banned-symbol list to every shipping project.
+sidebar:
+  order: 3
+---
+
+Shipping code rents its buffers from Vault, so the build hands the banned-symbol list to every project that is not a
+test project.
+
+```xml file=Directory.Build.props from="<ItemGroup Condition=" to="</ItemGroup>"
+```
+
+The list names each shared pool and the call to use in its place.
+
+```txt file=BannedSymbols.txt title="The banned symbols"
+```
+
+The workflow that builds this site pins the shared toolchain by commit.
+
+```yaml file=.github/workflows/docs.yml from="uses: NCodeGroup/docs/" to="uses: NCodeGroup/docs/" wrap
+```
+
+## Checklist
+
+- Every shipping project gets the list through `Directory.Build.props`.
+- A test project keeps the shared pools to compare against.

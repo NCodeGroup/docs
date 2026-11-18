@@ -1,0 +1,3 @@
+// The shared pools, banned outside test projects; rent from Vault.
+P:System.Buffers.ArrayPool`1.Shared;Rent with Vault.Rent.
+P:System.Buffers.MemoryPool`1.Shared;Rent with Vault.Rent.

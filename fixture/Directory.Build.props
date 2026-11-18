@@ -1,0 +1,6 @@
+<Project>
+  <!-- Shipping code rents its buffers from Vault; test projects compare against the shared pools. -->
+  <ItemGroup Condition="!$(MSBuildProjectName.EndsWith('.Tests'))">
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)BannedSymbols.txt" />
+  </ItemGroup>
+</Project>

@@ -19,7 +19,7 @@ name it like any other released file ([NCodeGroup/brand#28](https://github.com/N
 **`vendor/brand/vendoring/vendor-brand.mjs` is brand's script as the release ships it, named in
 `vendor/brand/brand.lock.json` and pinned by its SHA-256 like every other brand file.**
 
-1. `npm run update:brand -- <version>` writes the script of the release it takes, with the release's other files,
+1. `npm run update:brand '--' <version>` writes the script of the release it takes, with the release's other files,
    and `npm run check:vendor` fails when the script differs from the SHA-256 the lock pins.
 2. `npm run check:vendor` and `npm run update:brand` run that copy, and no other copy of the script is kept.
 3. Biome and the coverage leave out `vendor/`, which holds only copies; the script is brand's code, tested in brand.

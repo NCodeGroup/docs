@@ -29,7 +29,7 @@ in it, the fonts and Lucide's icons, wait three days in brand before brand pins 
 **The brand's files are vendored from an attested release, and the theme restyles only Starlight's markup.**
 
 1. `vendor/brand/` holds the files `vendor/brand/brand.lock.json` names from one brand release, in the release's own
-   folders. `npm run update:brand -- <version>` runs `--update`, which writes them only once `gh attestation verify`
+   folders. `npm run update:brand '--' <version>` runs `--update`, which writes them only once `gh attestation verify`
    proves the archive. `npm run check:vendor` runs `--check`, offline, and `test/vendor.test.mjs` runs it in CI.
 2. `scripts/vendor-brand.mjs` is brand's `vendoring/vendor-brand.mjs` with only the lines
    `./.template/Test-FileHeaders.ps1 -Fix` adds after its `#!` line. Biome and the coverage leave it out, as brand's

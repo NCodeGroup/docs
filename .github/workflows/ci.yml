@@ -65,7 +65,7 @@ jobs:
       # runner's Ubuntu archive. Nothing is cached, so each run downloads the build the locked playwright-core names.
       - name: Install the browser the tests use
         if: hashFiles('package.json') != ''
-        run: npm run browser -- --with-deps
+        run: npm run browser '--' --with-deps
       - name: Test
         if: hashFiles('package.json') != ''
         env:

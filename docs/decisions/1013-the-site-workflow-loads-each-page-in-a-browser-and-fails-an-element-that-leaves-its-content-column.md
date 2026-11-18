@@ -40,11 +40,11 @@ its content column or hides content sideways. It adds no package.**
    tab panels and closed `<details>` are not measured.
 4. The browser is `--browser`, else `DOCS_BROWSER`, else `CHROME_BIN`, else the browser `npm run browser` installs,
    found through `playwright-core` when it is installed. A value with `/` or `\` is a path, resolved against the
-   folder the command was typed in; one without is a command on `PATH`. The flags are `--headless --no-sandbox
-   --hide-scrollbars --remote-debugging-pipe --user-data-dir=<a fresh temporary folder> --no-first-run
-   --no-default-browser-check about:blank`. `--no-sandbox` is what Playwright passes by default, and Chrome's sandbox
-   does not start inside most runners and containers. The pages are the library's own, which the build job already ran
-   in Node through Astro, with a read-only token, and they load from 127.0.0.1.
+   folder the command was typed in; one without is a command on `PATH`. The flags are `--headless`,
+   `--no-sandbox`, `--hide-scrollbars`, `--remote-debugging-pipe`, `--user-data-dir=<a fresh temporary folder>`,
+   `--no-first-run`, `--no-default-browser-check` and `about:blank`. `--no-sandbox` is what Playwright passes by
+   default, and Chrome's sandbox does not start inside most runners and containers. The pages are the library's own,
+   which the build job already ran in Node through Astro, with a read-only token, and they load from 127.0.0.1.
 5. The workflow step runs after "Upload the site", so the site of a failing pull request can still be downloaded. Its
    failure fails the build job, which the deploy job needs, so a site that fails the check is not published.
 6. The fixture has a page with a wide Markdown table (`reference/behaviour.mdx`) and a 64-cell `MemoryMap` component,

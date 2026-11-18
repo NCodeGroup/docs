@@ -75,3 +75,5 @@ records are indexed in [project-template/](project-template/README.md).
 | [ADR-1007](1007-a-markdown-table-stacks-on-a-phone-with-its-cells-labelled-when-the-site-is-built.md) | A Markdown table stacks on a phone, with its cells labelled when the site is built | Accepted |
 | [ADR-1008](1008-the-brand-is-vendored-from-an-attested-release-and-the-theme-restyles-only-starlights-markup.md) | The brand is vendored from an attested release, and the theme restyles only Starlight's markup (amends 1000) | Accepted (amended by 1009) |
 | [ADR-1009](1009-brands-vendoring-script-is-vendored-and-pinned-in-the-brand-lock.md) | Brand's vendoring script is vendored and pinned in the brand lock (amends 1008) | Accepted |
+| [ADR-1010](1010-a-page-shows-a-repository-file-or-the-lines-between-two-texts-of-it-when-the-site-is-built.md) | A page shows a repository file, or the lines between two texts of it, when the site is built | Accepted |
+| [ADR-1011](1011-a-site-can-require-headings-on-the-pages-a-glob-names-and-the-build-fails-a-page-without-them.md) | A site can require headings on the pages a glob names, and the build fails a page without them | Accepted |

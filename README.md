@@ -159,6 +159,12 @@ By a repository administrator, before the workflow's first run on the default br
 2. Same page: **Enforce HTTPS** checked.
 3. **Settings > Environments > github-pages > Deployment branches and tags: Selected branches and tags**, with one
    rule, the default branch. Leave required reviewers and the wait timer off.
+4. **About > Website**, on the repository's page: the site's URL, such as `https://ncodegroup.github.io/Buffers/`.
+   GitHub shows it beside the repository.
+5. **The package's project URL**: for a .NET library, `PackageProjectUrl` in the packed project, set to the site's
+   URL. A package gallery shows it as the project's website, such as nuget.org's "Project website", and it reaches
+   the gallery with the next published version. A project that leaves it empty gets the repository's URL from its
+   template. The repository link stays where the package's Source Link metadata puts it.
 
 A pull request build needs none of it.
 

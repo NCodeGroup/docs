@@ -570,10 +570,10 @@ main:has(h1[data-numbered]) .sl-markdown-content > .sl-heading-wrapper.level-h2:
   font-size: 0.9375rem;
   line-height: 1.45;
 }
-@media (min-width: 50rem) {
-  /* Wide enough for a real table: the columns share the whole width. */
-  .sl-markdown-content table:not(:where(.not-content *)) { display: table; border-collapse: separate; overflow: hidden; }
-}
+/* A Markdown table is wrapped in div.ncode-table (src/tables/stacked-tables.mjs): its columns share the whole
+   column, its cells wrap, and the wrapper scrolls a table that still cannot fit. A table written as HTML scrolls itself. */
+.sl-markdown-content .ncode-table:not(:where(.not-content *)) { overflow-x: auto; }
+.sl-markdown-content .ncode-table > table:not(:where(.not-content *)) { display: table; border-collapse: separate; overflow: hidden; }
 .sl-markdown-content :is(th, td):not(:where(.not-content *)) {
   padding: 0.625rem var(--nc-space-5);
   border-bottom: var(--nc-border-hair) solid var(--nc-color-border);
@@ -584,15 +584,15 @@ main:has(h1[data-numbered]) .sl-markdown-content > .sl-heading-wrapper.level-h2:
   padding-block: 0;
   background: var(--nc-color-surface-sunken);
   text-align: start;
-  white-space: nowrap;
 }
 .sl-markdown-content td:not(:where(.not-content *)) { height: 3rem; }
 .sl-markdown-content tbody tr:last-child td:not(:where(.not-content *)) { border-bottom: 0; }
 .sl-markdown-content tr:nth-child(2n):not(:where(.not-content *)) { background: none; }
-.sl-markdown-content td:first-child code:not(:where(.not-content *)) { white-space: nowrap; }
+.sl-markdown-content td code:not(:where(.not-content *)) { overflow-wrap: anywhere; }
 /* On a phone a table is a stack of rows, each cell under its column's name, which
    src/tables/stacked-tables.mjs copies from the head onto the cell. The head stays for screen readers. */
 @media (max-width: 40rem) {
+  .sl-markdown-content .ncode-table > table.ncode-stacked:not(:where(.not-content *)) { display: block; }
   .sl-markdown-content table.ncode-stacked :is(thead, tbody, tr, td):not(:where(.not-content *)) {
     display: block;
     margin: 0;
@@ -619,10 +619,6 @@ main:has(h1[data-numbered]) .sl-markdown-content > .sl-heading-wrapper.level-h2:
     content: attr(data-label);
     display: block;
     margin-bottom: var(--nc-space-1);
-  }
-  .sl-markdown-content table.ncode-stacked td code:not(:where(.not-content *)) {
-    white-space: normal;
-    overflow-wrap: anywhere;
   }
 }
 

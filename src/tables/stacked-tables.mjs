@@ -6,8 +6,11 @@
 // body cell gets the text of its column's head cell as `data-label`, and the table gets the class
 // `ncode-stacked`, which the CSS targets. A cell under an empty head cell gets no label and shows
 // its value alone. A table written as HTML reaches the plugin as a JSX element in an `.mdx` page and
-// as raw text in a `.md` page, so it is never matched and keeps its columns.
+// as raw text in a `.md` page, so it is never matched and keeps its columns. The plugin also wraps the
+// table in a `div.ncode-table`, which scrolls a table too wide for the content column even with its
+// cells wrapped.
 const STACKED = 'ncode-stacked';
+const WRAPPER = 'ncode-table';
 
 const childElements = (node, tagName) =>
   (node.children ?? []).filter((child) => child.type === 'element' && child.tagName === tagName);
@@ -22,6 +25,7 @@ export function stackedTables() {
         if (!head) return;
         const labels = childElements(head, 'th').map((cell) => ctx.textContent(cell).replace(/\s+/g, ' ').trim());
         ctx.setProperty(table, 'className', [STACKED]);
+        ctx.wrapNode(table, { type: 'element', tagName: 'div', properties: { className: [WRAPPER] }, children: [] });
         for (const body of childElements(table, 'tbody')) {
           for (const row of childElements(body, 'tr')) {
             for (const [column, cell] of childElements(row, 'td').entries()) {

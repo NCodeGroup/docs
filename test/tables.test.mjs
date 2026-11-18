@@ -48,7 +48,7 @@ describe('the tables of a page', () => {
 
   it('labels each cell of a Markdown table with its column name', () => {
     const html = page('reference/api');
-    assert.match(html, /<table class="ncode-stacked">/);
+    assert.match(html, /<div class="ncode-table"><table class="ncode-stacked">/);
     const labels = [...html.matchAll(/<td data-label="([^"]*)"/g)].map((match) => match[1]);
     assert.deepEqual(labels, Array(4).fill(['Member', 'Returns', 'Notes']).flat());
   });
@@ -67,6 +67,6 @@ describe('the tables of a page', () => {
     );
     const html = page('guides/html-table');
     assert.match(html, /<td>Value<\/td>/);
-    assert.doesNotMatch(html, /ncode-stacked|data-label/);
+    assert.doesNotMatch(html, /ncode-stacked|ncode-table|data-label/);
   });
 });

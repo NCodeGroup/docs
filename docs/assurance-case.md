@@ -48,6 +48,7 @@ it, and a vulnerability in a dependency itself ([SECURITY.md](../SECURITY.md)).
 | Threat | In scope | Countered by |
 | --- | --- | --- |
 | A pull request in a library, from a fork too, runs code in the build through a page or a component | Yes | R1: the build job's token only reads, and the job holds no secret; R2: a pull request's run never deploys |
+| The layout check runs a library's built pages in the runner's Google Chrome, without its sandbox | Yes | R1: the pages run in the build job, which already runs the library's pages and components through Astro, with a token that only reads and no secret; the browser loads them from a server on 127.0.0.1, with a profile folder it deletes afterwards ([ADR-1013](decisions/1013-the-site-workflow-loads-each-page-in-a-browser-and-fails-an-element-that-leaves-its-content-column.md)) |
 | A pull request's build is published | Yes | R2: `deploy` runs only on the default branch, and the `github-pages` environment deploys only from that branch |
 | A run leaves files in a cache that a publishing run restores | Yes | R3: `cache-mode: none`, and `package-manager-cache: false` for `setup-node` |
 | A site is built with a toolchain or packages nobody pinned | Yes | R3: a run that knows no toolchain commit stops at its first step, and `npm ci` fails when `package.json` and the lockfile disagree |
@@ -78,6 +79,7 @@ Each input from a library or a caller, and the check it gets before the build us
 | Sample files | `src/snippets/catalog.mjs` checks each marker's spelling, each key's form, and that no key is defined twice and no region is unclosed or empty |
 | Pages | `snippet=` blocks (`src/snippets/code-block.mjs`), frontmatter through Starlight's schema, and links (R5) |
 | `scripts/site.mjs`'s arguments, `SITE_URL` and `DOCS_OUT` | `parseArgs` in strict mode and a known command; `SITE_URL` must parse as a URL; an output folder Astro would misplace stops `build` and `preview` |
+| `--browser`, `DOCS_BROWSER`, `CHROME_BIN` | Started as one executable with a list of arguments and no shell; a value with a path separator is resolved against the folder the command was typed in |
 
 ## Secure Design Principles Applied
 
@@ -99,7 +101,7 @@ Each input from a library or a caller, and the check it gets before the build us
 
 - CWE-20, improper input validation: R5 and [Input Validation](#input-validation).
 - CWE-22 and CWE-59, path traversal and link following: R4.
-- CWE-78 and CWE-94, command and code injection: `scripts/site.mjs` and `src/library.mjs` start Astro and git with a
+- CWE-78 and CWE-94, command and code injection: `scripts/site.mjs` and `src/library.mjs` start Astro and git, and `src/layout/browser.mjs` starts the browser, with a
   list of arguments and no shell, and the workflow's inputs reach the script through `env`.
 - CWE-117, improper output neutralization for logs: `readLastUpdated` in `src/library.mjs` writes only the first line
   of git's message, with `%` escaped, as a workflow command.

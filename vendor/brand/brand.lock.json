@@ -1,17 +1,17 @@
 {
-  "version": "0.10.0",
+  "version": "0.10.1",
   "files": {
     "tokens/tokens.css": {
       "source": "tokens/tokens.css",
-      "sha256": "07977b831405150512fae29eceb213449998e7f12b9f3995e729ad7131e97f38"
+      "sha256": "aa6cc692f613b0292e09622f7c29a8254f98c56b11e98de00be392913c00c7e3"
     },
     "css/fonts.css": {
       "source": "css/fonts.css",
-      "sha256": "79fe97ec6d58ee12dff689e27369b5fd6fda3437cbbbc35a88cad89ccdbe1513"
+      "sha256": "039ae0c2e58a07c4a5b86b0c4a1c4762d48ab8e3b166304866da7df707322c26"
     },
     "css/starlight.css": {
       "source": "css/starlight.css",
-      "sha256": "fd2cf04c03ba41d12eeeb6177d0f07249188042c730d442185a2d5d6e567214c"
+      "sha256": "7a5f3b51b7c3ca48e35b464ca58f893e3381c67950eb8dd3528d3bf39c326eba"
     },
     "fonts/instrument-sans-latin-wdth-normal.woff2": {
       "source": "fonts/instrument-sans-latin-wdth-normal.woff2",
@@ -39,7 +39,7 @@
     },
     "syntax/instrument-screen.json": {
       "source": "syntax/instrument-screen.json",
-      "sha256": "a585ae1acf81734cf47a616e1033575ae20af730ff654e283a2da87bea6ff60c"
+      "sha256": "7197e9dd66d80fe13a11f193ce0a56828c44184d3d74a98d19ae0ab904a42f3b"
     },
     "logo/ncode/mark/ncode-mark-blue.svg": {
       "source": "logo/ncode/mark/ncode-mark-blue.svg",

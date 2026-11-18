@@ -7,20 +7,9 @@ import assert from 'node:assert/strict';
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
-import { build, copyOfFixture } from './helpers.mjs';
+import { failingBuild, page } from './helpers.mjs';
 
 const SAMPLES = 'tests/NCode.Fixture.Tests/QuickStartSamples.cs';
-
-/** Builds a copy of the fixture after `change` has edited it, and expects the build to fail. */
-function failingBuild(name, change) {
-  const library = copyOfFixture(name);
-  change(library);
-  const result = build(name, { library });
-  assert.notEqual(result.code, 0, `the build should have failed:\n${result.output}`);
-  return result.output;
-}
-
-const page = (body) => `---\ntitle: A broken page\n---\n\n${body}\n`;
 
 describe('a wrong sample fails the build', () => {
   it('a key no sample file defines', () => {

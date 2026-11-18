@@ -3,6 +3,7 @@
 
 // Shared by the tests: build a library's site into a folder of its own, make a changed copy of the
 // fixture library, read the built pages, and serve a built site the way GitHub Pages does.
+import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -76,6 +77,17 @@ export function copyOfFixture(name) {
   cpSync(fixture, copy, { recursive: true });
   return copy;
 }
+
+/** Builds a copy of the fixture after `change` has edited it, and expects the build to fail. */
+export function failingBuild(name, change) {
+  const library = copyOfFixture(name);
+  change(library);
+  const result = build(name, { library });
+  assert.notEqual(result.code, 0, `the build should have failed:\n${result.output}`);
+  return result.output;
+}
+
+export const page = (body) => `---\ntitle: A broken page\n---\n\n${body}\n`;
 
 /** Every built page under `out`: its path with forward slashes, and its HTML. */
 export function pages(out) {

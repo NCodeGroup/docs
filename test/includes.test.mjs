@@ -3,7 +3,17 @@
 
 // The file include: reading a code block's file reference and selecting the lines it shows.
 import assert from 'node:assert/strict';
-import { mkdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import {
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, it } from 'node:test';
 import { fillFileBlock } from '../src/includes/code-block.mjs';
@@ -15,7 +25,7 @@ import {
   resolveIncludedFile,
   selectLines,
 } from '../src/includes/files.mjs';
-import { work, withLinks } from './helpers.mjs';
+import { build, failingBuild, fixture, page as pageBody, work, withLinks } from './helpers.mjs';
 
 const page = 'docs/site/guides/x.mdx';
 const rejects = (meta, message) =>
@@ -506,5 +516,153 @@ describe('the file include, filled', () => {
     const library = libraryNamed('snippet and file');
     put(library, 'a.txt', 'x');
     fills(library, { lang: 'txt', meta: 'file=a.txt snippet=Key' }, 'a code block takes snippet= or file=, not both.');
+  });
+});
+
+const BROKEN = 'docs/site/guides/broken.mdx';
+
+/** Builds a copy of the fixture whose broken page holds `block`, and expects the build to name `message`. */
+function failsWith(name, block, message, prepare = () => {}) {
+  const output = failingBuild(name, (library) => {
+    prepare(library);
+    writeFileSync(join(library, BROKEN), pageBody(block));
+  });
+  assert.ok(output.includes(`${BROKEN}: ${message}`), output);
+}
+
+describe('a wrong file include fails the build', () => {
+  it('a file the library does not have', () => {
+    failsWith(
+      'include-missing',
+      '```txt file=NoSuchFile.txt\n```',
+      'file=NoSuchFile.txt names no file in the library.',
+    );
+  });
+
+  it('a path that leaves the library', () => {
+    failsWith('include-parent', '```txt file=../outside.txt\n```', BAD_PATH('../outside.txt'));
+  });
+
+  it('an absolute path', () => {
+    failsWith('include-absolute', '```txt file=/etc/hosts\n```', BAD_PATH('/etc/hosts'));
+  });
+
+  it('a file inside .git', () => {
+    failsWith(
+      'include-git',
+      '```txt file=.git/config\n```',
+      'file=.git/config is inside .git, which the build never reads.',
+    );
+  });
+
+  it('a folder', () => {
+    failsWith('include-folder', '```txt file=docs\n```', 'file=docs is a folder; name a file.');
+  });
+
+  it('a symbolic link to a file outside the library', withLinks, () => {
+    const target = join(work, 'libraries', 'include-link-target.txt');
+    failsWith(
+      'include-link',
+      '```txt file=linked.txt\n```',
+      `file=linked.txt is outside the library through a symbolic link: its real path is ${realpathSync(target)}.`,
+      (library) => {
+        mkdirSync(join(work, 'libraries'), { recursive: true });
+        writeFileSync(target, 'outside\n');
+        symlinkSync(target, join(library, 'linked.txt'));
+      },
+    );
+  });
+
+  it('a file that is not text', () => {
+    failsWith('include-binary', '```txt file=binary.dat\n```', 'file=binary.dat is not UTF-8 text.', (library) =>
+      writeFileSync(join(library, 'binary.dat'), Buffer.from([0x50, 0, 0x4b])),
+    );
+  });
+
+  it('a from text that is on no line', () => {
+    failsWith(
+      'include-from-nowhere',
+      '```txt file=BannedSymbols.txt from="no such text"\n```',
+      'file=BannedSymbols.txt from="no such text" is on no line of the file.',
+    );
+  });
+
+  it('a from text that is on two lines', () => {
+    failsWith(
+      'include-from-twice',
+      '```txt file=BannedSymbols.txt from="Shared;Rent"\n```',
+      'file=BannedSymbols.txt from="Shared;Rent" is on lines 2 and 3; give text that is on one line only.',
+    );
+  });
+
+  it('a to text that is on no line after from', () => {
+    failsWith(
+      'include-to-nowhere',
+      '```txt file=BannedSymbols.txt from="ArrayPool" to="no such text"\n```',
+      'file=BannedSymbols.txt to="no such text" is on no line from line 2 on.',
+    );
+  });
+
+  it('a line range', () => {
+    failsWith(
+      'include-lines',
+      '```txt file=BannedSymbols.txt lines=2-3\n```',
+      'lines=2-3 is not supported: a line range shows other lines once the file changes. Name the first and last lines by their text, with from="…" and to="…".',
+    );
+  });
+
+  it('a block without its language', () => {
+    failsWith(
+      'include-no-language',
+      '``` file=BannedSymbols.txt\n```',
+      'a code block with file=BannedSymbols.txt needs its language first, as in ```txt file=BannedSymbols.txt',
+    );
+  });
+
+  it('a language the code blocks do not highlight', () => {
+    failsWith(
+      'include-unknown-language',
+      '```nosuchlang file=BannedSymbols.txt\n```',
+      'file=BannedSymbols.txt says nosuchlang, which is not a language the code blocks highlight; use txt for plain text.',
+    );
+  });
+
+  it('a block that holds code of its own', () => {
+    failsWith(
+      'include-not-empty',
+      '```txt file=BannedSymbols.txt\nmine\n```',
+      'a code block with file=BannedSymbols.txt must be empty; its text comes from the file.',
+    );
+  });
+
+  it('a block that takes a sample and a file', () => {
+    failsWith(
+      'include-snippet-and-file',
+      '```cs snippet=QuickStart file=BannedSymbols.txt\n```',
+      'a code block takes snippet= or file=, not both.',
+    );
+  });
+});
+
+describe('a library outside any repository', () => {
+  it('links the branch, and does not warn', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ncode-docs-'));
+    try {
+      cpSync(fixture, dir, { recursive: true });
+      const result = build('includes-no-repository', { library: dir });
+      assert.equal(result.code, 0, result.output);
+      const html = readFileSync(join(result.out, 'guides/ban-apis/index.html'), 'utf8');
+      const captions = [...html.matchAll(/<p class="ncode-source">.*?<\/p>/gs)].map(([paragraph]) => paragraph);
+      assert.equal(captions.length, 3, 'each file block has a caption');
+      for (const caption of captions) {
+        assert.ok(caption.includes('/blob/main/'), caption);
+        assert.match(caption, /on main/);
+      }
+      for (const line of result.output.split(/\r\n|\r|\n/)) {
+        assert.ok(!line.startsWith('Source links name the branch'), line);
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

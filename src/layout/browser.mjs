@@ -23,6 +23,8 @@ const CLOSE_TIMEOUT = 10_000;
  */
 export async function launchBrowser(executable) {
   const profile = mkdtempSync(join(tmpdir(), 'ncode-layout-'));
+  // Windows can hold the profile's files for a moment after the browser exits, so the removal retries.
+  const removeProfile = () => rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
   const flags = [
     '--headless',
     '--no-sandbox',
@@ -99,7 +101,7 @@ export async function launchBrowser(executable) {
     const timer = setTimeout(() => child.kill(), CLOSE_TIMEOUT);
     await exited;
     clearTimeout(timer);
-    rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    removeProfile();
   }
 
   try {
@@ -107,7 +109,7 @@ export async function launchBrowser(executable) {
   } catch (error) {
     child.kill();
     await exited;
-    rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    removeProfile();
     throw new Error(
       `The browser ${executable} did not start: ${error.message}. Name a Chromium-based browser, such as Google Chrome or Microsoft Edge, with --browser or DOCS_BROWSER.`,
     );

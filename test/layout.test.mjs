@@ -1,8 +1,9 @@
 // Copyright © NCode Group
 // SPDX-License-Identifier: Apache-2.0
 
-// The layout check's browser: a Chromium-based browser driven over its DevTools pipe opens a page at a width,
-// and a browser that does not start is reported by name.
+// The layout check: a Chromium-based browser driven over its DevTools pipe opens a page at a width, the check finds
+// the browser and the built pages, measures each page at each width and words what it found, and "site.mjs check"
+// runs it from the command line. A browser that does not start is reported by name.
 //
 // The browser is the headless Chromium that the locked playwright-core names. "npm run browser" downloads it.
 // Where it is not installed the tests are skipped and say so; DOCS_REQUIRE_BROWSER=1 makes that a failure,

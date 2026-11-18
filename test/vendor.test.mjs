@@ -8,6 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { appendFileSync, cpSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
+import { definedProperties, PRIMITIVE, readProperties } from '../src/brand/tokens.mjs';
 import { root, work } from './helpers.mjs';
 
 const brand = join(root, 'vendor', 'brand');
@@ -16,9 +17,6 @@ const check = (lock) =>
     cwd: root,
     encoding: 'utf8',
   });
-
-/** The custom properties a stylesheet or a component defines. */
-const defined = (text) => [...text.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((match) => match[1]);
 
 /** A file of this repository, read as text. */
 const read = (path) => readFileSync(join(root, path), 'utf8');
@@ -41,15 +39,9 @@ const readers = () => {
   return paths;
 };
 
-/**
- * The brand's private primitives, which brand's ADR-1002 lets any release change: the steps of its colour ramps and
- * of its type scale.
- */
-const PRIMITIVE = /^--nc-(?:(?:blue|stone|green|amber|red)-\d+|(?:text|weight|width|leading|tracking)-[a-z0-9]+)$/;
-
 /** The custom properties a file reads, with or without a fallback. */
 const reads = (path, text) => {
-  const names = [...text.matchAll(/var\(\s*(--[a-z0-9-]*[a-z0-9])\s*[,)]/g)].map((match) => match[1]);
+  const names = readProperties(text);
   // ec.config.mjs names a colour token by its role, token('screen'), for var(--nc-color-screen).
   if (path === 'ec.config.mjs')
     names.push(...[...text.matchAll(/token\('([a-z0-9-]+)'\)/g)].map((m) => `--nc-color-${m[1]}`));
@@ -93,9 +85,9 @@ describe('the vendored brand', () => {
   it('defines every custom property the theme, the code blocks and the components read', () => {
     const sources = readers();
     const known = new Set([
-      ...defined(read('vendor/brand/tokens/tokens.css')),
-      ...defined(read('vendor/brand/css/starlight.css')),
-      ...sources.flatMap((path) => defined(read(path))),
+      ...definedProperties(read('vendor/brand/tokens/tokens.css')),
+      ...definedProperties(read('vendor/brand/css/starlight.css')),
+      ...sources.flatMap((path) => definedProperties(read(path))),
     ]);
     assert.deepEqual(
       sources.flatMap((path) => undefinedReads(path, read(path), known)),
@@ -112,7 +104,7 @@ describe('the vendored brand', () => {
 
   it('reports a read of an undefined custom property or of a primitive, with or without a fallback', () => {
     const text = '.x { color: var(--nc-blue-600); background: var(--nc-nope, red); }';
-    const known = new Set(defined(read('vendor/brand/tokens/tokens.css')));
+    const known = new Set(definedProperties(read('vendor/brand/tokens/tokens.css')));
     assert.deepEqual(undefinedReads('a.css', text, known), ['a.css: --nc-nope']);
     assert.deepEqual(primitiveReads('a.css', text), ['a.css: --nc-blue-600']);
   });

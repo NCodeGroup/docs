@@ -8,7 +8,7 @@
 //   DOCS_LIBRARY   the library's repository folder (required)
 //   DOCS_CONTENT   the content folder inside it, relative, with forward slashes (default docs/site)
 import { spawnSync } from 'node:child_process';
-import { existsSync, globSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { existsSync, globSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validate } from './json-schema.mjs';
@@ -239,6 +239,66 @@ export function readLastUpdated(library, environment = process.env) {
     }
   }
   return dates;
+}
+
+/**
+ * A page's slug: its path under the content folder with forward slashes, without its .md or .mdx
+ * extension, in lower case, as Starlight names the page.
+ * @param {string} path A path under the content folder, with `/` or `\` separators.
+ * @returns {string}
+ */
+export function pageSlug(path) {
+  return path
+    .replaceAll('\\', '/')
+    .replace(/\.mdx?$/, '')
+    .toLowerCase();
+}
+
+/**
+ * The pages of a library, as the build mounts them: the .md and .mdx files of the content folder
+ * and the folders under it, except the library's own 404 page, and files and folders whose names
+ * start with `_` or `.`, and node_modules. A link to a folder is not followed.
+ * @param {{ contentDirectory: string }} library
+ * @returns {{ file: string, path: string, slug: string }[]} Sorted by `path`; `file` is absolute,
+ *   `path` is relative to the content folder with forward slashes.
+ */
+export function listPages(library) {
+  const found = [];
+  const walk = (directory, prefix) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      if (entry.name.startsWith('_') || entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+      const path = `${prefix}${entry.name}`;
+      if (entry.isDirectory()) {
+        walk(join(directory, entry.name), `${path}/`);
+      } else if (/\.mdx?$/.test(entry.name) && !(prefix === '' && NOT_FOUND_PAGES.includes(entry.name))) {
+        found.push({ file: join(directory, entry.name), path, slug: pageSlug(path) });
+      }
+    }
+  };
+  walk(library.contentDirectory, '');
+  return found.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+}
+
+/**
+ * The commit the library's checkout is at, which a page's source links name. Prints nothing.
+ * @param {{ root: string }} library
+ * @param {Record<string, string | undefined>} [environment]
+ * @returns {{ commit: string } | { commit: undefined, reason: string | undefined }} `reason` is git's
+ *   message when the library is in a repository whose commit git cannot read, and undefined when it
+ *   is in no repository.
+ */
+export function readCommit(library, environment = process.env) {
+  const result = spawnSync('git', ['rev-parse', '--verify', 'HEAD^{commit}'], {
+    cwd: library.root,
+    env: environment,
+    encoding: 'utf8',
+  });
+  const commit = result.stdout?.trim();
+  if (!result.error && result.status === 0 && /^[0-9a-f]{40}$/.test(commit)) return { commit };
+  if (!inRepository(library.root)) return { commit: undefined, reason: undefined };
+  const reason =
+    result.error?.message ?? (result.stderr.trim().split(/\r?\n/)[0] || `git exited with code ${result.status}`);
+  return { commit: undefined, reason };
 }
 
 /** Whether `folder` or a folder above it holds a .git folder or file, where git looks for a repository. */

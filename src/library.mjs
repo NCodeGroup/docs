@@ -175,6 +175,7 @@ export function resolveLibrary(environment = process.env) {
       samples: globs,
       editLinks: config.editLinks ?? true,
       lastUpdated: config.lastUpdated ?? true,
+      requiredHeadings: config.requiredHeadings ?? [],
     },
     sampleFiles: [...new Set(sampleFiles)].sort(),
   };

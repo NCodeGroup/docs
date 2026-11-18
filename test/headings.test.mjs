@@ -173,6 +173,20 @@ describe('headingsPlugin', () => {
     );
   });
 
+  it('counts a heading in another letter case as missing', () => {
+    assert.throws(
+      () =>
+        page([
+          [2, 'Before'],
+          [2, 'checklist'],
+        ]),
+      {
+        message:
+          'docs/site/guides/guide.mdx has no "## Checklist" heading, which requiredHeadings[0] in docs/site/site.config.json requires on every page its globs match (guides/*, tips/*). Add the heading, or add "guides/guide" to that rule\'s "except".',
+      },
+    );
+  });
+
   it('refuses headings out of order', () => {
     assert.throws(
       () =>

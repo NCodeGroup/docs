@@ -29,9 +29,9 @@ export async function findBrowser(environment = process.env) {
     const executable = server.process().spawnfile;
     await server.close();
     return executable;
-  } catch {
+  } catch (error) {
     throw new Error(
-      'No browser to check the layout with: name a Chromium-based browser, such as Google Chrome or Microsoft Edge, with --browser or DOCS_BROWSER, or run "npm run browser" in the toolchain.',
+      `No browser to check the layout with (${String(error?.message ?? error).split('\n')[0]}): name a Chromium-based browser, such as Google Chrome or Microsoft Edge, with --browser or DOCS_BROWSER, or run "npm run browser" in the toolchain.`,
     );
   }
 }
@@ -112,10 +112,9 @@ function measure() {
  * @param {string} options.base Its base path.
  * @param {{ name: string, path: string }[]} options.pages What `sitePages` lists.
  * @param {string} options.browser The browser's path.
- * @param {number[]} [options.widths] The widths to load each page at, `WIDTHS` by default.
  * @returns {Promise<{ page: string, width: number, element: string, heading?: string, problem: string }[]>}
  */
-export async function checkLayout({ out, base, pages, browser, widths = WIDTHS }) {
+export async function checkLayout({ out, base, pages, browser }) {
   const site = await serve(out, base);
   let chrome;
   try {
@@ -128,7 +127,7 @@ export async function checkLayout({ out, base, pages, browser, widths = WIDTHS }
     const page = await chrome.newPage();
     const problems = [];
     for (const { name, path } of pages) {
-      for (const width of widths) {
+      for (const width of WIDTHS) {
         await page.setWidth(width);
         await page.goto(`${site.origin}${base.replace(/\/$/, '')}/${path}`);
         const found = await page.evaluate(`document.fonts.ready.then(() => (${measure})())`);

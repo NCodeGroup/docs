@@ -129,13 +129,27 @@ describe('the layout check', { skip: executable ? false : missing }, () => {
 
     it('passes every page of the fixture at every width', async () => {
       const out = join(work, 'out', 'layout');
-      const problems = await checkLayout({
-        out,
-        base: BASE,
-        pages: sitePages(resolveLibrary({ DOCS_LIBRARY: fixture }), out),
-        browser: executable,
-      });
+      const pages = sitePages(resolveLibrary({ DOCS_LIBRARY: fixture }), out);
+      // A site with no pages would pass vacuously.
+      const paths = pages.map((page) => page.path);
+      assert.ok(paths.includes(''));
+      assert.ok(paths.includes('reference/behaviour/'));
+      assert.ok(paths.includes('concepts/how-sealing-works/'));
+      const problems = await checkLayout({ out, base: BASE, pages, browser: executable });
       assert.deepEqual(problems, []);
+    });
+
+    it('closes the site when the browser does not start', async () => {
+      // A server left open would keep the test process from exiting.
+      await assert.rejects(
+        checkLayout({
+          out: join(work, 'out', 'layout'),
+          base: BASE,
+          pages: [],
+          browser: join(work, 'no-such-browser'),
+        }),
+        /did not start/,
+      );
     });
 
     it('reports an element past the column and a box that hides its content, and leaves a marked scroller alone', async () => {
@@ -204,7 +218,7 @@ describe('the layout check', { skip: executable ? false : missing }, () => {
     it('passes the fixture from the command line', () => {
       const result = check(fixture, join(work, 'out', 'layout'));
       assert.equal(result.code, 0, result.output);
-      assert.match(result.output, /fits their content columns/);
+      assert.match(result.output, /The layout of [1-9]\d* pages fits/);
     });
 
     it('fails from the command line, naming the page, the width and the element', () => {

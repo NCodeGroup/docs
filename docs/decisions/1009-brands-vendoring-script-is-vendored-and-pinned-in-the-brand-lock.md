@@ -23,7 +23,7 @@ name it like any other released file ([NCodeGroup/brand#28](https://github.com/N
    and `npm run check:vendor` fails when the script differs from the SHA-256 the lock pins.
 2. `npm run check:vendor` and `npm run update:brand` run that copy, and no other copy of the script is kept.
 3. Biome and the coverage leave out `vendor/`, which holds only copies; the script is brand's code, tested in brand.
-   The header check reads the script as it is and passes on brand's own lines.
+   The header check skips `vendor/`, so the script keeps brand's own lines as the release ships them.
 
 This amends ADR-1008's second decision and its option "a byte-for-byte copy of `vendor-brand.mjs` pinned in the
 lock".
@@ -39,8 +39,8 @@ lock".
 - A release that changes the script reaches this repository through `npm run update:brand`, in the same diff as the
   rest of the release's files.
 - `--update` runs the copy it replaces, so the release's script runs from the next command on.
-- A release whose script lacks the header lines fails `.template/Test-FileHeaders.ps1`, and is taken once brand
-  restores them.
+- `.template/Test-FileHeaders.ps1` skips `vendor/`, as other authors' code, so a release is taken whatever header
+  lines its script carries.
 
 ## References
 

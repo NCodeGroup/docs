@@ -1,0 +1,49 @@
+---
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
+// One row of a buffer's bytes, each under its offset. A row of 64 is wider than any content column, so it scrolls
+// inside the column, and data-scrolls tells the layout check that it does so by design.
+interface Props {
+  /** How many bytes the row holds. */
+  length: number;
+  /** What the row shows, for a reader who cannot see it. */
+  label: string;
+}
+const { length, label } = Astro.props;
+---
+
+<!-- biome-ignore lint/a11y/noNoninteractiveTabindex: a region that scrolls sideways takes focus, so a keyboard can scroll it -->
+<section class="memory-map not-content" data-scrolls tabindex="0" aria-label={label}><ol class="memory-map__cells">{Array.from({ length }, (_, offset) => <li class="memory-map__cell"><span class="memory-map__offset">{offset}</span>00</li>)}</ol></section>
+
+<style>
+  .memory-map {
+    overflow-x: auto;
+    padding: var(--nc-space-4);
+    border-radius: var(--nc-radius-panel);
+    background: var(--nc-color-screen);
+  }
+  .memory-map__cells {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 2.5rem;
+    gap: var(--nc-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .memory-map__cell {
+    display: grid;
+    place-items: center;
+    height: 3rem;
+    border-radius: var(--nc-radius-cell);
+    background: var(--nc-color-screen-raised);
+    color: var(--nc-color-on-screen);
+    font: var(--nc-type-value);
+    font-stretch: var(--nc-type-value-stretch);
+  }
+  .memory-map__offset {
+    color: var(--nc-color-on-screen-muted);
+    font-size: 0.75em;
+  }
+</style>

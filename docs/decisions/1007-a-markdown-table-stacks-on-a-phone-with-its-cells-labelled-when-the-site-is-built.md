@@ -1,6 +1,6 @@
 # 1007. A Markdown table stacks on a phone, with its cells labelled when the site is built
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 1014)
 - **Date:** 2026-11-16
 - **Deciders:** NCode Group
 

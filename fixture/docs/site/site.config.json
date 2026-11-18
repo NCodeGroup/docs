@@ -13,13 +13,14 @@
     "url": "https://ncodegroup.github.io/Fixture"
   },
   "sidebar": [
-    { "label": "Start here", "items": ["quick-start"] },
+    { "label": "Start here", "items": [{ "slug": "index", "label": "Overview" }, "quick-start"] },
     { "label": "Guides", "items": [{ "autogenerate": { "directory": "guides" } }] },
     { "label": "Concepts", "items": ["concepts/how-sealing-works"] },
     {
       "label": "Reference",
       "items": [
         "reference/api",
+        "reference/behaviour",
         { "label": "Changelog", "link": "https://github.com/NCodeGroup/Fixture/blob/main/CHANGELOG.md" }
       ]
     }

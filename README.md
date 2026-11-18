@@ -132,7 +132,10 @@ jobs:
 ```
 
 Every pull request builds the site, so a page that does not build fails its check, and keeps the result for a week
-as the `github-pages` artifact. Only a run on the default branch deploys. The three permissions are the most the
+as the `github-pages` artifact. The build job then loads every page in the runner's Google Chrome at 1440, 1280, 1024
+and 390 px, and fails when an element leaves its page's content column or hides part of its content sideways
+([CONTRACT.md](CONTRACT.md), sections 7 and 8). The artifact is uploaded first, so a failing pull request's site can
+still be browsed. Only a run on the default branch deploys. The three permissions are the most the
 called jobs use: the build job reads, and the deploy job, which runs none of the library's code, writes.
 
 | Input | Default | Meaning |
@@ -156,6 +159,12 @@ By a repository administrator, before the workflow's first run on the default br
 2. Same page: **Enforce HTTPS** checked.
 3. **Settings > Environments > github-pages > Deployment branches and tags: Selected branches and tags**, with one
    rule, the default branch. Leave required reviewers and the wait timer off.
+4. **About > Website**, on the repository's page: the site's URL, such as `https://ncodegroup.github.io/Buffers/`.
+   GitHub shows it beside the repository.
+5. **The package's project URL**: for a .NET library, `PackageProjectUrl` in the packed project, set to the site's
+   URL. A package gallery shows it as the project's website, such as nuget.org's "Project website", and it reaches
+   the gallery with the next published version. A project that leaves it empty gets the repository's URL from its
+   template. The repository link stays where the package's Source Link metadata puts it.
 
 A pull request build needs none of it.
 
@@ -215,6 +224,10 @@ import lifecycle from '@site/assets/lifecycle.png';
 `@ncodegroup/docs/components` is Starlight's components and this toolchain's own; `@site/…` is the library's
 `_components/` and `_assets/`. A page imports from nowhere else.
 
+A library's component is designed for a content column of about 36rem: [CONTRACT.md](CONTRACT.md) section 7 gives the
+column's width at each window width, and how a component lays out data with many columns. The layout check fails an
+element that leaves the column.
+
 ## Local preview
 
 With both repositories cloned side by side, from this repository's folder:
@@ -231,6 +244,10 @@ result, with the search working. Both take `--content <path>` for a content fold
 written to the library.
 
 `npm run site '--' build ../Buffers --out <folder>` builds without serving.
+
+`npm run site '--' check ../Buffers --out <folder>` loads that built site in a browser and fails as the workflow does.
+It uses the browser `npm run browser` installs, or a Chromium-based browser that `--browser <path>` or `DOCS_BROWSER`
+names, such as Microsoft Edge.
 
 The separator is written `'--'`, quoted, so that PowerShell passes it to npm: PowerShell drops a bare `--` before npm's
 `npm.ps1` shim runs, and npm then reads the options after it, such as `--out`, as its own. A POSIX shell such as bash
@@ -290,6 +307,7 @@ through a newer one: `npx npm@11 ci --ignore-scripts`. `npm run` works with any 
 | `src/links/` | Adds the base path to links; checks the built pages |
 | `src/highlighting/` | C# 14 extension blocks for the C# grammar |
 | `src/tables/` | Labels each Markdown table's cells with their column names, so a table stacks on a phone |
+| `src/layout/` | Serves a built site and loads each page in a browser, to check that its content fits its column |
 | `src/components/` | The shared components, and the three Starlight overrides |
 | `src/styles/theme.css` | Starlight's markup, restyled with the brand tokens |
 | `vendor/brand/` | The brand's tokens, fonts, Starlight mapping, syntax theme and marks, vendored from a release |

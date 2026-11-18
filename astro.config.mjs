@@ -21,6 +21,7 @@ import {
   readCommit,
   readLastUpdated,
   resolveLibrary,
+  siteBase,
   warn,
 } from './src/library.mjs';
 import { baseLinks } from './src/links/base-links.mjs';
@@ -36,7 +37,7 @@ const { config } = library;
 // so a custom domain needs no change anywhere; a local build and a pull request build use the
 // library's own default. One variable, because an empty base path is a valid value of its own.
 const siteUrl = new URL(process.env.SITE_URL || config.siteUrl);
-const base = siteUrl.pathname.replace(/\/$/, '') || '/';
+const base = siteBase(library);
 const inBase = (path) => (base === '/' ? '' : base) + path;
 
 // A page's file as its author knows it, for a message: the build reads a mounted copy.

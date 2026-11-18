@@ -8,7 +8,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, describe, it, mock } from 'node:test';
-import { listPages, pageSlug, readCommit, resolveLibrary, warn as warnMessage } from '../src/library.mjs';
+import { listPages, pageSlug, readCommit, resolveLibrary, siteBase, warn as warnMessage } from '../src/library.mjs';
 import { copyOfFixture, fixture, root, work } from './helpers.mjs';
 
 const FIXTURE_PAGES = [
@@ -19,6 +19,7 @@ const FIXTURE_PAGES = [
   'index.mdx',
   'quick-start.mdx',
   'reference/api.mdx',
+  'reference/behaviour.mdx',
 ];
 
 /** Writes a file under a copy of the fixture, with the folders it needs. */
@@ -68,6 +69,13 @@ describe('a library', () => {
     add(copy, 'docs/site/Notes/Upper.mdx');
     const pages = listPages(resolveLibrary({ DOCS_LIBRARY: copy }));
     assert.ok(pages.some((page) => page.path === 'Notes/Upper.mdx' && page.slug === 'notes/upper'));
+  });
+
+  it('derives its base path from SITE_URL, else from its configuration', () => {
+    const library = resolveLibrary({ DOCS_LIBRARY: fixture });
+    assert.equal(siteBase(library, {}), '/Fixture');
+    assert.equal(siteBase(library, { SITE_URL: 'https://ncodegroup.github.io/Buffers/' }), '/Buffers');
+    assert.equal(siteBase(library, { SITE_URL: 'https://docs.example.org/' }), '/');
   });
 
   it('reads the commit of its checkout', () => {

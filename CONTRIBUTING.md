@@ -32,7 +32,7 @@ CI fails when the tests cover less than 90% of the statements or 80% of the bran
 
 Each source file starts with two comment lines, `Copyright © NCode Group` and `SPDX-License-Identifier: Apache-2.0` ([the template's decision](docs/decisions/project-template/0027-source-files-carry-a-copyright-and-spdx-license-header.md)). CI checks them with `./.template/Test-FileHeaders.ps1`, and `./.template/Test-FileHeaders.ps1 -Fix` adds them to every file without them, after a `#!` line. A stylesheet holds them as `/* */` comments, and an Astro component as `//` comments right after its frontmatter's opening `---` line, so they never reach the built page. Files under a `vendor/` or `node_modules/` folder hold other authors' code and aren't checked: `vendor/brand/vendoring/vendor-brand.mjs`, NCodeGroup/brand's vendoring script, keeps brand's own lines, and Biome and the coverage leave `vendor/` out too ([ADR-1009](docs/decisions/1009-brands-vendoring-script-is-vendored-and-pinned-in-the-brand-lock.md)).
 
-To see a change on a real site, build or serve a library that is cloned beside this repository: `npm run dev -- ../Buffers`. [README.md](README.md) has the details.
+To see a change on a real site, build or serve a library that is cloned beside this repository: `npm run dev '--' ../Buffers`. [README.md](README.md) has the details.
 
 ## Make a Change
 

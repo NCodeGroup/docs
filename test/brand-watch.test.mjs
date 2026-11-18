@@ -57,7 +57,7 @@ describe('issueText', () => {
     assert.ok(text.body.includes('2026-11-20'));
     assert.ok(text.body.includes('https://github.com/NCodeGroup/brand/releases/tag/v0.10.0'));
     assert.ok(text.body.includes('https://github.com/NCodeGroup/brand/compare/v0.9.0...v0.10.0'));
-    assert.ok(text.body.includes('npm run update:brand -- 0.10.0'));
+    assert.ok(text.body.includes("npm run update:brand '--' 0.10.0"));
   });
 
   it('ends with one newline after the last sentence', () => {

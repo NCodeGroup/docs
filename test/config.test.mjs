@@ -153,6 +153,10 @@ describe('the site configuration', () => {
     assert.throws(() => resolveLibrary({ DOCS_LIBRARY: library }), /docs\/site\/site\.config\.json was not found/);
   });
 
+  it('names the command that builds a library when none is given', () => {
+    assert.throws(() => resolveLibrary({}), { message: /npm run site '--' build <folder>/ });
+  });
+
   it('is read from the content folder the caller names', () => {
     assert.throws(
       () => resolveLibrary({ DOCS_LIBRARY: fixture, DOCS_CONTENT: 'website' }),

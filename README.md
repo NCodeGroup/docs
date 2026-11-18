@@ -221,16 +221,20 @@ With both repositories cloned side by side, from this repository's folder:
 
 ```shell
 npm ci --ignore-scripts
-npm run dev -- ../Buffers
+npm run dev '--' ../Buffers
 ```
 
 That serves the library's site at `http://localhost:4321/<base path>/` and follows edits to its pages, its sample
-files and the files its pages include. `npm run preview -- ../Buffers` builds the site as CI does and serves the result,
-with the search working. Both take `--content <path>` for a content folder other than `docs/site`, and
-`--port <number>`. From the library's folder the same commands are `npm --prefix ../docs run dev -- .`. Nothing is
+files and the files its pages include. `npm run preview '--' ../Buffers` builds the site as CI does and serves the
+result, with the search working. Both take `--content <path>` for a content folder other than `docs/site`, and
+`--port <number>`. From the library's folder the same commands are `npm --prefix ../docs run dev '--' .`. Nothing is
 written to the library.
 
-`npm run site -- build ../Buffers --out <folder>` builds without serving.
+`npm run site '--' build ../Buffers --out <folder>` builds without serving.
+
+The separator is written `'--'`, quoted, so that PowerShell passes it to npm: PowerShell drops a bare `--` before npm's
+`npm.ps1` shim runs, and npm then reads the options after it, such as `--out`, as its own. A POSIX shell such as bash
+reads `'--'` as `--`, so each command runs as written in both.
 
 ## Development
 
@@ -262,7 +266,7 @@ with the copyright line and the `SPDX-License-Identifier: Apache-2.0` line, as C
 [CONTRIBUTING.md](CONTRIBUTING.md) says where the lines go in an Astro component and a stylesheet.
 
 The browser is the headless Chromium that the locked `playwright-core` drives. `npm run browser` downloads it, once
-for each version of `playwright-core`; on Linux, `npm run browser -- --with-deps` also installs the system libraries
+for each version of `playwright-core`; on Linux, `npm run browser '--' --with-deps` also installs the system libraries
 it needs. Where the browser is not installed the browser check is skipped and says so. `DOCS_REQUIRE_BROWSER=1` makes
 that a failure, and CI sets it.
 
@@ -318,11 +322,11 @@ reads such a step or a custom property no vendored stylesheet defines
   The version exists, whatever the error's next line says: npm takes it once it is three days old, so wait until
   then, or take the newest version npm offers. `shiki` and `@astrojs/markdown-satteri` are pinned to the versions
   Astro and Starlight resolve, so they move together with them in one pull request.
-- **The brand.** `npm run update:brand -- <version>` vendors another release of NCodeGroup/brand. Dependabot can't see
+- **The brand.** `npm run update:brand '--' <version>` vendors another release of NCodeGroup/brand. Dependabot can't see
   vendored files, so the brand-watch workflow, `.github/workflows/brand-watch.yml`, checks NCodeGroup/brand every day:
   while the lock pins an older release than the newest, it keeps one open issue labeled `brand-update` and
   `dependencies`, "Update the brand to <version>", with the release's links and these steps, and closes it once the
-  lock pins the newest release. `npm run watch:brand -- --dry-run` shows what it would do for NCodeGroup/docs; a later
+  lock pins the newest release. `npm run watch:brand '--' --dry-run` shows what it would do for NCodeGroup/docs; a later
   `--repo=<owner/name>` names another repository. The update needs the GitHub CLI, signed in, and writes the files only
   once `gh attestation verify` proves the release's archive was built by brand's publish workflow for its tag. A brand
   release is taken when it is published, without the packages' three-day wait

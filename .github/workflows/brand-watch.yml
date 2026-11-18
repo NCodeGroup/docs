@@ -4,7 +4,7 @@ name: Brand watch
 # NCodeGroup/brand, which Dependabot can't see. While the lock is behind, it keeps one open issue labeled
 # brand-update, "Update the brand to <version>", with the release's links and the command that takes it, and closes
 # it once the lock pins the newest release. A brand release is taken as soon as it is published (ADR-1008), so the
-# watch names a release however young. scripts/brand-watch.mjs does the work; npm run watch:brand -- --dry-run shows
+# watch names a release however young. scripts/brand-watch.mjs does the work; npm run watch:brand '--' --dry-run shows
 # what it would do.
 on:
   schedule:

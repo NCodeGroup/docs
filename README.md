@@ -226,7 +226,7 @@ import lifecycle from '@site/assets/lifecycle.png';
 
 A library's component is designed for a content column of about 36rem: [CONTRACT.md](CONTRACT.md) section 7 gives the
 column's width at each window width, and how a component lays out data with many columns. The layout check fails an
-element that leaves the column.
+element that leaves the column, and a Markdown table too wide for it.
 
 ## Local preview
 

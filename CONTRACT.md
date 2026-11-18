@@ -339,6 +339,11 @@ head cell. Keep head cells short, since each is repeated on every row there; a c
 as a column of row names, shows its cells without a name. A table written as HTML, or one a library's component
 renders, is not stacked.
 
+A Markdown table must fit the content column. Its cells wrap, code in them included, so most tables do. One that still
+cannot fit, because it has too many columns or long words in them, scrolls sideways inside the column, so a published
+page stays readable, but the layout check (section 8) fails it: give it fewer columns, or lay its data out as a card
+per entry, as below. A table kept wide on purpose is a library's own component whose root is marked `data-scrolls`.
+
 A library's own component is an `.astro` file in `_components/`. It may import from the same four places, styles
 itself with the brand's public tokens, each prefixed `--nc-`: the colour roles, the type roles, the font families,
 elevation and the measures (`var(--nc-color-screen)`, `font: var(--nc-type-value)`, `var(--nc-space-4)`). It never
@@ -366,7 +371,7 @@ long identifiers, as a card per entry with its fields labelled, not as a wide ta
 A component's elements fit the page's content column. An element that must scroll sideways by design, such as a long
 strip of bytes, scrolls inside the column, with `overflow-x: auto`, and carries the attribute `data-scrolls`. The
 layout check (section 8) then measures its box, which still fits the column, but not its content. A code block
-scrolls the same way, unmarked.
+scrolls the same way, unmarked. A Markdown table is not exempt: it must fit.
 
 ## 8. What fails the build
 
@@ -397,8 +402,10 @@ the key or the link:
 
 After the build, the workflow loads every page in Google Chrome at 1440, 1280, 1024 and 390 px. It fails on an element
 of a page's content that extends past its content column, and on a scroll container in it that hides part of its
-content sideways (a code block and an element marked `data-scrolls` excepted). The message gives each page as its
-source file, the width and the element, with the heading it is under.
+content sideways (a code block and an element marked `data-scrolls` excepted). A Markdown table too wide for the
+column fails, though it scrolls inside it: the message names it
+`Markdown table "<first column> | <second> | <third> | …"` and says to lay it out as a card per entry or give it fewer
+columns. The message gives each page as its source file, the width and the element, with the heading it is under.
 
 A message from Astro or one of its plugins names the file it read, which is the toolchain's copy of the content
 folder: `src/content/docs/guides/x.mdx` there is `docs/site/guides/x.mdx` in the library. The link validator names a

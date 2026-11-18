@@ -37,6 +37,7 @@ import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import {
   CONFIG_FILE,
+  listPages,
   lockFile,
   mountDirectory,
   mountPath,
@@ -44,6 +45,7 @@ import {
   resolveLibrary,
   toolchainRoot,
 } from '../src/library.mjs';
+import { resolveHeadingRules } from '../src/headings/required-headings.mjs';
 import { readSnippets } from '../src/snippets/catalog.mjs';
 
 const COMMANDS = ['build', 'dev', 'preview', 'prepare'];
@@ -256,6 +258,10 @@ async function main() {
     // The same check astro.config.mjs makes, made here first so its message stands alone: a
     // duplicate key, an unclosed region or a malformed marker in the library's sample files.
     readSnippets({ files: library.sampleFiles, relativeTo: library.root });
+    // The check astro.config.mjs makes of requiredHeadings (a glob that matches no page, an
+    // exception the globs do not cover, a heading listed twice), made first so its message stands
+    // alone, before the lock and the mount.
+    resolveHeadingRules(library.config.requiredHeadings, listPages(library), library);
     // Fails on a content folder with both 404.mdx and 404.md, as mount() would, before the lock.
     ownNotFoundPage(library);
   } catch (error) {

@@ -11,11 +11,13 @@ import { satteri } from '@astrojs/markdown-satteri';
 import starlight from '@astrojs/starlight';
 import starlightLinksValidator from 'starlight-links-validator';
 import { ncodeSite } from './src/integration.mjs';
+import { headingsPlugin, resolveHeadingRules } from './src/headings/required-headings.mjs';
 import { findIncludedFiles, includesDigest } from './src/includes/files.mjs';
 import {
   libraryPath,
   listPages,
   ownNotFoundPage,
+  pageSlug,
   readCommit,
   readLastUpdated,
   resolveLibrary,
@@ -46,6 +48,10 @@ const snippets = readSnippets({ files: library.sampleFiles, relativeTo: library.
 // The files the pages include with `file=<path>`, and the commit their captions link to. A block
 // that names a file the library does not have stops the build when its page renders.
 const pages = listPages(library);
+// The headings the pages a rule names must have. A rule that matches no page stops the build here;
+// a page that lacks a heading stops it when the page renders.
+const headingRules = resolveHeadingRules(config.requiredHeadings, pages, library);
+const slugOf = (file) => pageSlug(libraryPath(library, file).slice(library.contentPath.length + 1));
 const includeRoot = { root: library.root, realRoot: realpathSync(library.root) };
 const included = findIncludedFiles(includeRoot, pages);
 const { commit, reason } = readCommit(library);
@@ -70,6 +76,7 @@ export default defineConfig({
           describePage,
           includes: { library: includeRoot, repository: config.repository, commit, digest: includesDigest(included) },
         }),
+        headingsPlugin(headingRules, { describePage, slugOf, configName: library.configName }),
       ],
       hastPlugins: [baseLinks(base, { describePage }), stackedTables()],
     }),

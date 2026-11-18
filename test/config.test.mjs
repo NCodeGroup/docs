@@ -51,7 +51,9 @@ describe('the site configuration', () => {
     assert.equal(library.config.title, 'NCode.Fixture');
     assert.equal(library.config.repository.branch, 'main');
     assert.equal(library.config.editLinks, true);
-    assert.deepEqual(library.config.requiredHeadings, []);
+    assert.deepEqual(library.config.requiredHeadings, [
+      { pages: ['guides/derive-*', 'guides/ban-*'], headings: ['## Checklist'] },
+    ]);
     assert.deepEqual(library.sampleFiles.map(relativeTo(fixture)), [
       'tests/NCode.Fixture.Tests/ExtensionSamples.cs',
       'tests/NCode.Fixture.Tests/QuickStartSamples.cs',

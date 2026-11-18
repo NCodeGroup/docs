@@ -21,4 +21,9 @@ The salt is not a secret, so it lives on the stack without a vault. The same key
 [password storage cheat sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
 :::
 
+## Checklist
+
+- Derive the key into a vault, never into an array of your own.
+- Keep the salt beside the key; it is not a secret.
+
 <LinkButton href="/guides/extension-members/" variant="secondary" icon="right-arrow" iconPlacement="end">Next: extension members</LinkButton>

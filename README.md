@@ -225,8 +225,8 @@ npm run dev '--' ../Buffers
 ```
 
 That serves the library's site at `http://localhost:4321/<base path>/` and follows edits to its pages, its sample
-files and the files its pages include. `npm run preview '--' ../Buffers` builds the site as CI does and serves the result,
-with the search working. Both take `--content <path>` for a content folder other than `docs/site`, and
+files and the files its pages include. `npm run preview '--' ../Buffers` builds the site as CI does and serves the
+result, with the search working. Both take `--content <path>` for a content folder other than `docs/site`, and
 `--port <number>`. From the library's folder the same commands are `npm --prefix ../docs run dev '--' .`. Nothing is
 written to the library.
 

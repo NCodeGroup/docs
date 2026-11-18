@@ -11,6 +11,7 @@ import { satteri } from '@astrojs/markdown-satteri';
 import starlight from '@astrojs/starlight';
 import starlightLinksValidator from 'starlight-links-validator';
 import { ncodeSite } from './src/integration.mjs';
+import { checkComponentTokens } from './src/brand/tokens.mjs';
 import { headingsPlugin, resolveHeadingRules } from './src/headings/required-headings.mjs';
 import { findIncludedFiles, includesDigest } from './src/includes/files.mjs';
 import {
@@ -51,6 +52,9 @@ const pages = listPages(library);
 // The headings the pages a rule names must have. A rule that matches no page stops the build here;
 // a page that lacks a heading stops it when the page renders.
 const headingRules = resolveHeadingRules(config.requiredHeadings, pages, library);
+// A component that reads a token the brand does not define, or a step of a ramp or scale, stops the
+// build here, before any page renders.
+checkComponentTokens(library);
 const slugOf = (file) => pageSlug(libraryPath(library, file).slice(library.contentPath.length + 1));
 const includeRoot = { root: library.root, realRoot: realpathSync(library.root) };
 const included = findIncludedFiles(includeRoot, pages);

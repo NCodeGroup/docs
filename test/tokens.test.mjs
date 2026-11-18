@@ -4,11 +4,11 @@
 // The custom properties a library's own components read: the brand's public tokens pass, and a token the brand does
 // not define or a step of a colour ramp or of the type scale stops the build.
 import assert from 'node:assert/strict';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { checkComponentTokens } from '../src/brand/tokens.mjs';
-import { work } from './helpers.mjs';
+import { failingBuild, work } from './helpers.mjs';
 
 /** A library whose content folder holds the given component files, by path under `_components/`. */
 const libraryWith = (name, components) => {
@@ -85,5 +85,28 @@ describe("the tokens a library's component reads", () => {
     assert.throws(() => checkComponentTokens(library), {
       message: `The library's components read custom properties the brand does not offer:\n  ${undefinedToken('docs/site/_components/A.astro', '--nc-nope')}\n  ${primitive('docs/site/_components/b/Second.astro', '--nc-blue-600')}`,
     });
+  });
+});
+
+const COMPONENT = 'docs/site/_components/ByteGrid.astro';
+
+/** A copy of the fixture whose component reads `token` where it read `--nc-color-screen`, built and expected to fail. */
+const failingComponent = (name, token) =>
+  failingBuild(name, (library) => {
+    const file = join(library, COMPONENT);
+    writeFileSync(file, readFileSync(file, 'utf8').replace('var(--nc-color-screen)', `var(${token})`));
+  });
+
+describe('a component token the build checks', () => {
+  it('fails a component that reads a step of a colour ramp', () => {
+    const output = failingComponent('tokens-primitive', '--nc-blue-600');
+    assert.ok(output.includes(primitive(COMPONENT, '--nc-blue-600')), output);
+    assert.ok(!output.includes('[build]'), output);
+  });
+
+  it('fails a component that reads a token the brand does not define', () => {
+    const output = failingComponent('tokens-undefined', '--nc-nope');
+    assert.ok(output.includes(undefinedToken(COMPONENT, '--nc-nope')), output);
+    assert.ok(!output.includes('[build]'), output);
   });
 });

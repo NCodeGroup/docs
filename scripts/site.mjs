@@ -45,6 +45,7 @@ import {
   resolveLibrary,
   toolchainRoot,
 } from '../src/library.mjs';
+import { checkComponentTokens } from '../src/brand/tokens.mjs';
 import { resolveHeadingRules } from '../src/headings/required-headings.mjs';
 import { readSnippets } from '../src/snippets/catalog.mjs';
 
@@ -262,6 +263,10 @@ async function main() {
     // exception the globs do not cover, a heading listed twice), made first so its message stands
     // alone, before the lock and the mount.
     resolveHeadingRules(library.config.requiredHeadings, listPages(library), library);
+    // The check astro.config.mjs makes of the tokens the library's components read (a token the
+    // brand does not define, a step of a ramp or scale), made first so its message stands alone,
+    // before the lock and the mount.
+    checkComponentTokens(library);
     // Fails on a content folder with both 404.mdx and 404.md, as mount() would, before the lock.
     ownNotFoundPage(library);
   } catch (error) {

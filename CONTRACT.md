@@ -234,7 +234,8 @@ caption under it that links those lines on GitHub:
 - `lines=` does not exist. A range of line numbers shows other lines once the file changes, and the build still
   passes; the text a page names is text the file holds, and a change to it stops the build, naming it.
 - The path is relative to the library's repository root: no leading `/` or `\`, no drive, no backslash, and no empty,
-  `.` or `..` segment. It names a file that exists and is neither a folder nor in `.git`; its real path, with every
+  `.` or `..` segment. It names a file that exists and is neither a folder nor in `.git`, whatever the letter case of
+  the folder's name; its real path, with every
   symbolic link followed, is under the repository's real path, and a link that leads out stops the build. `bin`,
   `obj`, `node_modules` and `TestResults` are allowed here, unlike in a `samples` glob. The file is at most 1 MiB, is
   UTF-8 text without a null character, and is not empty.

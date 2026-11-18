@@ -273,6 +273,9 @@ describe('the file include, found', () => {
     put(library, 'sub/.git/config', 'x');
     resolves(library, '.git/config', 'file=.git/config is inside .git, which the build never reads.');
     resolves(library, 'sub/.git/config', 'file=sub/.git/config is inside .git, which the build never reads.');
+    // A case-insensitive file system resolves these to the same folder; the check holds on any system.
+    resolves(library, '.GIT/config', 'file=.GIT/config is inside .git, which the build never reads.');
+    resolves(library, '.Git/x.txt', 'file=.Git/x.txt is inside .git, which the build never reads.');
   });
 
   it('refuses a file that is missing', () => {

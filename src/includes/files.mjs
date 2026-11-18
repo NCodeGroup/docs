@@ -182,7 +182,9 @@ export function resolveIncludedFile(library, path, page) {
     );
   }
   const insideGit = `file=${path} is inside .git, which the build never reads.`;
-  if (segments.includes('.git')) fail(insideGit);
+  // Windows and macOS file systems ignore letter case, so `.GIT` names the same folder as `.git`.
+  const isGit = (segment) => segment.toLowerCase() === '.git';
+  if (segments.some(isGit)) fail(insideGit);
 
   const absolute = join(library.root, ...segments);
   // A missing file has no entry at all, or a file where a folder should be (ENOTDIR). An entry that
@@ -212,7 +214,7 @@ export function resolveIncludedFile(library, path, page) {
   if (real === '..' || real.startsWith(`..${sep}`) || isAbsolute(real)) {
     fail(`file=${path} is outside the library through a symbolic link: its real path is ${realPath}.`);
   }
-  if (real.split(sep).includes('.git')) fail(insideGit);
+  if (real.split(sep).some(isGit)) fail(insideGit);
   if (stats.size > MAX_BYTES) fail(`file=${path} is ${stats.size} bytes; a page includes a file of at most 1 MiB.`);
   return { path, absolute };
 }

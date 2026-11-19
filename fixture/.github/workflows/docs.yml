@@ -4,8 +4,8 @@ name: Documentation site
 # it to GitHub Pages from the default branch. A pull request builds the site and keeps it as the github-pages artifact;
 # nothing is deployed for one. The toolchain is pinned by commit: Dependabot moves the pin.
 #
-# Set up once, by a repository administrator: Settings > Pages > Source: GitHub Actions, with Enforce HTTPS checked;
-# then Settings > Environments > github-pages, with deployment limited to the default branch.
+# Set up once, as the One-time setup section of NCodeGroup/docs' README.md lists: GitHub Pages, the github-pages
+# environment and the site's address at <name>.ncode.io.
 on:
   push:
     branches: [main]

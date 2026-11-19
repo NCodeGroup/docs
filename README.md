@@ -30,7 +30,7 @@ has the reasons.
 2. **Mark the samples** in the library's tests with `// begin-snippet: Key` and `// end-snippet`
    ([Samples](#samples)).
 3. **Add the caller workflow** ([The caller workflow](#the-caller-workflow)).
-4. **Have an administrator set up GitHub Pages once** ([One-time setup](#one-time-setup)).
+4. **Set up GitHub Pages and the site's address at `<name>.ncode.io` once** ([One-time setup](#one-time-setup)).
 5. **Tell Dependabot about the pin**: the `github-actions` entry of the library's `.github/dependabot.yml` already
    covers workflow files, so the pinned commit moves with each release of this repository.
 6. Add `*.mdx` to whatever the library's own gate checks for line endings and encoding. Nothing is built inside the

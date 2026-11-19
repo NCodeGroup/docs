@@ -63,7 +63,7 @@ before anything is built:
   "product": "Buffers",
   "version": "v5",
   "repository": { "url": "https://github.com/NCodeGroup/Buffers", "branch": "main" },
-  "site": { "url": "https://ncodegroup.github.io/Buffers" },
+  "site": { "url": "https://buffers.ncode.io" },
   "sidebar": [
     { "label": "Start here", "items": ["quick-start"] },
     { "label": "Guides", "items": [{ "autogenerate": { "directory": "guides" } }] }
@@ -159,7 +159,7 @@ By a repository administrator, before the workflow's first run on the default br
 2. Same page: **Enforce HTTPS** checked.
 3. **Settings > Environments > github-pages > Deployment branches and tags: Selected branches and tags**, with one
    rule, the default branch. Leave required reviewers and the wait timer off.
-4. **About > Website**, on the repository's page: the site's URL, such as `https://ncodegroup.github.io/Buffers/`.
+4. **About > Website**, on the repository's page: the site's URL, such as `https://buffers.ncode.io/`.
    GitHub shows it beside the repository.
 5. **The package's project URL**: for a .NET library, `PackageProjectUrl` in the packed project, set to the site's
    URL. A package gallery shows it as the project's website, such as nuget.org's "Project website", and it reaches

@@ -61,7 +61,7 @@
       "required": ["url"],
       "properties": {
         "url": {
-          "description": "The site's URL with its base path and no trailing slash, such as https://ncodegroup.github.io/Buffers. The SITE_URL environment variable, which the workflow sets from the repository's Pages settings, replaces it; a pull request build and a local build use this value.",
+          "description": "The site's URL with its base path and no trailing slash, such as https://buffers.ncode.io, or https://ncodegroup.github.io/Buffers for a site under a base path. The SITE_URL environment variable, which the workflow sets from the repository's Pages settings, replaces it; a pull request build and a local build use this value.",
           "type": "string",
           "pattern": "^https?://[^\\s/]+(/[^\\s?#]*[^\\s?#/])?$"
         }

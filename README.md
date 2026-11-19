@@ -190,8 +190,8 @@ request to the library.
    HTTPS**. The repository's settings, by an administrator.
 6. **Redeploy:** once the custom domain is set, run the library's site workflow on the default branch, with **Run
    workflow** on its page under **Actions**, which its `workflow_dispatch` trigger offers. A deploy that ran before
-   step 5 built the site for the old base path, and its stylesheets and scripts return 404 at the new address:
-   NCodeGroup/Buffers needed exactly this re-run. Anyone with write access to the repository.
+   step 5 built the site for the `/<Repo>/` base path, so its stylesheets and scripts return 404 at
+   `https://<name>.ncode.io/`. Anyone with write access to the repository.
 7. **About > Website**, on the repository's page: `https://<name>.ncode.io/`. GitHub shows it beside the repository.
    The repository's settings, by an administrator.
 8. **The package's project URL**: for a .NET library, `PackageProjectUrl` in the packed project, set to
@@ -199,9 +199,9 @@ request to the library.
    website", and it reaches the gallery with the next published version. A project that leaves it empty gets the
    repository's URL from its template. The repository link stays where the package's Source Link metadata puts it. A
    pull request to the library.
-9. **Check:** `http://<name>.ncode.io/` redirects to HTTPS, the old `https://ncodegroup.github.io/<Repo>/` address
-   redirects to the new one, a page's stylesheet loads, and the page's canonical link, `<link rel="canonical">`, names
-   the new address. Anyone.
+9. **Check:** `http://<name>.ncode.io/` redirects to HTTPS, `https://ncodegroup.github.io/<Repo>/` redirects to
+   `https://<name>.ncode.io/`, a page's stylesheet loads, and the page's canonical link, `<link rel="canonical">`,
+   names `https://<name>.ncode.io/`. Anyone.
 
 A pull request build needs none of it: it builds the site for `site.url`.
 

@@ -153,20 +153,57 @@ group, whatever the caller's `concurrency` says.
 
 ### One-time setup
 
-By a repository administrator, before the workflow's first run on the default branch:
+Every NCodeGroup site is served under `ncode.io`, one subdomain per site, at `https://<name>.ncode.io/`, where
+`<name>` is the library's name in lower case: `https://buffers.ncode.io/` for NCodeGroup/Buffers
+([its ADR-1026](https://github.com/NCodeGroup/Buffers/blob/main/docs/decisions/1026-the-documentation-site-is-served-at-buffers-ncode-io.md))
+and `https://brand.ncode.io/` for NCodeGroup/brand
+([its ADR-1015](https://github.com/NCodeGroup/brand/blob/main/docs/decisions/1015-the-guide-and-the-specimens-are-served-at-brand-ncode-io.md)).
 
-1. **Settings > Pages > Build and deployment > Source: GitHub Actions.**
-2. Same page: **Enforce HTTPS** checked.
-3. **Settings > Environments > github-pages > Deployment branches and tags: Selected branches and tags**, with one
-   rule, the default branch. Leave required reviewers and the wait timer off.
-4. **About > Website**, on the repository's page: the site's URL, such as `https://buffers.ncode.io/`. GitHub shows it
-   beside the repository.
-5. **The package's project URL**: for a .NET library, `PackageProjectUrl` in the packed project, set to the site's
-   URL. A package gallery shows it as the project's website, such as nuget.org's "Project website", and it reaches
-   the gallery with the next published version. A project that leaves it empty gets the repository's URL from its
-   template. The repository link stays where the package's Source Link metadata puts it.
+Already in place for every site:
 
-A pull request build needs none of it.
+- `ncode.io` is registered at Porkbun, and its DNS is hosted on Cloudflare. Every record is **DNS only** (the grey
+  cloud), never proxied, so GitHub Pages can issue each site's certificate, and a CAA record allows `letsencrypt.org`,
+  the certificate authority GitHub Pages uses. The zone is signed with DNSSEC, which covers every record a library
+  adds.
+- The NCodeGroup organization has verified `ncode.io` under its **Settings > Pages > Verified domains**, which covers
+  every subdomain, so no other GitHub account can serve a site under it. A new site needs no change to the
+  organization's settings.
+- A deploying run of the workflow reads the site's URL from the repository's Pages settings through
+  `actions/configure-pages`, so the custom domain decides the base path the site is built for. `site.url` in
+  `site.config.json` is the URL a pull request's build and the package's project website use.
+
+For a library whose site is to be served at `https://<name>.ncode.io/`, in this order; each step says who can do it:
+a repository administrator, someone who can edit the `ncode.io` zone in Cloudflare, or anyone who can open a pull
+request to the library.
+
+1. **Settings > Pages > Build and deployment > Source: GitHub Actions.** The repository's settings, by an
+   administrator, before the workflow's first run on the default branch.
+2. **Settings > Environments > github-pages > Deployment branches and tags: Selected branches and tags**, with one
+   rule, the default branch. Leave required reviewers and the wait timer off. The repository's settings, by an
+   administrator, before the workflow's first run on the default branch.
+3. **Cloudflare, the `ncode.io` zone:** add a CNAME record `<name>` → `ncodegroup.github.io`, with its proxy status
+   **DNS only**. The Cloudflare zone, by someone who can edit it.
+4. **The library's `site.config.json`:** set `site.url` to `https://<name>.ncode.io`, with no trailing slash. Record
+   the address in the library's own decision record and changelog, as its conventions say. A pull request to the
+   library.
+5. **Settings > Pages > Custom domain:** `<name>.ncode.io`. Once GitHub has issued the certificate, check **Enforce
+   HTTPS**. The repository's settings, by an administrator.
+6. **Redeploy:** once the custom domain is set, run the library's site workflow on the default branch, with **Run
+   workflow** on its page under **Actions**, which its `workflow_dispatch` trigger offers. A deploy that ran before
+   step 5 built the site for the old base path, and its stylesheets and scripts return 404 at the new address:
+   NCodeGroup/Buffers needed exactly this re-run. Anyone with write access to the repository.
+7. **About > Website**, on the repository's page: `https://<name>.ncode.io/`. GitHub shows it beside the repository.
+   The repository's settings, by an administrator.
+8. **The package's project URL**: for a .NET library, `PackageProjectUrl` in the packed project, set to
+   `https://<name>.ncode.io/`. A package gallery shows it as the project's website, such as nuget.org's "Project
+   website", and it reaches the gallery with the next published version. A project that leaves it empty gets the
+   repository's URL from its template. The repository link stays where the package's Source Link metadata puts it. A
+   pull request to the library.
+9. **Check:** `http://<name>.ncode.io/` redirects to HTTPS, the old `https://ncodegroup.github.io/<Repo>/` address
+   redirects to the new one, a page's stylesheet loads, and the page's canonical link, `<link rel="canonical">`, names
+   the new address. Anyone.
+
+A pull request build needs none of it: it builds the site for `site.url`.
 
 ## Writing a page
 

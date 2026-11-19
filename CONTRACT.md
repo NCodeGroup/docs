@@ -403,8 +403,8 @@ the key or the link:
 After the build, the workflow loads every page in Google Chrome at 1440, 1280, 1024 and 390 px. It fails on an element
 of a page's content that extends past its content column, and on a scroll container in it that hides part of its
 content sideways (a code block and an element marked `data-scrolls` excepted). A Markdown table too wide for the
-column fails, though it scrolls inside it: the message names it
-`Markdown table "<first column> | <second> | <third> | …"` and says to lay it out as a card per entry or give it fewer
+column fails, though it scrolls inside it: the message names it by the head cells that have text,
+`Markdown table "<first column> | <second> | <third> | …"`, and says to lay it out as a card per entry or give it fewer
 columns. The message gives each page as its source file, the width and the element, with the heading it is under.
 
 A message from Astro or one of its plugins names the file it read, which is the toolchain's copy of the content

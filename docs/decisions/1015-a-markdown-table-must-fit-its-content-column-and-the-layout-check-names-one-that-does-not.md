@@ -12,10 +12,9 @@ even with its cells wrapped scrolls inside it. The layout check of ADR-1013 fail
 content sideways except `.expressive-code` and `[data-scrolls]`, and the wrapper is neither. An author cannot put
 `data-scrolls` on a table written in Markdown.
 
-NCodeGroup/Buffers at 7d1dc8d, checked with v0.14.0, has three Markdown tables that fail through the wrapper at
-1280 px, hiding 22 to 1049 px ([#47](https://github.com/NCodeGroup/docs/issues/47)). The check names each
-`div.ncode-table`, and its advice to let a table's cells wrap names what the build already does. `CONTRACT.md`
-section 7 lays out data with more than three or four columns as a card per entry.
+Libraries write such tables ([#47](https://github.com/NCodeGroup/docs/issues/47)). A problem that names only
+`div.ncode-table` tells an author neither which table fails nor how to make it fit. `CONTRACT.md` section 7 lays out
+data with more than three or four columns as a card per entry.
 
 ## Decision
 
@@ -25,7 +24,8 @@ fails, and the check names the table and says how to make it fit.**
 1. `div.ncode-table` keeps `overflow-x: auto`, so a published page that has such a table stays readable, and carries no
    `data-scrolls`. The check exempts no `.ncode-table`.
 2. The check names a failing wrapper `Markdown table "<first> | <second> | <third> | …"` from the head cells of the
-   table's first head row, the first three, with `…` when there are more, and appends
+   table's first head row that have text, the first three, with `…` when there are more, or `Markdown table` alone when
+   none has text, and appends
    `: a Markdown table must fit the column, so lay it out as a card per entry or give it fewer columns` to the problem.
 3. The message's last line says a Markdown table must fit too, and that a component which scrolls sideways by design is
    marked `data-scrolls`.
@@ -39,14 +39,13 @@ fails, and the check names the table and says how to make it fit.**
 
 - **The wrapper scrolls by design.** The plugin marks `div.ncode-table` with `data-scrolls`, or the check skips
   `.ncode-table` as it skips `.expressive-code`. Rejected: the check stops catching a table that hides most of its
-  columns, such as the one that hides 1049 px, and a reader on a laptop scrolls to read a row.
+  columns, and a reader on a laptop scrolls to read a row.
 - **A table must fit** (chosen): it is section 7's own advice, one rule holds for every Markdown table, and a failing
   page says which table and what to do.
 
 ## Consequences
 
-- A library page with a Markdown table too wide for its column fails its build until the table fits, as Buffers' three
-  do.
+- A library page with a Markdown table too wide for its column fails its build until the table fits.
 - The message tells two tables under one heading apart by their columns.
 - A wide table kept on purpose is a component marked `data-scrolls`.
 

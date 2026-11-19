@@ -228,6 +228,15 @@ A library's component is designed for a content column of about 36rem: [CONTRACT
 column's width at each window width, and how a component lays out data with many columns. The layout check fails an
 element that leaves the column, and a Markdown table too wide for it.
 
+NCode.Buffers' components at release v5.2.4 lay out data with many columns as a card per entry:
+[`EntryCard.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/EntryCard.astro) with
+[`EntryField.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/EntryField.astro) for
+cards written in a page, and
+[`ApiMap.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/ApiMap.astro) and
+[`BufferBehaviorMatrix.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/BufferBehaviorMatrix.astro)
+for a table whose rows are drawn as cards. [CONTRACT.md](CONTRACT.md) section 7 says what each one does and links
+the page it is on.
+
 ## Local preview
 
 With both repositories cloned side by side, from this repository's folder:

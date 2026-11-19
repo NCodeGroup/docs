@@ -114,7 +114,7 @@ jobs:
           DOCS_LIBRARY: ${{ github.workspace }}/library
           DOCS_CONTENT: ${{ inputs.content-path }}
           DOCS_OUT: ${{ github.workspace }}/site
-          # Such as https://ncodegroup.github.io/Buffers; empty unless this run deploys.
+          # Such as https://buffers.ncode.io; empty unless this run deploys.
           SITE_URL: ${{ steps.pages.outputs.base_url }}
         run: node scripts/site.mjs build
       # The site as GitHub Pages takes it: one tar file, in an artifact named github-pages. Kept a week, so a pull
@@ -135,7 +135,7 @@ jobs:
           DOCS_LIBRARY: ${{ github.workspace }}/library
           DOCS_CONTENT: ${{ inputs.content-path }}
           DOCS_OUT: ${{ github.workspace }}/site
-          # Such as https://ncodegroup.github.io/Buffers; empty unless this run deploys.
+          # Such as https://buffers.ncode.io; empty unless this run deploys.
           SITE_URL: ${{ steps.pages.outputs.base_url }}
         run: node scripts/site.mjs check
 

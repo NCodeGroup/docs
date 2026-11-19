@@ -49,7 +49,7 @@ wrong value stops the build with a message that names the key. For editor suppor
 | `description` | Yes | One sentence: the meta description of a page that has none |
 | `repository.url` | Yes | The repository's URL, no trailing slash: the header's link and every edit link |
 | `repository.branch` | No | The default branch, which edit links open. Default `main` |
-| `site.url` | Yes | The site's URL with its base path, no trailing slash, such as `https://ncodegroup.github.io/Buffers` |
+| `site.url` | Yes | The site's URL with its base path, no trailing slash, such as `https://buffers.ncode.io`, or `https://ncodegroup.github.io/Buffers` for a site under a base path |
 | `sidebar` | Yes | The navigation: groups, in the order shown (below) |
 | `product` | No | The name beside the mark in the header, such as `Buffers`. Default: `title` |
 | `mark` | No | `ncode` (default) or `ncode-identity`: which lockup the header shows |
@@ -265,7 +265,7 @@ Write every internal link site-absolute, from the site's root, with a trailing s
 fragment `/guides/derive-a-key/#salt`. Never write the base path (`/Buffers/…`) and never a relative link (`../x/`).
 The build adds the base path, so the same page works under `/Buffers/` and at the root of a custom domain. A link
 that already starts with the base path stops the build, naming the page and the link as it should be written. A link
-to another site on the same host, such as another library's, is a full URL: `https://ncodegroup.github.io/Other/`.
+to another site, such as another library's, is a full URL: `https://other.ncode.io/`.
 
 | Where the link is written | Base path added |
 | --- | --- |
@@ -374,14 +374,14 @@ NCode.Buffers lays out its data this way, and its components at release v5.2.4 a
   [`EntryField.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/EntryField.astro):
   cards written in the page, one per entry, whose fields are a `<dl>` with each label beside its value, and above it
   in a window narrower than 40rem. They are on
-  [Objections and alternatives](https://ncodegroup.github.io/Buffers/evidence/objections-and-alternatives/).
+  [Objections and alternatives](https://buffers.ncode.io/evidence/objections-and-alternatives/).
 - [`ApiMap.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/ApiMap.astro): a table
   built from a data file whose rows are drawn as cards. Its head is hidden from sight but read by a screen reader,
   and each cell is shown under its label, in a grid of as many columns as the card has room for. It is on the
-  [API map](https://ncodegroup.github.io/Buffers/reference/api-map/).
+  [API map](https://buffers.ncode.io/reference/api-map/).
 - [`BufferBehaviorMatrix.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/BufferBehaviorMatrix.astro):
   a matrix of twelve columns drawn the same way, a card per row, with its yes-or-no facts side by side where they
-  fit. It is on [Buffer behavior, sizes and pooling](https://ncodegroup.github.io/Buffers/reference/buffer-behavior/).
+  fit. It is on [Buffer behavior, sizes and pooling](https://buffers.ncode.io/reference/buffer-behavior/).
 
 A component's elements fit the page's content column. An element that must scroll sideways by design, such as a long
 strip of bytes, scrolls inside the column, with `overflow-x: auto`, and carries the attribute `data-scrolls`. The

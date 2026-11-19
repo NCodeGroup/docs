@@ -1,4 +1,4 @@
-/* NCode Brand 0.10.1: css/starlight.css, copied by build.mjs from src/css/starlight.css; edit that file. Apache-2.0. */
+/* NCode Brand 0.11.0: css/starlight.css, copied by build.mjs from src/css/starlight.css; edit that file. Apache-2.0. */
 /*
  * Instrument for Starlight: Starlight's custom properties, mapped onto NCode's tokens.
  *
@@ -92,7 +92,7 @@
   --sl-text-h5: var(--nc-text-base);
   --sl-text-code: var(--nc-text-sm);
   --sl-line-height: var(--nc-leading-reading);
-  --sl-line-height-headings: 1.14;
+  --sl-line-height-headings: 1.18;
 
   /* Depth is drawn with hard edges; the one soft shadow is the overlay's. */
   --sl-shadow-sm: var(--nc-elevation-flush);
@@ -112,12 +112,12 @@
 }
 
 /* Wider than 40rem, where base.css's phone rules (max-width: 40rem) end, a long-form page's title is title-long's
-   size, 56 pixels, and a section heading-long's, 36. */
+   size, 44 pixels, and a section heading is heading-long's size, 28, the same as on a phone. */
 @media (width > 40rem) {
   :root,
   :root[data-theme='light'] {
-    --sl-text-h1: var(--nc-text-5xl);
-    --sl-text-h2: var(--nc-text-3xl);
+    --sl-text-h1: var(--nc-text-4xl);
+    --sl-text-h2: var(--nc-text-2xl);
   }
 }
 

@@ -1,6 +1,6 @@
 # 1013. The site workflow loads each page in a browser and fails an element that leaves its content column
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 1015)
 - **Date:** 2026-11-18
 - **Deciders:** NCode Group
 

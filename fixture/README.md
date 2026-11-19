@@ -7,3 +7,7 @@ in `tests/`, and the workflow that calls the toolchain. It has no `package.json`
 The fixture also has build files at its root, `Directory.Build.props` and `BannedSymbols.txt`, that
 `guides/ban-apis.mdx` includes, and its configuration requires a Checklist section on its guides `derive-a-key` and
 `ban-apis`.
+
+It also has `docs/site/_too-wide-table.md`, which is no page, since its name starts with an underscore: a Markdown
+table too wide for the content column, which `test/layout.test.mjs` copies into a page to prove that the layout check
+fails it.

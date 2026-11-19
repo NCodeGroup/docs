@@ -9,7 +9,7 @@
 // Where it is not installed the tests are skipped and say so; DOCS_REQUIRE_BROWSER=1 makes that a failure,
 // as CI sets it.
 import assert from 'node:assert/strict';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { before, describe, it } from 'node:test';
 import { join } from 'node:path';
@@ -34,6 +34,8 @@ try {
 }
 
 describe('the layout check', { skip: executable ? false : missing }, () => {
+  const BASE = '/Fixture/';
+
   // Runs `node scripts/site.mjs check` on a built site, as the workflow does.
   function check(library, out) {
     const environment = { ...process.env, NO_COLOR: '1' };
@@ -119,9 +121,61 @@ describe('the layout check', { skip: executable ? false : missing }, () => {
     assert.ok(message.includes('data-scrolls'));
   });
 
-  describe('on a built site', () => {
-    const BASE = '/Fixture/';
+  it('fails a Markdown table too wide for the column, naming it and saying how to make it fit', async () => {
+    // The fixture keeps the table in a file that is no page, so the fixture itself passes the check.
+    const library = copyOfFixture('layout-table');
+    const site = join(library, 'docs', 'site');
+    renameSync(join(site, '_too-wide-table.md'), join(site, 'guides', 'too-wide-table.md'));
+    // A table of three columns or fewer is named without `…`, and a head cell without text is left out of the name.
+    const page = join(site, 'guides', 'too-wide-table.md');
+    const word = 'Unbreakable'.repeat(12);
+    writeFileSync(
+      page,
+      [
+        readFileSync(page, 'utf8'),
+        '## Narrow',
+        '',
+        '|  | Kind | Note |',
+        '| --- | --- | --- |',
+        `| \`Vault\` | Unmanaged | ${word} |`,
+        '',
+        '## Unnamed',
+        '',
+        '|  |  |',
+        '| --- | --- |',
+        `| \`Vault\` | ${word} |`,
+        '',
+      ].join('\n'),
+    );
+    const result = build('layout-table', { library });
+    assert.equal(result.code, 0, result.output);
+    const problems = await checkLayout({
+      out: result.out,
+      base: BASE,
+      browser: executable,
+      pages: [{ name: 'docs/site/guides/too-wide-table.md', path: 'guides/too-wide-table/' }],
+    });
+    // On a phone the table stacks, so it fits there.
+    assert.deepEqual(
+      problems.filter((problem) => problem.heading === 'Compared').map((problem) => problem.width),
+      [1440, 1280, 1024],
+    );
+    const message = layoutMessage(problems);
+    assert.match(
+      message,
+      /\n {2}docs\/site\/guides\/too-wide-table\.md at 1280 px: Markdown table "Type \| Allocation \| Zeroing \| …", under "Compared", hides \d+ px of its content sideways: a Markdown table must fit the column, so lay it out as a card per entry or give it fewer columns\n/,
+    );
+    assert.match(
+      message,
+      /\n {2}docs\/site\/guides\/too-wide-table\.md at 1280 px: Markdown table "Kind \| Note", under "Narrow", hides \d+ px of its content sideways: a Markdown table must fit the column/,
+    );
+    assert.match(
+      message,
+      /\n {2}docs\/site\/guides\/too-wide-table\.md at 1280 px: Markdown table, under "Unnamed", hides \d+ px of its content sideways: a Markdown table must fit the column/,
+    );
+  });
 
+  describe('on a built site', () => {
     before(() => {
       const result = build('layout');
       assert.equal(result.code, 0, result.output);
@@ -154,29 +208,6 @@ describe('the layout check', { skip: executable ? false : missing }, () => {
 
     it('reports an element past the column and a box that hides its content, and leaves a marked scroller alone', async () => {
       const library = copyOfFixture('layout-wide');
-      const names = [
-        'One',
-        'Two',
-        'Three',
-        'Four',
-        'Five',
-        'Six',
-        'Seven',
-        'Eight',
-        'Nine',
-        'Ten',
-        'Eleven',
-        'Twelve',
-        'Thirteen',
-        'Fourteen',
-        'Fifteen',
-        'Sixteen',
-      ];
-      const table = [
-        `| ${names.join(' | ')} |`,
-        `| ${names.map(() => '---').join(' | ')} |`,
-        `| ${names.map(() => 'alpha').join(' | ')} |`,
-      ].join('\n');
       writeFileSync(
         join(library, 'docs', 'site', 'guides', 'wide.md'),
         [
@@ -189,8 +220,6 @@ describe('the layout check', { skip: executable ? false : missing }, () => {
           '<div class="hides" style="overflow-x: auto"><div style="width: 72rem">Content past the right edge.</div></div>',
           '',
           '<div class="marked" data-scrolls style="overflow-x: auto"><div style="width: 72rem">Content that scrolls by design.</div></div>',
-          '',
-          table,
           '',
         ].join('\n'),
       );
@@ -210,9 +239,7 @@ describe('the layout check', { skip: executable ? false : missing }, () => {
         );
       }
       const at = (width) => problems.filter((problem) => problem.width === width).map((problem) => problem.element);
-      for (const width of [1440, 1280, 1024])
-        assert.deepEqual(at(width), ['div.too-wide', 'div.hides', 'div.ncode-table']);
-      assert.deepEqual(at(390), ['div.too-wide', 'div.hides']);
+      for (const width of [1440, 1280, 1024, 390]) assert.deepEqual(at(width), ['div.too-wide', 'div.hides']);
     });
 
     it('passes the fixture from the command line', () => {

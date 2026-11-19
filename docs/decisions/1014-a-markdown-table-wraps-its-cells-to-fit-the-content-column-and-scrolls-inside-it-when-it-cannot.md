@@ -1,6 +1,6 @@
 # 1014. A Markdown table wraps its cells to fit the content column, and scrolls inside it when it cannot
 
-- **Status:** Accepted
+- **Status:** Accepted (amended by 1015)
 - **Date:** 2026-11-18
 - **Deciders:** NCode Group
 - **Amends:** 1007

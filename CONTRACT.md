@@ -368,6 +368,21 @@ The column is never wider than 50rem (800 px), which a page without the panel (`
 long identifiers, as a card per entry with its fields labelled, not as a wide table. Never give an element a
 `min-width` wider than the column.
 
+NCode.Buffers lays out its data this way, and its components at release v5.2.4 are examples to copy:
+
+- [`EntryCard.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/EntryCard.astro) and
+  [`EntryField.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/EntryField.astro):
+  cards written in the page, one per entry, whose fields are a `<dl>` with each label beside its value, and above it
+  in a window narrower than 40rem. They are on
+  [Objections and alternatives](https://ncodegroup.github.io/Buffers/evidence/objections-and-alternatives/).
+- [`ApiMap.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/ApiMap.astro): a table
+  built from a data file whose rows are drawn as cards. Its head is hidden from sight but read by a screen reader,
+  and each cell is shown under its label, in a grid of as many columns as the card has room for. It is on the
+  [API map](https://ncodegroup.github.io/Buffers/reference/api-map/).
+- [`BufferBehaviorMatrix.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/BufferBehaviorMatrix.astro):
+  a matrix of twelve columns drawn the same way, a card per row, with its yes-or-no facts side by side where they
+  fit. It is on [Buffer behavior, sizes and pooling](https://ncodegroup.github.io/Buffers/reference/buffer-behavior/).
+
 A component's elements fit the page's content column. An element that must scroll sideways by design, such as a long
 strip of bytes, scrolls inside the column, with `overflow-x: auto`, and carries the attribute `data-scrolls`. The
 layout check (section 8) then measures its box, which still fits the column, but not its content. A code block

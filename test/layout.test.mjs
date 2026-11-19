@@ -126,6 +126,27 @@ describe('the layout check', { skip: executable ? false : missing }, () => {
     const library = copyOfFixture('layout-table');
     const site = join(library, 'docs', 'site');
     renameSync(join(site, '_too-wide-table.md'), join(site, 'guides', 'too-wide-table.md'));
+    // A table of three columns or fewer is named without `…`, and a head cell without text is left out of the name.
+    const page = join(site, 'guides', 'too-wide-table.md');
+    const word = 'Unbreakable'.repeat(12);
+    writeFileSync(
+      page,
+      [
+        readFileSync(page, 'utf8'),
+        '## Narrow',
+        '',
+        '|  | Kind | Note |',
+        '| --- | --- | --- |',
+        `| \`Vault\` | Unmanaged | ${word} |`,
+        '',
+        '## Unnamed',
+        '',
+        '|  |  |',
+        '| --- | --- |',
+        `| \`Vault\` | ${word} |`,
+        '',
+      ].join('\n'),
+    );
     const result = build('layout-table', { library });
     assert.equal(result.code, 0, result.output);
     const problems = await checkLayout({
@@ -136,12 +157,21 @@ describe('the layout check', { skip: executable ? false : missing }, () => {
     });
     // On a phone the table stacks, so it fits there.
     assert.deepEqual(
-      problems.map((problem) => problem.width),
+      problems.filter((problem) => problem.heading === 'Compared').map((problem) => problem.width),
       [1440, 1280, 1024],
     );
+    const message = layoutMessage(problems);
     assert.match(
-      layoutMessage(problems),
+      message,
       /\n {2}docs\/site\/guides\/too-wide-table\.md at 1280 px: Markdown table "Type \| Allocation \| Zeroing \| …", under "Compared", hides \d+ px of its content sideways: a Markdown table must fit the column, so lay it out as a card per entry or give it fewer columns\n/,
+    );
+    assert.match(
+      message,
+      /\n {2}docs\/site\/guides\/too-wide-table\.md at 1280 px: Markdown table "Kind \| Note", under "Narrow", hides \d+ px of its content sideways: a Markdown table must fit the column/,
+    );
+    assert.match(
+      message,
+      /\n {2}docs\/site\/guides\/too-wide-table\.md at 1280 px: Markdown table, under "Unnamed", hides \d+ px of its content sideways: a Markdown table must fit the column/,
     );
   });
 

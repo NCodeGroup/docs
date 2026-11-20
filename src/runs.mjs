@@ -25,8 +25,9 @@ const remove = (path) => {
   try {
     rmSync(path, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
   } catch {
-    // Left for the next run to remove.
+    // Reported below.
   }
+  if (existsSync(path)) console.warn(`Could not remove ${path}: the next command removes it once its process is gone.`);
 };
 
 /**

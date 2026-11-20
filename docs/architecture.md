@@ -7,7 +7,7 @@ requirements.
 
 A library's `.github/workflows/docs.yml` calls `.github/workflows/site.yml` at a pinned commit of this repository. Its
 build job checks out the library and the toolchain, installs the locked packages and runs `scripts/site.mjs`, which
-copies the library's content folder into the toolchain and runs Astro. A maintainer runs the same script beside a clone
+copies the library's content folder into a folder of the run's own and runs Astro there. A maintainer runs the same script beside a clone
 of a library, with `npm run dev` or `npm run site`, and from a library's checkout or any worktree of it with the
 launcher `build/site.mjs`.
 
@@ -25,7 +25,7 @@ flowchart LR
 | Component | Role |
 | --- | --- |
 | Reusable workflow (`.github/workflows/site.yml`) | Two jobs: `build` checks out the library and the toolchain at the pinned commit, installs, builds and uploads the site; `deploy` hands the artifact to GitHub Pages, from the library's default branch only |
-| Site script (`scripts/site.mjs`) | Checks its arguments, resolves the library, checks the samples, the `requiredHeadings` rules and the components' tokens before Astro starts, takes the checkout's lock, copies the content folder to `src/content/docs/`, with the toolchain's 404 page when the library has none, and runs `astro build --force`, `dev` or `preview`; for `check` it serves the built site and loads each page in a browser instead of running Astro |
+| Site script (`scripts/site.mjs`) | Checks its arguments, resolves the library, checks the samples, the `requiredHeadings` rules and the components' tokens before Astro starts, takes its output folder's lock, makes a folder of its own under `.runs/` (`src/runs.mjs`), copies the content folder to `src/content/docs/` there, with the toolchain's 404 page when the library has none, and runs `astro build --force`, `dev` or `preview` with that folder as Astro's root, so one checkout runs several commands at once ([ADR-1017](decisions/1017-each-site-command-runs-astro-in-a-folder-of-its-own-so-one-toolchain-checkout-builds-several-sites-at-once.md)); for `check` it serves the built site and loads each page in a browser instead of running Astro |
 | Library launcher (`fixture/build/site.mjs`) | A library copies it into its `build/` folder; it finds the toolchain beside the library's main checkout, from the main checkout and from every worktree, and runs `scripts/site.mjs` for the checkout it is in ([ADR-1016](decisions/1016-a-library-runs-the-toolchain-through-a-launcher-it-copies-which-finds-the-toolchain-beside-its-main-checkout.md)) |
 | Library settings (`src/library.mjs`, `src/json-schema.mjs`, `schema/site.config.schema.json`) | Reads `DOCS_LIBRARY` and `DOCS_CONTENT`, checks `site.config.json` against the schema, resolves the sample globs to files inside the library, lists the pages (`listPages`, `pageSlug`), reads the commit the site is built from (`readCommit`), and dates each page with one `git log` |
 | Astro project (`astro.config.mjs`, `src/integration.mjs`, `src/content.config.ts`, `src/pages/404.astro`) | Configures Starlight from the library's settings: the base path from `SITE_URL` or `site.url`, the Markdown plugins, the link checks, and the import aliases `@ncodegroup/docs/components`, `@site/components/` and `@site/assets/`; and renders the 404 page, the library's or the toolchain's, in place of Starlight's own 404 route ([ADR-1006](decisions/1006-the-toolchain-renders-the-404-page-and-supplies-one-when-a-library-has-none.md)) |
@@ -68,8 +68,8 @@ flowchart LR
 - The C# grammar patch steps aside when the grammar has a rule of its own for extension blocks, and stops the build
   when a rule it builds on is missing
   ([ADR-1004](decisions/1004-the-csharp-grammar-is-patched-at-build-time-for-extension-blocks.md)).
-- The build writes nothing to the library: it reads a copy of the content folder, which git ignores and the next run
-  replaces.
+- The build writes nothing to the library: it reads a copy of the content folder in a folder of the run's own, which git
+  ignores and which is removed when the command ends.
 - Vendored files are never edited here: a release of NCodeGroup/brand replaces them whole. `src/styles/theme.css` and
   `ec.config.mjs` read only the brand's public tokens and the Starlight properties `css/starlight.css` sets, never a
   step of a colour ramp or of the type scale, and state no colour of their own.

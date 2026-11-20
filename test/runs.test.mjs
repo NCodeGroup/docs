@@ -120,21 +120,32 @@ function buildAsync(name, library) {
   rmSync(out, { recursive: true, force: true });
   const environment = { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0' };
   for (const key of ['SITE_URL', 'DOCS_LIBRARY', 'DOCS_CONTENT', 'DOCS_OUT', 'INIT_CWD']) delete environment[key];
-  return new Promise((done) => {
-    const child = spawn(process.execPath, [join(root, 'scripts', 'site.mjs'), 'build', library, '--out', out], {
-      cwd: root,
-      env: environment,
-      timeout: 180_000,
-    });
-    let output = '';
-    child.stdout.on('data', (chunk) => {
-      output += chunk;
-    });
-    child.stderr.on('data', (chunk) => {
-      output += chunk;
-    });
-    child.on('close', (code) => done({ code: code ?? 1, output, out }));
+  const child = spawn(process.execPath, [join(root, 'scripts', 'site.mjs'), 'build', library, '--out', out], {
+    cwd: root,
+    env: environment,
+    timeout: 180_000,
   });
+  let output = '';
+  child.stdout.on('data', (chunk) => {
+    output += chunk;
+  });
+  child.stderr.on('data', (chunk) => {
+    output += chunk;
+  });
+  // The pid is known before the build ends, so a test can look for the folder of the run while it is still going.
+  const done = new Promise((resolve) => {
+    child.on('close', (code) => resolve({ code: code ?? 1, output, out }));
+  });
+  return { pid: child.pid, done };
+}
+
+/** The names in the runs folder that start with `<pid>-`, or none when the folder is not there. */
+function runFoldersOf(pid) {
+  try {
+    return readdirSync(runsDirectory).filter((name) => name.startsWith(`${pid}-`));
+  } catch {
+    return [];
+  }
 }
 
 describe('one checkout of the toolchain', () => {
@@ -142,7 +153,22 @@ describe('one checkout of the toolchain', () => {
     const other = copyOfFixture('runs-other');
     const config = join(other, 'docs', 'site', 'site.config.json');
     writeFileSync(config, JSON.stringify({ ...JSON.parse(readFileSync(config, 'utf8')), title: 'NCode.Other' }));
-    const [first, second] = await Promise.all([buildAsync('runs-fixture', fixture), buildAsync('runs-other', other)]);
+    const builds = [buildAsync('runs-fixture', fixture), buildAsync('runs-other', other)];
+    const moments = [];
+    const timer = setInterval(() => {
+      moments.push(builds.map((started) => runFoldersOf(started.pid).length > 0));
+    }, 25);
+    let first;
+    let second;
+    try {
+      [first, second] = await Promise.all(builds.map((started) => started.done));
+    } finally {
+      clearInterval(timer);
+    }
+    assert.ok(
+      moments.some(([one, two]) => one && two),
+      'the two builds should have run at the same time',
+    );
     assert.equal(first.code, 0, first.output);
     assert.equal(second.code, 0, second.output);
     // Starlight joins the page title, from index.mdx, and the site title, and shows one alone only when they are equal.

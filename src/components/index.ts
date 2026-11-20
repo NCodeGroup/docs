@@ -18,5 +18,6 @@ export {
   Tabs,
 } from '@astrojs/starlight/components';
 export { default as Braces } from './Braces.astro';
+export { default as Pitfalls } from './Pitfalls.astro';
 export { default as Readout } from './Readout.astro';
 export { default as Status } from './Status.astro';

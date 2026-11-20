@@ -13,7 +13,7 @@ declare module 'virtual:ncode-docs/site' {
     contentPath: string;
     /** The library's own 404 page, 404.mdx or 404.md, when it has one (src/library.mjs). */
     notFoundPage?: string;
-    /** The folder Starlight reads pages from, as a page's filePath starts: src/content/docs/ (src/library.mjs). */
+    /** The folder Starlight reads pages from, as a page's filePath starts: src/content/docs/ of the run's folder (src/runs.mjs). */
     mount: string;
     editLinks: boolean;
     lastUpdated: boolean;

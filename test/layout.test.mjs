@@ -75,10 +75,13 @@ describe('the layout check', { skip: executable ? false : missing }, () => {
   });
 
   it('fails a command the browser does not answer in time', async () => {
-    const browser = await launchBrowser(executable, { commandTimeout: 1000 });
+    const browser = await launchBrowser(executable);
     try {
       const page = await browser.newPage();
-      await assert.rejects(page.evaluate('new Promise(() => {})'), /did not answer Runtime\.evaluate in 1 s/);
+      await assert.rejects(
+        page.evaluate('new Promise(() => {})', { timeout: 1000 }),
+        /did not answer Runtime\.evaluate in 1 s/,
+      );
     } finally {
       await browser.close();
     }

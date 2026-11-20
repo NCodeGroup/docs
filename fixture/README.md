@@ -4,6 +4,9 @@ A stand-in for a library repository, for the documentation toolchain's own build
 keeps: pages and a site configuration in `docs/site/`, a component and images of its own beside them, sample regions
 in `tests/`, and the workflow that calls the toolchain. It has no `package.json` and no lockfile, as no library does.
 
+The fixture has `build/site.mjs`, the launcher a library copies into its `build/` folder to build and serve its site
+from its main checkout or any worktree (README.md, Local preview).
+
 The fixture also has build files at its root, `Directory.Build.props` and `BannedSymbols.txt`, that
 `guides/ban-apis.mdx` includes, and its configuration requires a Checklist section on its guides `derive-a-key` and
 `ban-apis`.

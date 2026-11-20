@@ -29,6 +29,7 @@ import { join, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import {
   CONFIG_FILE,
+  defaultOutFolder,
   listPages,
   mountPath,
   ownNotFoundPage,
@@ -47,8 +48,6 @@ const COMMANDS = ['build', 'dev', 'preview', 'check'];
 // The page mounted as 404.mdx when the library has none of its own.
 const DEFAULT_NOT_FOUND = join(toolchainRoot, 'src', 'defaults', '404.mdx');
 
-// CodeQL's js/clear-text-logging flags this console.error, because some problems quote SITE_URL or DOCS_OUT from a copy
-// of process.env. They are a URL and a folder the caller passed, never a secret: its alert is a false positive.
 function usage(problem) {
   console.error(
     `${problem}\n\nUsage: node scripts/site.mjs <${COMMANDS.join('|')}> <library folder> [--content <path>] [--site-url <url>] [--out <folder>] [--port <number>] [--browser <path>]`,
@@ -144,11 +143,8 @@ const finished = (child) => new Promise((done) => child.on('exit', (code, signal
  * layout check, and fails on content that leaves its column (ADR-1013). It reads the built site
  * and writes nothing, so it takes no output folder's lock, makes no run folder and mounts no library.
  */
-async function checkBuiltSite(library, environment) {
-  const out = environment.DOCS_OUT || join(toolchainRoot, 'dist');
+async function checkBuiltSite(library, environment, out) {
   if (!existsSync(join(out, 'index.html'))) {
-    // CodeQL's js/clear-text-logging flags this, as it does usage():
-    // out is the folder the caller passed, never a secret.
     console.error(`No built site in ${out}: build it first, with the same --out.`);
     return 1;
   }
@@ -202,15 +198,17 @@ async function main() {
   } else if (environment.DOCS_LIBRARY) environment.DOCS_LIBRARY = resolve(from, environment.DOCS_LIBRARY);
   else usage('No library folder given.');
   if (parsed.values.content) environment.DOCS_CONTENT = parsed.values.content;
-  if (parsed.values['site-url']) environment.SITE_URL = parsed.values['site-url'];
-  if (parsed.values.out) environment.DOCS_OUT = resolve(from, parsed.values.out);
-  else if (environment.DOCS_OUT) environment.DOCS_OUT = resolve(from, environment.DOCS_OUT);
+  // Read straight from process.env, not from the copy: CodeQL's clear-text-logging check takes a value read from a copy
+  // of the environment for the whole environment, and these two are printed.
+  const siteUrl = parsed.values['site-url'] ?? process.env.SITE_URL;
+  if (siteUrl) environment.SITE_URL = siteUrl;
+  const outFolder = parsed.values.out ?? process.env.DOCS_OUT;
+  const out = outFolder ? resolve(from, outFolder) : defaultOutFolder;
+  environment.DOCS_OUT = out;
   // A browser with a separator is a path, relative to where the command was typed; one without is a command on PATH.
   const browser = parsed.values.browser ?? environment.DOCS_BROWSER;
   if (browser) environment.DOCS_BROWSER = /[\\/]/.test(browser) ? resolve(from, browser) : browser;
-  if (environment.SITE_URL && !URL.canParse(environment.SITE_URL)) usage(`"${environment.SITE_URL}" is not a URL.`);
-  // dev builds nothing into the output folder, so it leaves it alone.
-  if (command === 'build' || command === 'preview') environment.DOCS_OUT ||= join(toolchainRoot, 'dist');
+  if (siteUrl && !URL.canParse(siteUrl)) usage(`"${siteUrl}" is not a URL.`);
   const port = parsed.values.port ? ['--port', parsed.values.port] : [];
 
   let library;
@@ -233,11 +231,11 @@ async function main() {
     console.error(error.message);
     process.exit(1);
   }
-  if (command === 'check') return checkBuiltSite(library, environment);
+  if (command === 'check') return checkBuiltSite(library, environment, out);
   // Two commands that write one output folder conflict, so a build or preview takes it before it starts.
   if (command !== 'dev') {
     try {
-      lockOutput(environment.DOCS_OUT, library.root);
+      lockOutput(out, library.root);
     } catch (error) {
       console.error(error.message);
       process.exit(1);

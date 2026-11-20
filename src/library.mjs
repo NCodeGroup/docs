@@ -21,6 +21,8 @@ const posix = (path) => path.split(sep).join('/');
 
 /** The toolchain's own folder. */
 export const toolchainRoot = fileURLToPath(new URL('..', import.meta.url));
+// Where build writes the site, and check and preview read it, when no --out or DOCS_OUT names a folder.
+export const defaultOutFolder = join(toolchainRoot, 'dist');
 /** Where a run mounts the content folder, from the run's folder, as Astro names a page's file. */
 export const mountPath = 'src/content/docs';
 /** Where scripts/site.mjs makes a folder for each build, dev server or preview (src/runs.mjs); git ignores it. */

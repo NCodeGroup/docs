@@ -17,6 +17,7 @@ import { checkComponentTokens } from './src/brand/tokens.mjs';
 import { headingsPlugin, resolveHeadingRules } from './src/headings/required-headings.mjs';
 import { findIncludedFiles, includesDigest } from './src/includes/files.mjs';
 import {
+  defaultOutFolder,
   libraryPath,
   listPages,
   ownNotFoundPage,
@@ -82,7 +83,7 @@ export default defineConfig({
   base,
   // With 'always', the build, the dev server and GitHub Pages agree on every page's URL.
   trailingSlash: 'always',
-  outDir: process.env.DOCS_OUT || fromToolchain('dist'),
+  outDir: process.env.DOCS_OUT || defaultOutFolder,
   // The favicons, from the brand's {N} logo kit; a library's images are imported from its _assets folder.
   publicDir: fromToolchain('vendor/brand/logo/ncode/favicon'),
   markdown: {

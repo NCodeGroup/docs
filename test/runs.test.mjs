@@ -180,7 +180,8 @@ describe('one checkout of the toolchain', () => {
   });
 
   it('removes the folder of each run that ended', () => {
-    const left = readdirSync(runsDirectory, { withFileTypes: true }).filter((entry) => {
+    const entries = existsSync(runsDirectory) ? readdirSync(runsDirectory, { withFileTypes: true }) : [];
+    const left = entries.filter((entry) => {
       const folder = /^(\d+)-/.exec(entry.name);
       return entry.isDirectory() && folder && !isRunning(Number(folder[1]));
     });

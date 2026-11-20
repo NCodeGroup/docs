@@ -7,9 +7,9 @@ requirements.
 
 A library's `.github/workflows/docs.yml` calls `.github/workflows/site.yml` at a pinned commit of this repository. Its
 build job checks out the library and the toolchain, installs the locked packages and runs `scripts/site.mjs`, which
-copies the library's content folder into a folder of the run's own and runs Astro there. A maintainer runs the same script beside a clone
-of a library, with `npm run dev` or `npm run site`, and from a library's checkout or any worktree of it with the
-launcher `build/site.mjs`.
+copies the library's content folder into a folder of the run's own and runs Astro there. A maintainer runs the same
+script beside a clone of a library, with `npm run dev` or `npm run site`, and from a library's checkout or any worktree
+of it with the launcher `build/site.mjs`.
 
 ```mermaid
 flowchart LR

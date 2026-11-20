@@ -1,0 +1,26 @@
+---
+// Copyright © NCode Group
+// SPDX-License-Identifier: Apache-2.0
+
+// The fixture's inline component: a mark at the end of a sentence that links to its evidence. Its root carries
+// `data-inline`, so the layout check fails it where it stands apart from its sentence (CONTRACT.md section 7).
+interface Props {
+  /** The page that holds the evidence, from the site's root, such as `/reference/behaviour/`. */
+  to: string;
+  /** What the evidence is, for the tooltip and a screen reader. */
+  label: string;
+}
+const { to, label } = Astro.props;
+const href = `${import.meta.env.BASE_URL}${to.replace(/^\//, '')}`;
+---
+
+<a class="proof not-content" data-inline href={href} title={label} aria-label={label}>✓</a>
+
+<style>
+  .proof {
+    display: inline-flex;
+    margin-inline-start: 0.125rem;
+    color: var(--nc-color-text-secondary);
+    text-decoration: none;
+  }
+</style>

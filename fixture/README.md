@@ -11,6 +11,9 @@ The fixture also has build files at its root, `Directory.Build.props` and `Banne
 `guides/ban-apis.mdx` includes, and its configuration requires a Checklist section on its guides `derive-a-key` and
 `ban-apis`.
 
+The component `docs/site/_components/Proof.astro` is an inline component marked `data-inline`, used on
+`guides/derive-a-key.mdx` at the end of a sentence and in a captioned row of its own.
+
 It also has `docs/site/_too-wide-table.md`, which is no page, since its name starts with an underscore: a Markdown
 table too wide for the content column, which `test/layout.test.mjs` copies into a page to prove that the layout check
 fails it.

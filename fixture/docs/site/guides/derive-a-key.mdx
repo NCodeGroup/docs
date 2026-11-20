@@ -6,12 +6,15 @@ sidebar:
 ---
 
 import { LinkButton } from '@ncodegroup/docs/components';
+import Proof from '@site/components/Proof.astro';
 
 A derived key is as sensitive as the password it came from. Derive it straight into a vault, never into an array of
-your own.
+your own. <Proof to="/reference/behaviour/" label="Each member's test, on the behaviour page" />
 
 ```cs snippet=DeriveKey
 ```
+
+<p>Evidence <Proof to="/reference/behaviour/" label="The tests of Vault, on the behaviour page" /></p>
 
 The salt is not a secret, so it lives on the stack without a vault. The same key, sealed behind a method, is the
 [quick start](/quick-start/#seal-a-secret)'s sample.

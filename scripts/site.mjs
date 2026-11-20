@@ -142,7 +142,7 @@ const finished = (child) => new Promise((done) => child.on('exit', (code, signal
 /**
  * Loads the pages that `build` wrote into the output folder in a browser, at each width of the
  * layout check, and fails on content that leaves its column (ADR-1013). It reads the built site
- * and writes nothing, so it neither locks the checkout nor mounts the library.
+ * and writes nothing, so it takes no output folder's lock, makes no run folder and mounts no library.
  */
 async function checkBuiltSite(library, environment) {
   const out = environment.DOCS_OUT || join(toolchainRoot, 'dist');

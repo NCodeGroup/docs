@@ -265,7 +265,8 @@ import lifecycle from '@site/assets/lifecycle.png';
 
 A library's component is designed for a content column of about 36rem: [CONTRACT.md](CONTRACT.md) section 7 gives the
 column's width at each window width, and how a component lays out data with many columns. The layout check fails an
-element that leaves the column, and a Markdown table too wide for it.
+element that leaves the column, and a Markdown table too wide for it. Write an inline component on the text line it
+belongs to; marked `data-inline`, the layout check fails one that stands apart ([CONTRACT.md](CONTRACT.md) section 7).
 
 NCode.Buffers' components at release v5.2.4 lay out data with many columns as a card per entry:
 [`EntryCard.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/EntryCard.astro) with

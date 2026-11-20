@@ -389,6 +389,26 @@ strip of bytes, scrolls inside the column, with `overflow-x: auto`, and carries 
 layout check (section 8) then measures its box, which still fits the column, but not its content. A code block
 scrolls the same way, unmarked. A Markdown table is not exempt: it must fit.
 
+### Inline components
+
+An inline component belongs inside a sentence, such as an evidence mark at the end of the sentence it supports. MDX
+decides from the page's lines whether it stays in its paragraph, and it does not always:
+
+- A line that holds only JSX tags, starting at column 0, becomes a block of its own, so a mark on the line under its
+  sentence renders alone.
+- A component written right after a block component, such as a card, renders below it, alone.
+- In a list item that also holds a code block, a component on a line of its own renders under the code block.
+- Wrapping a line between two inline components pushes the second one out of the paragraph.
+
+So write an inline component on the text line it belongs to, never on a line of its own. Never write it right after a
+block component. Never wrap a line between two of them, and keep such a line long. A row that stands alone on purpose,
+such as marks under a code sample, is a paragraph of its own: `<p>Evidence <Proof … /> <Proof … /></p>`.
+
+A library opts its inline component into the layout check with `data-inline` on its root element. The check fails one
+when the nearest node before it, past white space and other `data-inline` elements, is an element that is not
+inline-level, or when there is none and it comes first in an `li`, `div` or `section`. The fixture's
+`_components/Proof.astro` is an example.
+
 ## 8. What fails the build
 
 Each of these stops the build, in a pull request as on the default branch, with a message that names the file and
@@ -421,7 +441,8 @@ of a page's content that extends past its content column, and on a scroll contai
 content sideways (a code block and an element marked `data-scrolls` excepted). A Markdown table too wide for the
 column fails, though it scrolls inside it: the message names it by the head cells that have text,
 `Markdown table "<first column> | <second> | <third> | …"`, and says to lay it out as a card per entry or give it fewer
-columns. The message gives each page as its source file, the width and the element, with the heading it is under.
+columns. The message gives each page as its source file, the width and the element, with the heading it is under. The
+check also fails, at 1440 px, an element marked `data-inline` that stands apart from the text it belongs to (section 7).
 
 A message from Astro or one of its plugins names the file it read, which is the copy of the content folder in the run's
 folder under `.runs/` in the toolchain: a path that ends in `src/content/docs/guides/x.mdx` there is

@@ -78,7 +78,7 @@ Each input from a library or a caller, and the check it gets before the build us
 | `_components/` files | Each `--nc-` token read is one the brand defines and is no ramp or scale step (`src/brand/tokens.mjs`) |
 | Sample files | `src/snippets/catalog.mjs` checks each marker's spelling, each key's form, and that no key is defined twice and no region is unclosed or empty |
 | Pages | `snippet=` blocks (`src/snippets/code-block.mjs`), frontmatter through Starlight's schema, and links (R5) |
-| `scripts/site.mjs`'s arguments, `SITE_URL` and `DOCS_OUT` | `parseArgs` in strict mode and a known command; `SITE_URL` must parse as a URL; an output folder Astro would misplace stops `build` and `preview` |
+| `scripts/site.mjs`'s arguments, `SITE_URL` and `DOCS_OUT` | `parseArgs` in strict mode and a known command; `SITE_URL` must parse as a URL; `build` and `preview` lock their output folder, so a second command that writes it stops (ADR-1017) |
 | `--browser`, `DOCS_BROWSER`, `CHROME_BIN` | Started as one executable with a list of arguments and no shell; a value with a path separator is resolved against the folder the command was typed in |
 
 ## Secure Design Principles Applied

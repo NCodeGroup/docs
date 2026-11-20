@@ -255,25 +255,26 @@ could not put the base path on each fail the build, in a page, in its frontmatte
 ### Components
 
 ```mdx
-import { Steps, Tabs, TabItem, Status } from '@ncodegroup/docs/components';
+import { Steps, Tabs, TabItem, Status, Pitfalls } from '@ncodegroup/docs/components';
 import Diagram from '@site/components/Diagram.astro';
 import lifecycle from '@site/assets/lifecycle.png';
 ```
 
-`@ncodegroup/docs/components` is Starlight's components and this toolchain's own; `@site/…` is the library's
-`_components/` and `_assets/`. A page imports from nowhere else.
+`@ncodegroup/docs/components` is Starlight's components and this toolchain's own, `Status`, `Readout`, `Braces` and
+`Pitfalls` among them; `@site/…` is the library's `_components/` and `_assets/`. A page imports from nowhere else.
 
 A library's component is designed for a content column of about 36rem: [CONTRACT.md](CONTRACT.md) section 7 gives the
 column's width at each window width, and how a component lays out data with many columns. The layout check fails an
 element that leaves the column, and a Markdown table too wide for it. Write an inline component on the text line it
 belongs to; marked `data-inline`, the layout check fails one that stands apart ([CONTRACT.md](CONTRACT.md) section 7).
+The same section gives the guidance for pages that read calmly.
 
-NCode.Buffers' components at release v5.2.4 lay out data with many columns as a card per entry:
-[`EntryCard.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/EntryCard.astro) with
-[`EntryField.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/EntryField.astro) for
+NCode.Buffers' components at release v5.3.2 lay out data with many columns as a card per entry:
+[`EntryCard.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/EntryCard.astro) with
+[`EntryField.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/EntryField.astro) for
 cards written in a page, and
-[`ApiMap.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/ApiMap.astro) and
-[`BufferBehaviorMatrix.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/BufferBehaviorMatrix.astro)
+[`ApiMap.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/ApiMap.astro) and
+[`BufferBehaviorMatrix.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/BufferBehaviorMatrix.astro)
 for a table whose rows are drawn as cards. [CONTRACT.md](CONTRACT.md) section 7 says what each one does and links
 the page it is on.
 

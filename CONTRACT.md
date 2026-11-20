@@ -324,13 +324,14 @@ library that needs one asks for it in this repository. `@astrojs/starlight/compo
 `@ncodegroup/docs/components`, which re-exports it.
 
 `@ncodegroup/docs/components` exports Starlight's `Aside`, `Badge`, `Card`, `CardGrid`, `Code`, `FileTree`, `Icon`,
-`LinkButton`, `LinkCard`, `Steps`, `TabItem` and `Tabs`, and three of this toolchain's own:
+`LinkButton`, `LinkCard`, `Steps`, `TabItem` and `Tabs`, and four of this toolchain's own:
 
 | Component | Use |
 | --- | --- |
 | `<Status state="success">Yes</Status>` | A lamp and a word. `state`: `on` (default), `off`, `success`, `warning`, `danger` |
 | `<Readout>32 bytes</Readout>` | One value on a small screen |
 | `<Braces>32 bytes</Braces>` | A value between the braces of the NCode mark |
+| `<Pitfalls>` … `</Pitfalls>` | A guide's pitfalls: a Markdown list inside it, one titled entry per pitfall (below) |
 
 Callouts need no import: `:::note`, `:::tip`, `:::caution` and `:::danger`, with an optional title, `:::tip[Title]`.
 
@@ -369,18 +370,18 @@ The column is never wider than 50rem (800 px), which a page without the panel (`
 long identifiers, as a card per entry with its fields labelled, not as a wide table. Never give an element a
 `min-width` wider than the column.
 
-NCode.Buffers lays out its data this way, and its components at release v5.2.4 are examples to copy:
+NCode.Buffers lays out its data this way, and its components at release v5.3.2 are examples to copy:
 
-- [`EntryCard.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/EntryCard.astro) and
-  [`EntryField.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/EntryField.astro):
+- [`EntryCard.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/EntryCard.astro) and
+  [`EntryField.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/EntryField.astro):
   cards written in the page, one per entry, whose fields are a `<dl>` with each label beside its value, and above it
   in a window narrower than 40rem. They are on
   [Objections and alternatives](https://buffers.ncode.io/evidence/objections-and-alternatives/).
-- [`ApiMap.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/ApiMap.astro): a table
+- [`ApiMap.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/ApiMap.astro): a table
   built from a data file whose rows are drawn as cards. Its head is hidden from sight but read by a screen reader,
   and each cell is shown under its label, in a grid of as many columns as the card has room for. It is on the
   [API map](https://buffers.ncode.io/reference/api-map/).
-- [`BufferBehaviorMatrix.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/BufferBehaviorMatrix.astro):
+- [`BufferBehaviorMatrix.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/BufferBehaviorMatrix.astro):
   a matrix of twelve columns drawn the same way, a card per row, with its yes-or-no facts side by side where they
   fit. It is on [Buffer behavior, sizes and pooling](https://buffers.ncode.io/reference/buffer-behavior/).
 
@@ -408,6 +409,41 @@ A library opts its inline component into the layout check with `data-inline` on 
 when the nearest node before it, past white space and other `data-inline` elements, is an element that is not
 inline-level, or when there is none and it comes first in an `li`, `div` or `section`. The fixture's
 `_components/Proof.astro` is an example.
+
+### Calm reading
+
+NCodeGroup/Buffers#114 and #118 read 31 pages and found what makes a page loud. A page reads calmly when it keeps to
+these:
+
+- No page-kind plate: no label such as "GUIDE · reach a goal" above a title. The sidebar group says what kind of page
+  it is.
+- No "You'll use …" line under a guide's title.
+- A short sidebar: guide groups are `"collapsed": true`, and every label fits on one line, while page titles may stay
+  long.
+- Pitfalls as a list, not packed bullets: `<Pitfalls>` around a Markdown list, each entry a bold title, then one line
+  each for *You write*, *What happens:* and *Write instead:*, with italic labels. A pitfall that has a heading of its
+  own uses the same labels, each starting its own paragraph.
+- Italic run-in labels, not bold ones, which made reference pages the loudest.
+- Evidence marks inline: each at the end of the sentence it supports, showing only its glyph. A row that has to stand
+  alone, such as under a code sample, starts with a muted "Evidence" caption.
+
+A short example block of the pitfalls list:
+
+```mdx
+<Pitfalls>
+
+- **Deriving into an array.**
+  - *You write* `Rfc2898DeriveBytes.Pbkdf2(password, salt, 600_000, HashAlgorithmName.SHA256, 32)`, which returns a
+    `byte[]`.
+  - *What happens:* the key sits in an array the garbage collector may copy, and nothing zeroes it.
+  - *Write instead:* derive into the span a vault rents.
+
+</Pitfalls>
+```
+
+Buffers' release v5.3.2 has both components:
+[`Pitfalls.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/Pitfalls.astro) and
+[`Proof.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/Proof.astro).
 
 ## 8. What fails the build
 

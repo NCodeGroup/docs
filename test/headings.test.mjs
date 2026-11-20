@@ -348,8 +348,8 @@ describe('a required heading the build checks', () => {
       editPage(library, 'guides/derive-a-key', (text) =>
         text
           .replace(
-            "import { LinkButton } from '@ncodegroup/docs/components';",
-            "import { Aside, LinkButton } from '@ncodegroup/docs/components';",
+            "import { LinkButton, Pitfalls } from '@ncodegroup/docs/components';",
+            "import { Aside, LinkButton, Pitfalls } from '@ncodegroup/docs/components';",
           )
           .replace(CHECKLIST, (section) => `<Aside>\n\n${section.trimEnd()}\n\n</Aside>\n\n`),
       );

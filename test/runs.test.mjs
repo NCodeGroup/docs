@@ -88,6 +88,22 @@ describe('a run of the site script', () => {
     assert.equal(JSON.parse(readFileSync(file, 'utf8')).pid, process.pid);
   });
 
+  it('stops on a lock that cannot be read and leaves it', () => {
+    const out = join(work, 'unreadable-out');
+    const file = outputLock(out);
+    mkdirSync(runsDirectory, { recursive: true });
+    remember(file);
+    writeFileSync(file, '');
+    assert.throws(
+      () => lockOutput(out, '/somewhere/Mine'),
+      new Error(
+        `Cannot read ${file}, the lock of ${out}.\n` +
+          'If no command writes the site there, remove that file and run this command again.',
+      ),
+    );
+    assert.equal(readFileSync(file, 'utf8'), '');
+  });
+
   it('locks one file for the spellings of a folder that its file system treats as one', () => {
     const caseless = process.platform === 'win32' || process.platform === 'darwin';
     const upper = outputLock(join(work, 'Out'));

@@ -88,7 +88,8 @@ export function outputLock(out) {
 
 /**
  * Takes an output folder for one library until the process ends. Two commands that write one folder conflict,
- * so a second one stops here and says who holds it. A lock whose process is gone is taken over.
+ * so a second one stops here and says who holds it. A lock whose process is gone is taken over. A lock that cannot
+ * be read stops the command and stays, as `removeStaleRuns` keeps it.
  */
 export function lockOutput(out, library) {
   const file = outputLock(out);
@@ -108,12 +109,23 @@ export function lockOutput(out, library) {
     } catch (error) {
       if (error.code !== 'EEXIST') throw error;
       let held;
-      try {
-        held = JSON.parse(readFileSync(file, 'utf8'));
-      } catch {
-        held = undefined;
+      for (let read = 0; read < 20 && !held; read++) {
+        // The first command writes its lock just after it creates it, so an empty lock is read again before it
+        // counts as unreadable.
+        if (read) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
+        try {
+          held = JSON.parse(readFileSync(file, 'utf8'));
+        } catch {
+          held = undefined;
+        }
       }
-      if (held && isRunning(held.pid)) {
+      if (!held) {
+        throw new Error(
+          `Cannot read ${file}, the lock of ${out}.\n` +
+            'If no command writes the site there, remove that file and run this command again.',
+        );
+      }
+      if (isRunning(held.pid)) {
         throw new Error(
           `Another command writes the site to ${out}: process ${held.pid} is building ${held.library}.\n` +
             'Two commands never write one output folder: wait for that command, stop it, or name another folder with --out.',

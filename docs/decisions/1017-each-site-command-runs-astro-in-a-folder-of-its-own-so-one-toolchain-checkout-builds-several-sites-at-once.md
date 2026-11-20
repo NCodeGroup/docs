@@ -6,8 +6,8 @@
 
 ## Context
 
-One mount of the library's content in the toolchain allowed one command per checkout. Plans run in parallel worktrees
-and sessions, and a dev server left running, or a second session, made a Done-when exit 1
+Plans run in parallel worktrees and sessions, and a dev server can be left running, so one checkout of the toolchain
+has to build and serve several sites at once
 ([#58](https://github.com/NCodeGroup/docs/issues/58),
 [NCodeGroup/Buffers#114](https://github.com/NCodeGroup/Buffers/pull/114) and
 [NCodeGroup/Buffers#118](https://github.com/NCodeGroup/Buffers/pull/118)).
@@ -44,8 +44,8 @@ one checkout of the toolchain builds and serves several sites at once.**
 
 ## Consequences
 
-- Each command starts with empty Astro and Vite caches, so a dev server starts a little slower and every build is full,
-  as `--force` already made it.
+- Each command starts with empty Astro and Vite caches, so a dev server starts a little slower and
+  every build is a full build (`--force`).
 - A killed command leaves its folder until the next command removes it.
 - Messages name files under `.runs/<run>/src/content/docs/`; `CONTRACT.md` maps such a path to the library's file.
 

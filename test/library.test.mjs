@@ -8,7 +8,18 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, describe, it, mock } from 'node:test';
-import { listPages, pageSlug, readCommit, resolveLibrary, siteBase, warn as warnMessage } from '../src/library.mjs';
+import {
+  libraryPath,
+  listPages,
+  pageSlug,
+  readCommit,
+  resolveLibrary,
+  runFolder,
+  runMount,
+  runsDirectory,
+  siteBase,
+  warn as warnMessage,
+} from '../src/library.mjs';
 import { copyOfFixture, fixture, root, work } from './helpers.mjs';
 
 const FIXTURE_PAGES = [
@@ -98,6 +109,26 @@ describe('a library', () => {
     const result = readCommit(resolveLibrary({ DOCS_LIBRARY: fixture }), { PATH: noGit });
     assert.equal(result.commit, undefined);
     assert.ok(result.reason?.endsWith('spawnSync git ENOENT'), result.reason);
+  });
+});
+
+describe('a run folder', () => {
+  it("names a page in any run's mount as its author knows it", () => {
+    const library = resolveLibrary({ DOCS_LIBRARY: fixture });
+    assert.equal(
+      libraryPath(library, join(runsDirectory, '123-abcdef', 'src', 'content', 'docs', 'guides', 'derive-a-key.mdx')),
+      'docs/site/guides/derive-a-key.mdx',
+    );
+    assert.equal(libraryPath(library, join(fixture, 'docs', 'site', 'quick-start.mdx')), 'docs/site/quick-start.mdx');
+    const elsewhere = join(work, 'elsewhere.mdx');
+    assert.equal(libraryPath(library, elsewhere), elsewhere);
+  });
+
+  it('is the folder DOCS_RUN names, with its mount in src/content/docs', () => {
+    const run = join(work, 'run');
+    assert.equal(runFolder({ DOCS_RUN: run }), run);
+    assert.equal(runMount(run), join(run, 'src', 'content', 'docs'));
+    assert.throws(() => runFolder({}), /No run folder: scripts\/site\.mjs makes one for each command/);
   });
 });
 

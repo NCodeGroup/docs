@@ -120,6 +120,25 @@ describe('the launcher a library copies', () => {
     assert.ok(result.stderr.includes('--toolchain <folder>'), result.stderr);
   });
 
+  it("passes git's error on when the library is in no git repository", () => {
+    const outside = join(area, 'outside');
+    const lonely = join(outside, 'Lib');
+    mkdirSync(join(lonely, 'build'), { recursive: true });
+    copyFileSync(join(fixture, 'build', 'site.mjs'), launcherIn(lonely));
+    // The ceiling keeps git from looking above `outside`, where the toolchain's own repository is.
+    const result = run(launcherIn(lonely), ['build'], lonely, { GIT_CEILING_DIRECTORIES: outside });
+    assert.equal(result.status, 1, result.stdout);
+    assert.equal(result.stdout, '');
+    // The launcher takes the library from its own URL, so the drive letter's case can differ on Windows.
+    assert.ok(
+      result.stderr.toLowerCase().includes(`git cannot name the main checkout of ${resolve(lonely)}`.toLowerCase()),
+      result.stderr,
+    );
+    assert.ok(result.stderr.includes('--toolchain <folder>'), result.stderr);
+    assert.ok(result.stderr.includes('DOCS_TOOLCHAIN'), result.stderr);
+    assert.match(result.stderr, /not a git repository/i);
+  });
+
   it('builds the fixture with this toolchain', () => {
     const out = join(work, 'out', 'launcher');
     rmSync(out, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });

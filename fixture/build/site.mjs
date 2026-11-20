@@ -48,8 +48,10 @@ if (!toolchain) {
     encoding: 'utf8',
   });
   if (output.error || output.status !== 0) {
+    // Git's own first line says why (no repository, an unsafe folder, no git on the path), which a guess would hide.
+    const reason = output.error?.message ?? (output.stderr.trim().split(/\r?\n/)[0] || `git exited ${output.status}`);
     console.error(
-      `${library} is in no git repository, so the toolchain beside its main checkout cannot be found: name it with --toolchain <folder> or DOCS_TOOLCHAIN.`,
+      `git cannot name the main checkout of ${library} (${reason}), so the toolchain beside it cannot be found: name it with --toolchain <folder> or DOCS_TOOLCHAIN.`,
     );
     process.exit(1);
   }

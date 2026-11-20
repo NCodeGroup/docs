@@ -8,13 +8,15 @@ requirements.
 A library's `.github/workflows/docs.yml` calls `.github/workflows/site.yml` at a pinned commit of this repository. Its
 build job checks out the library and the toolchain, installs the locked packages and runs `scripts/site.mjs`, which
 copies the library's content folder into the toolchain and runs Astro. A maintainer runs the same script beside a clone
-of a library, with `npm run dev` or `npm run site`.
+of a library, with `npm run dev` or `npm run site`, and from a library's checkout or any worktree of it with the
+launcher `build/site.mjs`.
 
 ```mermaid
 flowchart LR
   caller["Library's docs.yml"] --> build["build job of site.yml"]
   build --> install["npm ci --ignore-scripts --omit=dev"] --> script["scripts/site.mjs"]
   local["npm run dev or npm run site"] --> script
+  launcher["node build/site.mjs in a library"] --> script
   script --> astro["Astro and Starlight, with the toolchain's plugins"]
   astro --> artifact["github-pages artifact"]
   artifact --> deploy["deploy job of site.yml"] --> pages["The library's GitHub Pages"]
@@ -24,6 +26,7 @@ flowchart LR
 | --- | --- |
 | Reusable workflow (`.github/workflows/site.yml`) | Two jobs: `build` checks out the library and the toolchain at the pinned commit, installs, builds and uploads the site; `deploy` hands the artifact to GitHub Pages, from the library's default branch only |
 | Site script (`scripts/site.mjs`) | Checks its arguments, resolves the library, checks the samples, the `requiredHeadings` rules and the components' tokens before Astro starts, takes the checkout's lock, copies the content folder to `src/content/docs/`, with the toolchain's 404 page when the library has none, and runs `astro build --force`, `dev` or `preview`; for `check` it serves the built site and loads each page in a browser instead of running Astro |
+| Library launcher (`fixture/build/site.mjs`) | A library copies it into its `build/` folder; it finds the toolchain beside the library's main checkout, from the main checkout and from every worktree, and runs `scripts/site.mjs` for the checkout it is in ([ADR-1016](decisions/1016-a-library-runs-the-toolchain-through-a-launcher-it-copies-which-finds-the-toolchain-beside-its-main-checkout.md)) |
 | Library settings (`src/library.mjs`, `src/json-schema.mjs`, `schema/site.config.schema.json`) | Reads `DOCS_LIBRARY` and `DOCS_CONTENT`, checks `site.config.json` against the schema, resolves the sample globs to files inside the library, lists the pages (`listPages`, `pageSlug`), reads the commit the site is built from (`readCommit`), and dates each page with one `git log` |
 | Astro project (`astro.config.mjs`, `src/integration.mjs`, `src/content.config.ts`, `src/pages/404.astro`) | Configures Starlight from the library's settings: the base path from `SITE_URL` or `site.url`, the Markdown plugins, the link checks, and the import aliases `@ncodegroup/docs/components`, `@site/components/` and `@site/assets/`; and renders the 404 page, the library's or the toolchain's, in place of Starlight's own 404 route ([ADR-1006](decisions/1006-the-toolchain-renders-the-404-page-and-supplies-one-when-a-library-has-none.md)) |
 | Samples and repository files (`src/snippets/`, `src/includes/`) | Reads the regions of the sample files and fills each `snippet=Key` block, and reads the repository files pages name and fills each `file=` block with a link to its lines ([ADR-1002](decisions/1002-a-page-includes-a-compiled-sample-by-its-key-when-the-site-is-built.md), [ADR-1010](decisions/1010-a-page-shows-a-repository-file-or-the-lines-between-two-texts-of-it-when-the-site-is-built.md)) |

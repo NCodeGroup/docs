@@ -21,6 +21,7 @@ docs/site/                                the content folder (the workflow's con
 tests/**/*.cs                             the sample files (the samples setting names other globs)
 Directory.Build.props, BannedSymbols.txt  any file of the repository a page shows (section 4)
 .github/workflows/docs.yml                the workflow that calls the toolchain (README.md)
+build/site.mjs                            optional: runs the toolchain from any checkout (section 9)
 ```
 
 - A page is an `.mdx` file. Its URL is its path under the content folder, lower-cased, without the extension, with a
@@ -438,6 +439,11 @@ node scripts/site.mjs check <library folder> [--content docs/site] [--site-url <
 `check` loads the site `build` wrote and checks it as the workflow does: give it the same `--content`, `--site-url`
 and `--out`. Its browser is `--browser` or `DOCS_BROWSER`, else `CHROME_BIN`, else the Chromium `npm run browser`
 installs; a Chromium-based browser such as Google Chrome or Microsoft Edge.
+
+`node build/site.mjs <command> [options]` runs the same commands from a library's checkout, its main checkout or any
+worktree of it, with the launcher the library copies from `fixture/build/site.mjs`; the library is the checkout the
+launcher is in, and the toolchain is `--toolchain <folder>`, else `DOCS_TOOLCHAIN`, else the folder `docs` beside the
+library's main checkout; every other option goes to `scripts/site.mjs` as it is.
 
 `DOCS_LIBRARY`, `DOCS_CONTENT`, `SITE_URL`, `DOCS_OUT` and `DOCS_BROWSER` are the same five values as environment
 variables; an argument wins. The script copies the content folder into this toolchain at `src/content/docs/` (ignored

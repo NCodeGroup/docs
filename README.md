@@ -290,7 +290,9 @@ files and the files its pages include. `npm run preview '--' ../Buffers` builds 
 result, with the search working. Both take `--content <path>` for a content folder other than `docs/site`, and
 `--port <number>`. Nothing is written to the library.
 
-`npm run site '--' build ../Buffers --out <folder>` builds without serving.
+`npm run site '--' build ../Buffers --out <folder>` builds without serving. One checkout of the toolchain runs several
+of these commands at once, for several libraries or several worktrees of one, as long as each build writes its own
+`--out` folder.
 
 `npm run site '--' check ../Buffers --out <folder>` loads that built site in a browser and fails as the workflow does.
 It uses the browser `npm run browser` installs, or a Chromium-based browser that `--browser <path>` or `DOCS_BROWSER`

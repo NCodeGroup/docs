@@ -423,9 +423,10 @@ column fails, though it scrolls inside it: the message names it by the head cell
 `Markdown table "<first column> | <second> | <third> | …"`, and says to lay it out as a card per entry or give it fewer
 columns. The message gives each page as its source file, the width and the element, with the heading it is under.
 
-A message from Astro or one of its plugins names the file it read, which is the toolchain's copy of the content
-folder: `src/content/docs/guides/x.mdx` there is `docs/site/guides/x.mdx` in the library. The link validator names a
-page by its path under the content folder, and shows a link with the base path already added.
+A message from Astro or one of its plugins names the file it read, which is the copy of the content folder in the run's
+folder under `.runs/` in the toolchain: a path that ends in `src/content/docs/guides/x.mdx` there is
+`docs/site/guides/x.mdx` in the library. The link validator names a page by its path under the content folder, and
+shows a link with the base path already added.
 
 ## 9. Building
 
@@ -446,15 +447,15 @@ launcher is in, and the toolchain is `--toolchain <folder>`, else `DOCS_TOOLCHAI
 library's main checkout; every other option goes to `scripts/site.mjs` as it is.
 
 `DOCS_LIBRARY`, `DOCS_CONTENT`, `SITE_URL`, `DOCS_OUT` and `DOCS_BROWSER` are the same five values as environment
-variables; an argument wins. The script copies the content folder into this toolchain at `src/content/docs/` (ignored
-by git, replaced by the next run), so one checkout of the toolchain builds one library at a time: a second command
-started while a build or a dev server runs in the same checkout stops with a message that names the first. It writes
-nothing to the library.
+variables; an argument wins. Each `build`, `dev` and `preview` runs Astro in a folder of its own under `.runs/` in the
+toolchain, ignored by git, with the content folder copied to `src/content/docs/` there. The folder is removed when the
+command ends, and the next command removes one whose process is gone. So one checkout of the toolchain builds and
+serves several libraries, or several worktrees of one, at once, such as a dev server beside two builds. Two commands
+that write one output folder cannot run at once: the second stops with a message that names the first and says to name
+another folder with `--out`. It writes nothing to the library.
 
-The built site goes to `dist/` in this toolchain unless `--out` names another folder. A folder outside the toolchain
-whose path starts with the toolchain's, such as `../docs-site` beside a toolchain at `../docs`, stops `build` and
-`preview` before anything is built: Astro would take it for a folder inside the toolchain, and that build could not
-find the toolchain's packages.
+The built site goes to `dist/` in this toolchain unless `--out` names another folder, which may be anywhere, such as
+`../docs-site` beside a toolchain at `../docs`.
 
 The dev server (`npm run dev`) follows edits to pages, sample files and the files pages include; a file a page starts
 including, and a page a `requiredHeadings` rule starts covering, are followed from the server's next start.

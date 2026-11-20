@@ -21,18 +21,21 @@ const library = dirname(dirname(fileURLToPath(import.meta.url)));
 const remaining = [];
 let toolchain;
 const args = process.argv.slice(2);
+// A following option is not a folder, so a missing value must not swallow it.
+const folderOf = (value) => {
+  if (value === undefined || value === '' || value.startsWith('-')) {
+    console.error('--toolchain needs a folder.');
+    process.exit(2);
+  }
+  return value;
+};
 for (let index = 0; index < args.length; index++) {
   const arg = args[index];
   if (arg === '--toolchain') {
-    const value = args[index + 1];
-    if (value === undefined) {
-      console.error('--toolchain needs a folder.');
-      process.exit(2);
-    }
-    toolchain = value;
+    toolchain = folderOf(args[index + 1]);
     index++;
   } else if (arg.startsWith('--toolchain=')) {
-    toolchain = arg.slice('--toolchain='.length);
+    toolchain = folderOf(arg.slice('--toolchain='.length));
   } else {
     remaining.push(arg);
   }

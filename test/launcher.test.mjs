@@ -99,6 +99,19 @@ describe('the launcher a library copies', () => {
     assert.equal(printed(named).other, undefined, 'the variable should not win over --toolchain');
   });
 
+  it('refuses a --toolchain without a folder', () => {
+    for (const args of [
+      ['build', '--toolchain'],
+      ['build', '--toolchain', '--out', 'x'],
+      ['build', '--toolchain='],
+    ]) {
+      const result = run(launcherIn(library), args, library);
+      assert.equal(result.status, 2, `${args.join(' ')}: ${result.stdout}${result.stderr}`);
+      assert.ok(result.stderr.includes('--toolchain needs a folder.'), result.stderr);
+      assert.equal(result.stdout, '', 'the stand-in should not have run');
+    }
+  });
+
   it('says where it looked when no toolchain is there', () => {
     const nowhere = join(area, 'nowhere');
     const result = run(launcherIn(library), ['build', '--toolchain', nowhere], library);

@@ -412,8 +412,9 @@ inline-level, or when there is none and it comes first in an `li`, `div` or `sec
 
 ### Calm reading
 
-NCodeGroup/Buffers#114 and #118 read 31 pages and found what makes a page loud. A page reads calmly when it keeps to
-these:
+[NCodeGroup/Buffers#114](https://github.com/NCodeGroup/Buffers/pull/114) and
+[NCodeGroup/Buffers#118](https://github.com/NCodeGroup/Buffers/pull/118) read 31 pages and found what makes a page
+loud. A page reads calmly when it keeps to these:
 
 - No page-kind plate: no label such as "GUIDE · reach a goal" above a title. The sidebar group says what kind of page
   it is.

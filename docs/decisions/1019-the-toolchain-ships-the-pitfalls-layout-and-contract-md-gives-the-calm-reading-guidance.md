@@ -6,8 +6,10 @@
 
 ## Context
 
-NCodeGroup/Buffers#114 and #118 calmed a busy site across 31 pages. Every library's site faces the same choices, and
-every library's guides have pitfalls ([#60](https://github.com/NCodeGroup/docs/issues/60)).
+[NCodeGroup/Buffers#114](https://github.com/NCodeGroup/Buffers/pull/114) and
+[NCodeGroup/Buffers#118](https://github.com/NCodeGroup/Buffers/pull/118) calmed a busy site across 31 pages. Every
+library's site faces the same choices, and every library's guides have pitfalls
+([#60](https://github.com/NCodeGroup/docs/issues/60)).
 
 [ADR-1000](1000-library-sites-are-built-with-astro-starlight-core-only.md) adds a package to the toolchain only for what
 every library's site needs. A pitfalls list is such a thing, and the guidance that keeps a page calm is one document

@@ -9,8 +9,9 @@
 A library's plans run in git worktrees under `.claude/worktrees/<name>/`. The command
 `npm --prefix ../docs run dev '--' .` names `.claude/worktrees/docs` from one of them, so npm fails with ENOENT and
 every Done-when that builds the site fails ([#57](https://github.com/NCodeGroup/docs/issues/57)). NCode.Buffers wrote
-its own `build/site.ps1` to get around it (NCodeGroup/Buffers#118). PowerShell also drops a bare `--` before npm's
-shim, so the command differs between PowerShell and bash.
+its own `build/site.ps1` to get around it
+([NCodeGroup/Buffers#118](https://github.com/NCodeGroup/Buffers/pull/118)). PowerShell also drops a bare `--` before
+npm's shim, so the command differs between PowerShell and bash.
 
 A library has one place that is the same in the main checkout and in every worktree: the common Git folder, which is
 the main checkout's `.git`. The toolchain is cloned beside the main checkout.

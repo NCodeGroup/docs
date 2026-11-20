@@ -16,8 +16,9 @@ on how the page's lines are written, and MDX decides:
 - In a list item that also holds a code block, a component on a line of its own renders under the code block.
 - Wrapping a line between two inline components pushes the second one out of the paragraph.
 
-NCodeGroup/Buffers#114 found about 35 stranded marks in a browser pass that its text checks missed
-([#59](https://github.com/NCodeGroup/docs/issues/59)). Only a library knows which of its components are inline.
+[NCodeGroup/Buffers#114](https://github.com/NCodeGroup/Buffers/pull/114) found about 35 stranded marks in a browser
+pass that its text checks missed ([#59](https://github.com/NCodeGroup/docs/issues/59)). Only a library knows which of
+its components are inline.
 
 ## Decision
 

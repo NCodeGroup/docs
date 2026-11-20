@@ -8,7 +8,9 @@
 
 One mount of the library's content in the toolchain allowed one command per checkout. Plans run in parallel worktrees
 and sessions, and a dev server left running, or a second session, made a Done-when exit 1
-([#58](https://github.com/NCodeGroup/docs/issues/58), NCodeGroup/Buffers#114 and #118).
+([#58](https://github.com/NCodeGroup/docs/issues/58),
+[NCodeGroup/Buffers#114](https://github.com/NCodeGroup/Buffers/pull/114) and
+[NCodeGroup/Buffers#118](https://github.com/NCodeGroup/Buffers/pull/118)).
 
 Astro keeps per-project state in its root's `.astro/` folder: the content modules, the asset imports and the dev data
 store. No setting moves that folder (`astro/dist/core/config/settings.js`, Astro 7.4.11). Starlight and

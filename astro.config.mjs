@@ -4,8 +4,10 @@
 // @ts-check
 // The one Astro project every NCode library's documentation site is built with. It holds no
 // library's content: scripts/site.mjs (or the reusable workflow) names a library through
-// DOCS_LIBRARY and DOCS_CONTENT, mounts its content folder at src/content/docs/, and runs Astro.
+// DOCS_LIBRARY and DOCS_CONTENT, mounts its content folder at src/content/docs/ of a run's folder
+// (src/runs.mjs), and runs Astro there.
 import { realpathSync } from 'node:fs';
+import { join } from 'node:path';
 import { defineConfig } from 'astro/config';
 import { satteri } from '@astrojs/markdown-satteri';
 import starlight from '@astrojs/starlight';
@@ -21,7 +23,10 @@ import {
   readCommit,
   readLastUpdated,
   resolveLibrary,
+  runFolder,
+  runMount,
   siteBase,
+  toolchainRoot,
   warn,
 } from './src/library.mjs';
 import { baseLinks } from './src/links/base-links.mjs';
@@ -32,6 +37,9 @@ import { stackedTables } from './src/tables/stacked-tables.mjs';
 
 const library = resolveLibrary();
 const { config } = library;
+const run = runFolder();
+// The run's folder is Astro's root, so every toolchain file is named by its full path.
+const fromToolchain = (path) => join(toolchainRoot, ...path.split('/'));
 
 // The site's URL as it is served. The workflow passes SITE_URL from the repository's Pages settings,
 // so a custom domain needs no change anywhere; a local build and a pull request build use the
@@ -69,13 +77,14 @@ if (!commit && reason && included.length > 0) {
 }
 
 export default defineConfig({
+  root: run,
   site: siteUrl.origin,
   base,
   // With 'always', the build, the dev server and GitHub Pages agree on every page's URL.
   trailingSlash: 'always',
-  outDir: process.env.DOCS_OUT || './dist',
+  outDir: process.env.DOCS_OUT || fromToolchain('dist'),
   // The favicons, from the brand's {N} logo kit; a library's images are imported from its _assets folder.
-  publicDir: './vendor/brand/logo/ncode/favicon',
+  publicDir: fromToolchain('vendor/brand/logo/ncode/favicon'),
   markdown: {
     processor: satteri({
       mdastPlugins: [
@@ -90,19 +99,22 @@ export default defineConfig({
   },
   integrations: [
     watchLibraryFiles([...library.sampleFiles, ...included]),
-    ncodeSite({
-      title: config.title,
-      product: config.product,
-      mark: config.mark,
-      version: config.version,
-      repository: config.repository,
-      social: config.social,
-      contentPath: library.contentPath,
-      notFoundPage: ownNotFoundPage(library),
-      editLinks: config.editLinks,
-      lastUpdated: config.lastUpdated,
-      lastUpdatedByFile: config.lastUpdated ? readLastUpdated(library) : {},
-    }),
+    ncodeSite(
+      {
+        title: config.title,
+        product: config.product,
+        mark: config.mark,
+        version: config.version,
+        repository: config.repository,
+        social: config.social,
+        contentPath: library.contentPath,
+        notFoundPage: ownNotFoundPage(library),
+        editLinks: config.editLinks,
+        lastUpdated: config.lastUpdated,
+        lastUpdatedByFile: config.lastUpdated ? readLastUpdated(library) : {},
+      },
+      { mountFolder: runMount(run) },
+    ),
     starlight({
       title: config.title,
       description: config.description,
@@ -116,17 +128,17 @@ export default defineConfig({
       // The brand's tokens, the typefaces they name and Starlight's own properties mapped onto them,
       // vendored and never edited here; then the stylesheet that restyles Starlight's markup.
       customCss: [
-        './vendor/brand/tokens/tokens.css',
-        './vendor/brand/css/fonts.css',
-        './vendor/brand/css/starlight.css',
-        './src/styles/theme.css',
+        fromToolchain('vendor/brand/tokens/tokens.css'),
+        fromToolchain('vendor/brand/css/fonts.css'),
+        fromToolchain('vendor/brand/css/starlight.css'),
+        fromToolchain('src/styles/theme.css'),
       ],
       components: {
-        SiteTitle: './src/components/overrides/SiteTitle.astro',
-        SocialIcons: './src/components/overrides/SocialIcons.astro',
-        PageTitle: './src/components/overrides/PageTitle.astro',
+        SiteTitle: fromToolchain('src/components/overrides/SiteTitle.astro'),
+        SocialIcons: fromToolchain('src/components/overrides/SocialIcons.astro'),
+        PageTitle: fromToolchain('src/components/overrides/PageTitle.astro'),
       },
-      routeMiddleware: './src/route-data.ts',
+      routeMiddleware: fromToolchain('src/route-data.ts'),
       // The middleware sets both from the library's repository; see src/route-data.ts.
       lastUpdated: false,
       credits: false,

@@ -18,10 +18,11 @@
 // URL from SITE_URL, the output folder from DOCS_OUT and the browser from DOCS_BROWSER; an argument
 // wins over its variable.
 //
-// What it does: checks the library's site.config.json, mounts the content folder into this toolchain
-// (a copy at src/content/docs/, see mount() below), and runs Astro with the library named in the
-// environment. Nothing is written to the library, and nothing of the library stays in this
-// repository: the mount is ignored by git and replaced by the next run.
+// What it does: checks the library's site.config.json, makes a folder of its own for the command under
+// .runs/ (src/runs.mjs; it is removed when the command ends), mounts the content folder into that
+// folder (a copy at src/content/docs/, see mount() below), and runs Astro there with the library named
+// in the environment. Nothing is written to the library, and nothing of the library stays in this
+// repository.
 import { spawn } from 'node:child_process';
 import {
   cpSync,
@@ -36,19 +37,20 @@ import {
   watch,
   writeFileSync,
 } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import {
   CONFIG_FILE,
   listPages,
   lockFile,
-  mountDirectory,
   mountPath,
   ownNotFoundPage,
   resolveLibrary,
+  runMount,
   siteBase,
   toolchainRoot,
 } from '../src/library.mjs';
+import { startRun } from '../src/runs.mjs';
 import { checkComponentTokens } from '../src/brand/tokens.mjs';
 import { resolveHeadingRules } from '../src/headings/required-headings.mjs';
 import { checkLayout, findBrowser, layoutMessage, sitePages, WIDTHS } from '../src/layout/check.mjs';
@@ -140,9 +142,9 @@ function sync(source, target, top = true, extras = []) {
  * links need a privilege or a junction, and keeps every file the dev server serves inside its root.
  * The toolchain's 404 page is mounted when the library has none of its own.
  */
-function mount(library) {
+function mount(library, run) {
   const extras = ownNotFoundPage(library) ? [] : [['404.mdx', DEFAULT_NOT_FOUND]];
-  return sync(library.contentDirectory, mountDirectory, true, extras);
+  return sync(library.contentDirectory, runMount(run), true, extras);
 }
 
 const isRunning = (pid) => {
@@ -195,14 +197,21 @@ function lock(library) {
   throw new Error(`Could not take ${lockFile}`);
 }
 
-function runAstro(args, environment) {
+function runAstro(args, environment, run) {
   // Astro's own entry file, run with this Node.js: no shell and no .cmd shim, so it is the same on Windows.
   const astro = join(toolchainRoot, 'node_modules', 'astro', 'bin', 'astro.mjs');
   if (!existsSync(astro)) {
     console.error(`The toolchain's packages are not installed: run "npm ci --ignore-scripts" in ${toolchainRoot}`);
     process.exit(1);
   }
-  const child = spawn(process.execPath, [astro, ...args], { cwd: toolchainRoot, env: environment, stdio: 'inherit' });
+  // Astro resolves --config from its root, the run's folder, and builds prerendered pages in the run's
+  // .astro/ when the output folder is outside it, where they find the toolchain's packages.
+  const config = relative(run, join(toolchainRoot, 'astro.config.mjs'));
+  const child = spawn(process.execPath, [astro, ...args, '--config', config], {
+    cwd: run,
+    env: environment,
+    stdio: 'inherit',
+  });
   // Ending this script ends Astro too, so a server never outlives the command that started it.
   const stop = (signal) => child.kill(signal);
   for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, stop);
@@ -314,7 +323,9 @@ async function main() {
   }
   if (command === 'check') return checkBuiltSite(library, environment);
   lock(library);
-  mount(library);
+  const run = startRun();
+  environment.DOCS_RUN = run;
+  mount(library, run);
   console.log(`Mounted ${library.contentPath}/ of ${library.root}`);
   if (command === 'prepare') return 0;
 
@@ -326,7 +337,7 @@ async function main() {
       clearTimeout(timer);
       timer = setTimeout(() => {
         try {
-          mount(library);
+          mount(library, run);
         } catch (error) {
           console.error(`Could not update the mounted copy: ${error.message}`);
         }
@@ -334,14 +345,14 @@ async function main() {
     });
     // --ignore-lock keeps Astro in the foreground, where this script's watcher lives and Ctrl+C ends
     // both; without it Astro can start its server detached, in the background.
-    const code = await finished(runAstro(['dev', '--ignore-lock', ...port], environment));
+    const code = await finished(runAstro(['dev', '--ignore-lock', ...port], environment, run));
     watcher.close();
     return code;
   }
 
   // A full build every time: Astro's content cache is keyed by a page's own text, and a sample
   // lives in another file. --force clears it.
-  const built = await finished(runAstro(['build', '--force'], environment));
+  const built = await finished(runAstro(['build', '--force'], environment, run));
   if (built !== 0) {
     // Astro and its plugins name the file they read, which is the mounted copy.
     console.error(
@@ -349,7 +360,7 @@ async function main() {
     );
   }
   if (built !== 0 || command === 'build') return built;
-  return finished(runAstro(['preview', '--ignore-lock', ...port], environment));
+  return finished(runAstro(['preview', '--ignore-lock', ...port], environment, run));
 }
 
 process.exit(await main());

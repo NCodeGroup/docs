@@ -9,21 +9,23 @@
 //   @site/components/<file>     the library's own components, <content folder>/_components/
 //   @site/assets/<file>         the library's own images, <content folder>/_assets/
 import { join } from 'node:path';
-import { mountDirectory, mountPath, toolchainRoot } from './library.mjs';
+import { mountPath, toolchainRoot } from './library.mjs';
 
 const VIRTUAL = 'virtual:ncode-docs/site';
 
 /**
  * The site's code reads the mount through the virtual module, not by importing library.mjs: the
  * middleware is bundled and runs from the build's output folder, where library.mjs would not find
- * the schema it reads when it loads.
+ * the schema it reads when it loads. `mountFolder` is the content folder inside the run's folder.
  */
-export function ncodeSite(site) {
+export function ncodeSite(site, { mountFolder }) {
   const settings = { ...site, mount: `${mountPath}/` };
   return {
     name: 'ncode-docs-site',
     hooks: {
-      'astro:config:setup': ({ updateConfig }) => {
+      'astro:config:setup': ({ updateConfig, injectRoute }) => {
+        // The run's root has no src/pages/, so the 404 page is injected from the toolchain (ADR-1006).
+        injectRoute({ pattern: '/404', entrypoint: join(toolchainRoot, 'src', 'pages', '404.astro') });
         updateConfig({
           vite: {
             resolve: {
@@ -32,8 +34,8 @@ export function ncodeSite(site) {
                   find: '@ncodegroup/docs/components',
                   replacement: join(toolchainRoot, 'src', 'components', 'index.ts'),
                 },
-                { find: /^@site\/components\//, replacement: `${join(mountDirectory, '_components')}/` },
-                { find: /^@site\/assets\//, replacement: `${join(mountDirectory, '_assets')}/` },
+                { find: /^@site\/components\//, replacement: `${join(mountFolder, '_components')}/` },
+                { find: /^@site\/assets\//, replacement: `${join(mountFolder, '_assets')}/` },
               ],
             },
             plugins: [

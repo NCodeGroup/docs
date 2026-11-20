@@ -22,7 +22,7 @@ export const onRequest = defineRouteMiddleware((context) => {
   const { entry, pagination, head } = route;
 
   // The page's file under the content folder, such as guides/derive-a-key.mdx. Astro names it from
-  // the toolchain's folder, src/content/docs/guides/derive-a-key.mdx: site.mount is that prefix.
+  // the run's folder, src/content/docs/guides/derive-a-key.mdx: site.mount is that prefix.
   const filePath = entry.filePath?.replaceAll('\\', '/');
   // src/pages/404.astro renders the 404 page through StarlightPage, which names every page's file
   // <id>.md, so its file is the library's own 404.mdx or 404.md (site.notFoundPage), or undefined

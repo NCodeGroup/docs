@@ -260,6 +260,31 @@ starlight-theme-select label,
 .ncode-braces__brace { height: 1.6em; width: 0.4em; flex: none; fill: var(--nc-color-logo); }
 .ncode-braces__value { font: var(--nc-type-value); font-size: 0.9em; font-stretch: var(--nc-type-value-stretch); letter-spacing: var(--nc-type-value-tracking); }
 
+/* A guide's pitfalls: the page writes a list, one item per pitfall, and a nested item per label. minmax(0, 1fr)
+   keeps an entry inside the column whatever unbreakable text it holds. */
+.ncode-pitfalls > ul {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--nc-space-5);
+  margin: var(--nc-space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ncode-pitfalls > ul > li { margin: 0; }
+.ncode-pitfalls > ul > li > ul {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--nc-space-2);
+  margin: var(--nc-space-2) 0 0;
+  padding-inline-start: var(--nc-space-4);
+  border-inline-start: var(--nc-border-hair) solid var(--nc-color-border);
+  list-style: none;
+}
+.ncode-pitfalls > ul > li > ul > li { margin: 0; }
+.ncode-pitfalls li > p { margin: 0; }
+.ncode-pitfalls > ul > li > ul > li > em:first-child,
+.ncode-pitfalls > ul > li > ul > li > p:first-child > em:first-child { color: var(--nc-color-text-secondary); }
+
 /* ================================================================== 4. The site bar */
 
 .page > .header {

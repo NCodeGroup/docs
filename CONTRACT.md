@@ -21,6 +21,7 @@ docs/site/                                the content folder (the workflow's con
 tests/**/*.cs                             the sample files (the samples setting names other globs)
 Directory.Build.props, BannedSymbols.txt  any file of the repository a page shows (section 4)
 .github/workflows/docs.yml                the workflow that calls the toolchain (README.md)
+build/site.mjs                            optional: runs the toolchain from any checkout (section 9)
 ```
 
 - A page is an `.mdx` file. Its URL is its path under the content folder, lower-cased, without the extension, with a
@@ -323,13 +324,14 @@ library that needs one asks for it in this repository. `@astrojs/starlight/compo
 `@ncodegroup/docs/components`, which re-exports it.
 
 `@ncodegroup/docs/components` exports Starlight's `Aside`, `Badge`, `Card`, `CardGrid`, `Code`, `FileTree`, `Icon`,
-`LinkButton`, `LinkCard`, `Steps`, `TabItem` and `Tabs`, and three of this toolchain's own:
+`LinkButton`, `LinkCard`, `Steps`, `TabItem` and `Tabs`, and four of this toolchain's own:
 
 | Component | Use |
 | --- | --- |
 | `<Status state="success">Yes</Status>` | A lamp and a word. `state`: `on` (default), `off`, `success`, `warning`, `danger` |
 | `<Readout>32 bytes</Readout>` | One value on a small screen |
 | `<Braces>32 bytes</Braces>` | A value between the braces of the NCode mark |
+| `<Pitfalls>` … `</Pitfalls>` | A guide's pitfalls: a Markdown list inside it, one titled entry per pitfall (below) |
 
 Callouts need no import: `:::note`, `:::tip`, `:::caution` and `:::danger`, with an optional title, `:::tip[Title]`.
 
@@ -368,18 +370,18 @@ The column is never wider than 50rem (800 px), which a page without the panel (`
 long identifiers, as a card per entry with its fields labelled, not as a wide table. Never give an element a
 `min-width` wider than the column.
 
-NCode.Buffers lays out its data this way, and its components at release v5.2.4 are examples to copy:
+NCode.Buffers lays out its data this way, and its components at release v5.3.2 are examples to copy:
 
-- [`EntryCard.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/EntryCard.astro) and
-  [`EntryField.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/EntryField.astro):
+- [`EntryCard.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/EntryCard.astro) and
+  [`EntryField.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/EntryField.astro):
   cards written in the page, one per entry, whose fields are a `<dl>` with each label beside its value, and above it
   in a window narrower than 40rem. They are on
   [Objections and alternatives](https://buffers.ncode.io/evidence/objections-and-alternatives/).
-- [`ApiMap.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/ApiMap.astro): a table
+- [`ApiMap.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/ApiMap.astro): a table
   built from a data file whose rows are drawn as cards. Its head is hidden from sight but read by a screen reader,
   and each cell is shown under its label, in a grid of as many columns as the card has room for. It is on the
   [API map](https://buffers.ncode.io/reference/api-map/).
-- [`BufferBehaviorMatrix.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/BufferBehaviorMatrix.astro):
+- [`BufferBehaviorMatrix.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/BufferBehaviorMatrix.astro):
   a matrix of twelve columns drawn the same way, a card per row, with its yes-or-no facts side by side where they
   fit. It is on [Buffer behavior, sizes and pooling](https://buffers.ncode.io/reference/buffer-behavior/).
 
@@ -387,6 +389,62 @@ A component's elements fit the page's content column. An element that must scrol
 strip of bytes, scrolls inside the column, with `overflow-x: auto`, and carries the attribute `data-scrolls`. The
 layout check (section 8) then measures its box, which still fits the column, but not its content. A code block
 scrolls the same way, unmarked. A Markdown table is not exempt: it must fit.
+
+### Inline components
+
+An inline component belongs inside a sentence, such as an evidence mark at the end of the sentence it supports. MDX
+decides from the page's lines whether it stays in its paragraph, and it does not always:
+
+- A line that holds only JSX tags, starting at column 0, becomes a block of its own, so a mark on the line under its
+  sentence renders alone.
+- A component written right after a block component, such as a card, renders below it, alone.
+- In a list item that also holds a code block, a component on a line of its own renders under the code block.
+- Wrapping a line between two inline components pushes the second one out of the paragraph.
+
+So write an inline component on the text line it belongs to, never on a line of its own. Never write it right after a
+block component. Never wrap a line between two of them, and keep such a line long. A row that stands alone on purpose,
+such as marks under a code sample, is a paragraph of its own: `<p>Evidence <Proof … /> <Proof … /></p>`.
+
+A library opts its inline component into the layout check with `data-inline` on its root element. The check fails one
+when the nearest node before it, past white space and other `data-inline` elements, is an element that is not
+inline-level, or when there is none and it comes first in an `li`, `div` or `section`. The fixture's
+`_components/Proof.astro` is an example.
+
+### Calm reading
+
+[NCodeGroup/Buffers#114](https://github.com/NCodeGroup/Buffers/pull/114) and
+[NCodeGroup/Buffers#118](https://github.com/NCodeGroup/Buffers/pull/118) read 31 pages and found what makes a page
+loud. A page reads calmly when it keeps to these:
+
+- No page-kind plate: no label such as "GUIDE · reach a goal" above a title. The sidebar group says what kind of page
+  it is.
+- No "You'll use …" line under a guide's title.
+- A short sidebar: guide groups are `"collapsed": true`, and every label fits on one line, while page titles may stay
+  long.
+- Pitfalls as a list, not packed bullets: `<Pitfalls>` around a Markdown list, each entry a bold title, then one line
+  each for *You write*, *What happens:* and *Write instead:*, with italic labels. A pitfall that has a heading of its
+  own uses the same labels, each starting its own paragraph.
+- Italic run-in labels, not bold ones, which made reference pages the loudest.
+- Evidence marks inline: each at the end of the sentence it supports, showing only its glyph. A row that has to stand
+  alone, such as under a code sample, starts with a muted "Evidence" caption.
+
+A short example block of the pitfalls list:
+
+```mdx
+<Pitfalls>
+
+- **Deriving into an array.**
+  - *You write* `Rfc2898DeriveBytes.Pbkdf2(password, salt, 600_000, HashAlgorithmName.SHA256, 32)`, which returns a
+    `byte[]`.
+  - *What happens:* the key sits in an array the garbage collector may copy, and nothing zeroes it.
+  - *Write instead:* derive into the span a vault rents.
+
+</Pitfalls>
+```
+
+Buffers' release v5.3.2 has both components:
+[`Pitfalls.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/Pitfalls.astro) and
+[`Proof.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/Proof.astro).
 
 ## 8. What fails the build
 
@@ -420,11 +478,13 @@ of a page's content that extends past its content column, and on a scroll contai
 content sideways (a code block and an element marked `data-scrolls` excepted). A Markdown table too wide for the
 column fails, though it scrolls inside it: the message names it by the head cells that have text,
 `Markdown table "<first column> | <second> | <third> | …"`, and says to lay it out as a card per entry or give it fewer
-columns. The message gives each page as its source file, the width and the element, with the heading it is under.
+columns. The message gives each page as its source file, the width and the element, with the heading it is under. The
+check also fails, at 1440 px, an element marked `data-inline` that stands apart from the text it belongs to (section 7).
 
-A message from Astro or one of its plugins names the file it read, which is the toolchain's copy of the content
-folder: `src/content/docs/guides/x.mdx` there is `docs/site/guides/x.mdx` in the library. The link validator names a
-page by its path under the content folder, and shows a link with the base path already added.
+A message from Astro or one of its plugins names the file it read, which is the copy of the content folder in the run's
+folder under `.runs/` in the toolchain: a path that ends in `src/content/docs/guides/x.mdx` there is
+`docs/site/guides/x.mdx` in the library. The link validator names a page by its path under the content folder, and
+shows a link with the base path already added.
 
 ## 9. Building
 
@@ -439,16 +499,21 @@ node scripts/site.mjs check <library folder> [--content docs/site] [--site-url <
 and `--out`. Its browser is `--browser` or `DOCS_BROWSER`, else `CHROME_BIN`, else the Chromium `npm run browser`
 installs; a Chromium-based browser such as Google Chrome or Microsoft Edge.
 
-`DOCS_LIBRARY`, `DOCS_CONTENT`, `SITE_URL`, `DOCS_OUT` and `DOCS_BROWSER` are the same five values as environment
-variables; an argument wins. The script copies the content folder into this toolchain at `src/content/docs/` (ignored
-by git, replaced by the next run), so one checkout of the toolchain builds one library at a time: a second command
-started while a build or a dev server runs in the same checkout stops with a message that names the first. It writes
-nothing to the library.
+`node build/site.mjs <command> [options]` runs the same commands from a library's checkout, its main checkout or any
+worktree of it, with the launcher the library copies from `fixture/build/site.mjs`; the library is the checkout the
+launcher is in, and the toolchain is `--toolchain <folder>`, else `DOCS_TOOLCHAIN`, else the folder `docs` beside the
+library's main checkout; every other option goes to `scripts/site.mjs` as it is.
 
-The built site goes to `dist/` in this toolchain unless `--out` names another folder. A folder outside the toolchain
-whose path starts with the toolchain's, such as `../docs-site` beside a toolchain at `../docs`, stops `build` and
-`preview` before anything is built: Astro would take it for a folder inside the toolchain, and that build could not
-find the toolchain's packages.
+`DOCS_LIBRARY`, `DOCS_CONTENT`, `SITE_URL`, `DOCS_OUT` and `DOCS_BROWSER` are the same five values as environment
+variables; an argument wins. Each `build`, `dev` and `preview` runs Astro in a folder of its own under `.runs/` in the
+toolchain, ignored by git, with the content folder copied to `src/content/docs/` there. The folder is removed when the
+command ends, and the next command removes one whose process is gone. So one checkout of the toolchain builds and
+serves several libraries, or several worktrees of one, at once, such as a dev server beside two builds. Two commands
+that write one output folder cannot run at once: the second stops with a message that names the first and says to name
+another folder with `--out`. It writes nothing to the library.
+
+The built site goes to `dist/` in this toolchain unless `--out` names another folder, which may be anywhere, such as
+`../docs-site` beside a toolchain at `../docs`.
 
 The dev server (`npm run dev`) follows edits to pages, sample files and the files pages include; a file a page starts
 including, and a page a `requiredHeadings` rule starts covering, are followed from the server's next start.

@@ -5,13 +5,16 @@ sidebar:
   order: 1
 ---
 
-import { LinkButton } from '@ncodegroup/docs/components';
+import { LinkButton, Pitfalls } from '@ncodegroup/docs/components';
+import Proof from '@site/components/Proof.astro';
 
 A derived key is as sensitive as the password it came from. Derive it straight into a vault, never into an array of
-your own.
+your own. <Proof to="/reference/behaviour/" label="Each member's test, on the behaviour page" />
 
 ```cs snippet=DeriveKey
 ```
+
+<p>Evidence <Proof to="/reference/behaviour/" label="The tests of Vault, on the behaviour page" /></p>
 
 The salt is not a secret, so it lives on the stack without a vault. The same key, sealed behind a method, is the
 [quick start](/quick-start/#seal-a-secret)'s sample.
@@ -20,6 +23,17 @@ The salt is not a secret, so it lives on the stack without a vault. The same key
 600,000 iterations of PBKDF2 with SHA-256 is the figure OWASP recommends; see the
 [password storage cheat sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
 :::
+
+## Pitfalls
+
+<Pitfalls>
+
+- **Deriving into an array.**
+  - *You write* `Rfc2898DeriveBytes.Pbkdf2(password, salt, 600_000, HashAlgorithmName.SHA256, 32)`, which returns a `byte[]`.
+  - *What happens:* the key sits in an array the garbage collector may copy, and nothing zeroes it.
+  - *Write instead:* derive into the span a vault rents, as the sample above does.
+
+</Pitfalls>
 
 ## Checklist
 

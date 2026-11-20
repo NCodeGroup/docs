@@ -21,12 +21,29 @@ const posix = (path) => path.split(sep).join('/');
 
 /** The toolchain's own folder. */
 export const toolchainRoot = fileURLToPath(new URL('..', import.meta.url));
-/** Where scripts/site.mjs mounts a library's content folder: the folder Starlight reads pages from. */
-export const mountDirectory = join(toolchainRoot, 'src', 'content', 'docs');
-/** The mount from the toolchain's folder, with forward slashes, as Astro names a page's file: src/content/docs. */
-export const mountPath = posix(relative(toolchainRoot, mountDirectory));
-/** Names the process that holds the mount, while scripts/site.mjs runs; in a folder git ignores. */
-export const lockFile = join(toolchainRoot, 'node_modules', '.ncode-docs-site.lock');
+// Where build writes the site, and check and preview read it, when no --out or DOCS_OUT names a folder.
+export const defaultOutFolder = join(toolchainRoot, 'dist');
+/** Where a run mounts the content folder, from the run's folder, as Astro names a page's file. */
+export const mountPath = 'src/content/docs';
+/** Where scripts/site.mjs makes a folder for each build, dev server or preview (src/runs.mjs); git ignores it. */
+export const runsDirectory = join(toolchainRoot, '.runs');
+/** The mount in a run's folder. */
+export const runMount = (run) => join(run, ...mountPath.split('/'));
+
+/**
+ * The folder of the run this process is part of, which scripts/site.mjs names in DOCS_RUN.
+ * @param {Record<string, string | undefined>} [environment]
+ * @returns {string}
+ * @throws {Error} When DOCS_RUN is unset.
+ */
+export function runFolder(environment = process.env) {
+  if (!environment.DOCS_RUN) {
+    throw new Error(
+      'No run folder: scripts/site.mjs makes one for each command and names it in DOCS_RUN. Build the site with "npm run site \'--\' build <folder>".',
+    );
+  }
+  return resolve(environment.DOCS_RUN);
+}
 
 /** The names a library's own 404 page can have, at the root of its content folder. */
 const NOT_FOUND_PAGES = ['404.mdx', '404.md'];
@@ -196,8 +213,11 @@ export function siteBase(library, environment = process.env) {
  * mounted copy or the original.
  */
 export function libraryPath(library, file) {
-  const fromMount = relative(mountDirectory, file);
-  if (!fromMount.startsWith('..') && !isAbsolute(fromMount)) return `${library.contentPath}/${posix(fromMount)}`;
+  const inRuns = posix(relative(runsDirectory, file));
+  if (!isOutside(inRuns)) {
+    const match = new RegExp(`^[^/]+/${mountPath}/(.+)$`).exec(inRuns);
+    if (match) return `${library.contentPath}/${match[1]}`;
+  }
   const fromRoot = relative(library.root, file);
   return fromRoot.startsWith('..') || isAbsolute(fromRoot) ? file : posix(fromRoot);
 }

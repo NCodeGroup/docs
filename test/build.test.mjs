@@ -9,7 +9,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, w
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
-import { lockFile, readLastUpdated } from '../src/library.mjs';
+import { readLastUpdated } from '../src/library.mjs';
 import { build, copyOfFixture, pages, root, siteAbsoluteUrls, work } from './helpers.mjs';
 
 const EXPECTED_PAGES = [
@@ -260,55 +260,6 @@ describe('a page written as plain Markdown', () => {
     assert.match(plain, /<a href="https:\/\/example\.test\/">an external one<\/a>/);
     assert.match(plain, /<img src="\/Fixture\/favicon\.svg" alt="The mark" width="32">/);
     assert.match(plain, /&lt;a href="\/nowhere\/"&gt;/);
-  });
-});
-
-describe('a checkout that is already building a library', () => {
-  it('refuses a second build, and says who holds it', () => {
-    // This test's own process stands in for a build that is still running.
-    writeFileSync(lockFile, JSON.stringify({ pid: process.pid, library: '/somewhere/Other' }));
-    try {
-      const result = build('locked');
-      assert.equal(result.code, 1, result.output);
-      assert.match(
-        result.output,
-        new RegExp(`This toolchain checkout is in use: process ${process.pid} is building or serving /somewhere/Other`),
-      );
-      assert.doesNotMatch(result.output, /Mounted/);
-    } finally {
-      rmSync(lockFile, { force: true });
-    }
-  });
-
-  it('takes over from a build that is gone', () => {
-    // No process has this id: the largest a Linux kernel gives out is 4194304.
-    writeFileSync(lockFile, JSON.stringify({ pid: 2 ** 30, library: '/somewhere/Other' }));
-    const result = build('unlocked');
-    assert.equal(result.code, 0, result.output);
-    assert.ok(!existsSync(lockFile), 'the lock is released when the build ends');
-  });
-});
-
-describe("an output folder outside the toolchain whose path starts with the toolchain's", () => {
-  it('stops the build before it starts, and says why', () => {
-    // Such as ../docs-site beside a toolchain at ../docs, which Astro takes for a folder inside it.
-    const toolchain = root.replace(/[\\/]+$/, '');
-    const out = `${toolchain}-test-output-${process.pid}`;
-    assert.ok(!existsSync(out), `${out} is in the way`);
-    try {
-      const result = build('output-beside', { args: ['--out', out] });
-      assert.equal(result.code, 2, result.output);
-      assert.ok(
-        result.output.includes(
-          `The output folder ${out} is outside the toolchain, but its path starts with the toolchain's, ${toolchain}: Astro takes it for a folder inside the toolchain, and the build then cannot find the toolchain's packages. Name a folder whose path does not start with ${toolchain}.`,
-        ),
-        result.output,
-      );
-      assert.doesNotMatch(result.output, /Mounted/);
-      assert.ok(!existsSync(out), `${out} was written`);
-    } finally {
-      rmSync(out, { recursive: true, force: true });
-    }
   });
 });
 

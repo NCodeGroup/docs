@@ -13,7 +13,8 @@ const pageFields = z.object({
 });
 
 // The pages of the library the build is for: scripts/site.mjs mounts its content folder at
-// src/content/docs/, where Starlight expects its pages to be. This is Starlight's own loader with
+// src/content/docs/ of the run's folder, Astro's root, whose src/content.config.ts re-exports this
+// file (src/runs.mjs). That is where Starlight expects its pages to be. This is Starlight's own loader with
 // one more rule: a folder whose name starts with an underscore (_components, _assets) holds no
 // pages, as a file whose name starts with one never did. The 404 page at the root is no page of
 // its own: the notFound collection below holds it.

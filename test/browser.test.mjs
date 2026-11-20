@@ -230,6 +230,29 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
     assert.deepEqual(ring, { visible: true, lit: true, style: 'solid', inside: true });
   });
 
+  it('lays out the pitfalls as a list, each label italic in the secondary text colour', async () => {
+    await page.goto(`${site.origin}${BASE}guides/derive-a-key/`, { waitUntil: 'networkidle' });
+    const pitfalls = await page.evaluate(() => {
+      const list = getComputedStyle(document.querySelector('.ncode-pitfalls > ul'));
+      const label = document.querySelector('.ncode-pitfalls > ul > li > ul > li > em');
+      const style = getComputedStyle(label);
+      return {
+        display: list.display,
+        listStyleType: list.listStyleType,
+        text: label.textContent,
+        fontStyle: style.fontStyle,
+        secondary: style.color !== getComputedStyle(label.closest('li')).color,
+      };
+    });
+    assert.deepEqual(pitfalls, {
+      display: 'grid',
+      listStyleType: 'none',
+      text: 'You write',
+      fontStyle: 'italic',
+      secondary: true,
+    });
+  });
+
   it('asks no other origin for anything', () => {
     const elsewhere = requested.filter(
       (url) => !url.startsWith(site.origin) && !url.startsWith('data:') && !url.startsWith('blob:'),

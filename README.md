@@ -30,10 +30,12 @@ has the reasons.
 2. **Mark the samples** in the library's tests with `// begin-snippet: Key` and `// end-snippet`
    ([Samples](#samples)).
 3. **Add the caller workflow** ([The caller workflow](#the-caller-workflow)).
-4. **Set up GitHub Pages and the site's address at `<name>.ncode.io` once** ([One-time setup](#one-time-setup)).
-5. **Tell Dependabot about the pin**: the `github-actions` entry of the library's `.github/dependabot.yml` already
+4. **Copy the launcher**, [`fixture/build/site.mjs`](fixture/build/site.mjs), into the library's `build/` folder, to
+   build and serve the site from its main checkout or any worktree of it ([Local preview](#local-preview)).
+5. **Set up GitHub Pages and the site's address at `<name>.ncode.io` once** ([One-time setup](#one-time-setup)).
+6. **Tell Dependabot about the pin**: the `github-actions` entry of the library's `.github/dependabot.yml` already
    covers workflow files, so the pinned commit moves with each release of this repository.
-6. Add `*.mdx` to whatever the library's own gate checks for line endings and encoding. Nothing is built inside the
+7. Add `*.mdx` to whatever the library's own gate checks for line endings and encoding. Nothing is built inside the
    library, so its `.gitignore` needs no new line.
 
 ### Content layout
@@ -253,24 +255,26 @@ could not put the base path on each fail the build, in a page, in its frontmatte
 ### Components
 
 ```mdx
-import { Steps, Tabs, TabItem, Status } from '@ncodegroup/docs/components';
+import { Steps, Tabs, TabItem, Status, Pitfalls } from '@ncodegroup/docs/components';
 import Diagram from '@site/components/Diagram.astro';
 import lifecycle from '@site/assets/lifecycle.png';
 ```
 
-`@ncodegroup/docs/components` is Starlight's components and this toolchain's own; `@site/…` is the library's
-`_components/` and `_assets/`. A page imports from nowhere else.
+`@ncodegroup/docs/components` is Starlight's components and this toolchain's own, `Status`, `Readout`, `Braces` and
+`Pitfalls` among them; `@site/…` is the library's `_components/` and `_assets/`. A page imports from nowhere else.
 
 A library's component is designed for a content column of about 36rem: [CONTRACT.md](CONTRACT.md) section 7 gives the
 column's width at each window width, and how a component lays out data with many columns. The layout check fails an
-element that leaves the column, and a Markdown table too wide for it.
+element that leaves the column, and a Markdown table too wide for it. Write an inline component on the text line it
+belongs to; marked `data-inline`, the layout check fails one that stands apart ([CONTRACT.md](CONTRACT.md) section 7).
+The same section gives the guidance for pages that read calmly.
 
-NCode.Buffers' components at release v5.2.4 lay out data with many columns as a card per entry:
-[`EntryCard.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/EntryCard.astro) with
-[`EntryField.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/EntryField.astro) for
+NCode.Buffers' components at release v5.3.2 lay out data with many columns as a card per entry:
+[`EntryCard.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/EntryCard.astro) with
+[`EntryField.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/EntryField.astro) for
 cards written in a page, and
-[`ApiMap.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/ApiMap.astro) and
-[`BufferBehaviorMatrix.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.2.4/docs/site/_components/BufferBehaviorMatrix.astro)
+[`ApiMap.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/ApiMap.astro) and
+[`BufferBehaviorMatrix.astro`](https://github.com/NCodeGroup/Buffers/blob/v5.3.2/docs/site/_components/BufferBehaviorMatrix.astro)
 for a table whose rows are drawn as cards. [CONTRACT.md](CONTRACT.md) section 7 says what each one does and links
 the page it is on.
 
@@ -286,14 +290,30 @@ npm run dev '--' ../Buffers
 That serves the library's site at `http://localhost:4321/<base path>/` and follows edits to its pages, its sample
 files and the files its pages include. `npm run preview '--' ../Buffers` builds the site as CI does and serves the
 result, with the search working. Both take `--content <path>` for a content folder other than `docs/site`, and
-`--port <number>`. From the library's folder the same commands are `npm --prefix ../docs run dev '--' .`. Nothing is
-written to the library.
+`--port <number>`. Nothing is written to the library.
 
-`npm run site '--' build ../Buffers --out <folder>` builds without serving.
+`npm run site '--' build ../Buffers --out <folder>` builds without serving. One checkout of the toolchain runs several
+of these commands at once, for several libraries or several worktrees of one, as long as each build writes its own
+`--out` folder.
 
 `npm run site '--' check ../Buffers --out <folder>` loads that built site in a browser and fails as the workflow does.
 It uses the browser `npm run browser` installs, or a Chromium-based browser that `--browser <path>` or `DOCS_BROWSER`
 names, such as Microsoft Edge.
+
+From the library's own folder, in its main checkout or in a plan's worktree under `.claude/worktrees/`, run the
+launcher the library copies from [`fixture/build/site.mjs`](fixture/build/site.mjs):
+
+```shell
+node build/site.mjs dev
+node build/site.mjs build --out ../site-out
+node build/site.mjs check --out ../site-out
+```
+
+It builds the checkout it is in. It finds the toolchain in a folder named `docs` beside the library's main checkout,
+because `git rev-parse --path-format=absolute --git-common-dir` names the main checkout's `.git` folder from the main
+checkout and from every worktree; `--toolchain <folder>` or `DOCS_TOOLCHAIN` names another. Every other option goes to
+`scripts/site.mjs` as it is, and a relative path in one starts from the current folder. It runs `node`, never npm, so
+it needs no separator.
 
 The separator is written `'--'`, quoted, so that PowerShell passes it to npm: PowerShell drops a bare `--` before npm's
 `npm.ps1` shim runs, and npm then reads the options after it, such as `--out`, as its own. A POSIX shell such as bash
@@ -359,6 +379,7 @@ through a newer one: `npx npm@11 ci --ignore-scripts`. `npm run` works with any 
 | `vendor/brand/` | The brand's tokens, fonts, Starlight mapping, syntax theme and marks, vendored from a release |
 | `schema/site.config.schema.json` | The site configuration's schema |
 | `fixture/` | A stand-in library: what `npm run build` builds and the tests check |
+| `fixture/build/site.mjs` | The launcher a library copies into its `build/` folder |
 | `test/` | The tests, for Node's own test runner |
 | `biome.json` | Biome's formatter and linter rules |
 | `CONTRACT.md` | What a library holds, and what the build does with it |

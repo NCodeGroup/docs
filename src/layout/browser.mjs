@@ -24,11 +24,9 @@ const COMMAND_TIMEOUT = 60_000;
  * start.
  *
  * @param {string} executable The path of a Chromium-based browser, or its command on PATH.
- * @param {{ commandTimeout?: number }} [options] commandTimeout: how long one command may take, COMMAND_TIMEOUT by
- *   default.
  * @returns {Promise<{ newPage: () => Promise<object>, close: () => Promise<void> }>}
  */
-export async function launchBrowser(executable, { commandTimeout = COMMAND_TIMEOUT } = {}) {
+export async function launchBrowser(executable) {
   const profile = mkdtempSync(join(tmpdir(), 'ncode-layout-'));
   // Windows can hold the profile's files for a moment after the browser exits, so the removal retries.
   const removeProfile = () => rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
@@ -95,14 +93,11 @@ export async function launchBrowser(executable, { commandTimeout = COMMAND_TIMEO
   });
 
   /** Sends one DevTools command and resolves with its result. */
-  function send(method, params, sessionId) {
+  function send(method, params, sessionId, timeout = COMMAND_TIMEOUT) {
     if (failure) return Promise.reject(new Error(failure));
     return new Promise((resolve, reject) => {
       const id = ++nextId;
-      const timer = setTimeout(
-        () => fail(`the browser did not answer ${method} in ${commandTimeout / 1000} s`),
-        commandTimeout,
-      );
+      const timer = setTimeout(() => fail(`the browser did not answer ${method} in ${timeout / 1000} s`), timeout);
       pending.set(id, { resolve, reject, timer });
       toBrowser.write(`${JSON.stringify({ id, method, params, sessionId })}\0`, (error) => {
         if (error) fail(error.message);
@@ -172,12 +167,16 @@ export async function launchBrowser(executable, { commandTimeout = COMMAND_TIMEO
           listeners.delete(listener);
         }
       },
-      /** Runs an expression in the page and returns its value; a promise is awaited. */
-      async evaluate(expression) {
+      /**
+       * Runs an expression in the page and returns its value; a promise is awaited.
+       * timeout: how long the browser may take to answer, COMMAND_TIMEOUT by default.
+       */
+      async evaluate(expression, { timeout } = {}) {
         const { result, exceptionDetails } = await send(
           'Runtime.evaluate',
           { expression, awaitPromise: true, returnByValue: true },
           sessionId,
+          timeout,
         );
         if (exceptionDetails) {
           throw new Error(exceptionDetails.exception?.description ?? exceptionDetails.text);

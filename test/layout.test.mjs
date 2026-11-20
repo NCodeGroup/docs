@@ -175,6 +175,76 @@ describe('the layout check', { skip: executable ? false : missing }, () => {
     );
   });
 
+  it('fails an inline component that stands apart from its sentence, and passes one in its sentence, its table cell or a paragraph of its own', async () => {
+    const library = copyOfFixture('layout-inline');
+    const mark = '<Proof to="/reference/behaviour/" label="A test" />';
+    writeFileSync(
+      join(library, 'docs', 'site', 'guides', 'stranded.mdx'),
+      [
+        '---',
+        'title: Stranded',
+        '---',
+        '',
+        "import Proof from '@site/components/Proof.astro';",
+        "import { Card } from '@ncodegroup/docs/components';",
+        '',
+        mark,
+        '',
+        '## In its sentence',
+        '',
+        `A mark ends the sentence it supports. ${mark}`,
+        `Two marks end this one. ${mark}${mark}`,
+        '',
+        `<p>Evidence ${mark} ${mark}</p>`,
+        '',
+        '| Claim | Evidence |',
+        '| --- | --- |',
+        `| Zeroed on dispose | ${mark} |`,
+        '',
+        '## After a paragraph',
+        '',
+        'A sentence, and its marks on the line below.',
+        `${mark} ${mark}`,
+        '',
+        '## After a card',
+        '',
+        `<Card title="A card">Card text.</Card> ${mark}`,
+        '',
+        '## Under a code block',
+        '',
+        '- An item with code.',
+        '',
+        '  ```cs',
+        '  var x = 1;',
+        '  ```',
+        `  ${mark}`,
+        '',
+      ].join('\n'),
+    );
+    const result = build('layout-inline', { library });
+    assert.equal(result.code, 0, result.output);
+    const problems = (
+      await checkLayout({
+        out: result.out,
+        base: BASE,
+        browser: executable,
+        pages: [{ name: 'docs/site/guides/stranded.mdx', path: 'guides/stranded/' }],
+      })
+    ).filter((problem) => problem.problem.startsWith('stands apart'));
+    assert.deepEqual(
+      problems.map(({ width, element, heading }) => ({ width, element, heading })),
+      ['Stranded', 'After a paragraph', 'After a paragraph', 'After a card', 'Under a code block'].map((heading) => ({
+        width: 1440,
+        element: 'a.proof.not-content',
+        heading,
+      })),
+    );
+    assert.match(
+      layoutMessage(problems),
+      /\n {2}docs\/site\/guides\/stranded\.mdx at 1440 px: a\.proof\.not-content, under "After a card", stands apart from the text it belongs to: /,
+    );
+  });
+
   describe('on a built site', () => {
     before(() => {
       const result = build('layout');

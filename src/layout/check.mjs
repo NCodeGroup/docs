@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // The layout check (ADR-1013): it loads each built page in a Chromium-based browser at a few widths and reports
-// an element that leaves its content column or hides content sideways. This file finds the browser, lists the
-// pages to load, measures each page at each width and words the message.
+// an element that leaves its content column or hides content sideways, and an inline component marked data-inline
+// that stands apart from its sentence (ADR-1018). This file finds the browser, lists the pages to load, measures
+// each page at each width and words the message.
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { listPages } from '../library.mjs';
@@ -54,7 +55,7 @@ export function sitePages(library, out) {
 }
 
 // This function runs in the page, not in Node: the browser takes its source text, so it uses only browser globals.
-function measure() {
+function measure(inline) {
   const found = [];
   const headings = [...document.querySelectorAll('main :is(h1, h2, h3, h4, h5, h6)')];
   const describe = (element) =>
@@ -117,6 +118,31 @@ function measure() {
   for (const container of document.querySelectorAll('main .sl-container')) {
     visit(container, container.getBoundingClientRect());
   }
+  if (inline) {
+    for (const element of document.querySelectorAll('main [data-inline]')) {
+      // The marks before it on its line do not count, nor does white space: what is left is what it follows.
+      let before = element.previousSibling;
+      while (
+        before &&
+        (before.nodeType === Node.COMMENT_NODE ||
+          (before.nodeType === Node.TEXT_NODE && before.textContent.trim() === '') ||
+          (before.nodeType === Node.ELEMENT_NODE && before.matches('[data-inline]')))
+      ) {
+        before = before.previousSibling;
+      }
+      const alone = before
+        ? before.nodeType === Node.ELEMENT_NODE && !getComputedStyle(before).display.startsWith('inline')
+        : element.parentElement.matches('li, div, section');
+      if (alone) {
+        found.push({
+          element: describe(element),
+          heading: under(element),
+          problem:
+            'stands apart from the text it belongs to: write it on the line of its sentence, never on a line of its own or right after a block component',
+        });
+      }
+    }
+  }
   return found;
 }
 
@@ -145,7 +171,8 @@ export async function checkLayout({ out, base, pages, browser }) {
       for (const width of WIDTHS) {
         await page.setWidth(width);
         await page.goto(`${site.origin}${base.replace(/\/$/, '')}/${path}`);
-        const found = await page.evaluate(`document.fonts.ready.then(() => (${measure})())`);
+        // Stranding is structural, so an inline component is checked once per page, at the first width.
+        const found = await page.evaluate(`document.fonts.ready.then(() => (${measure})(${width === WIDTHS[0]}))`);
         for (const problem of found) problems.push({ page: name, width, ...problem });
       }
     }
@@ -169,6 +196,6 @@ export function layoutMessage(problems) {
       `  ${page} at ${width} px: ${element}${heading === undefined ? '' : `, under "${heading}"`}, ${problem}`,
   );
   const last =
-    'Each element of a page fits its content column, about 36rem at 1280 px (CONTRACT.md, section 7): a Markdown table must fit it too, so give a wide one fewer columns or lay its data out as a card per entry, and mark a component that scrolls sideways by design with data-scrolls.';
+    'Each element of a page fits its content column, about 36rem at 1280 px (CONTRACT.md, section 7): a Markdown table must fit it too, so give a wide one fewer columns or lay its data out as a card per entry, and mark a component that scrolls sideways by design with data-scrolls. Write an inline component marked data-inline on the line of the sentence it belongs to (section 7).';
   return [first, ...lines, last].join('\n');
 }

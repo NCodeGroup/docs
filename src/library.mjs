@@ -21,8 +21,6 @@ const posix = (path) => path.split(sep).join('/');
 
 /** The toolchain's own folder. */
 export const toolchainRoot = fileURLToPath(new URL('..', import.meta.url));
-/** Where scripts/site.mjs mounts a library's content folder: the folder Starlight reads pages from. */
-export const mountDirectory = join(toolchainRoot, 'src', 'content', 'docs');
 /** Where a run mounts the content folder, from the run's folder, as Astro names a page's file. */
 export const mountPath = 'src/content/docs';
 /** Where scripts/site.mjs makes a folder for each build, dev server or preview (src/runs.mjs); git ignores it. */
@@ -44,8 +42,6 @@ export function runFolder(environment = process.env) {
   }
   return resolve(environment.DOCS_RUN);
 }
-/** Names the process that holds the mount, while scripts/site.mjs runs; in a folder git ignores. */
-export const lockFile = join(toolchainRoot, 'node_modules', '.ncode-docs-site.lock');
 
 /** The names a library's own 404 page can have, at the root of its content folder. */
 const NOT_FOUND_PAGES = ['404.mdx', '404.md'];
@@ -220,8 +216,6 @@ export function libraryPath(library, file) {
     const match = new RegExp(`^[^/]+/${mountPath}/(.+)$`).exec(inRuns);
     if (match) return `${library.contentPath}/${match[1]}`;
   }
-  const fromMount = relative(mountDirectory, file);
-  if (!fromMount.startsWith('..') && !isAbsolute(fromMount)) return `${library.contentPath}/${posix(fromMount)}`;
   const fromRoot = relative(library.root, file);
   return fromRoot.startsWith('..') || isAbsolute(fromRoot) ? file : posix(fromRoot);
 }

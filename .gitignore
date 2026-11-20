@@ -36,8 +36,9 @@ dist/
 coverage/
 lcov.info
 
-# A library's content folder, mounted here for a build (scripts/site.mjs). Nothing of a library is committed.
-/src/content/docs/
+# A folder for each build, dev server or preview, holding the library's mounted content (src/runs.mjs). Nothing of a
+# library is committed.
+/.runs/
 
 # Astro's generated types and caches
 /.astro/

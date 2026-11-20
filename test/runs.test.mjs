@@ -3,13 +3,14 @@
 
 // The run folders and output locks of the site script.
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { spawn } from 'node:child_process';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, it } from 'node:test';
 import { pathToFileURL } from 'node:url';
 import { runsDirectory, toolchainRoot } from '../src/library.mjs';
-import { lockOutput, outputLock, removeStaleRuns, startRun } from '../src/runs.mjs';
-import { work } from './helpers.mjs';
+import { isRunning, lockOutput, outputLock, removeStaleRuns, startRun } from '../src/runs.mjs';
+import { build, copyOfFixture, fixture, root, work } from './helpers.mjs';
 
 const GONE = 2 ** 30;
 const cleanup = [];
@@ -94,5 +95,87 @@ describe('a run of the site script', () => {
     if (caseless) assert.equal(upper, lower);
     else assert.notEqual(upper, lower);
     assert.notEqual(outputLock(join(work, 'one')), outputLock(join(work, 'two')));
+  });
+});
+
+/** Like `build()` of helpers.mjs, but asynchronous, so two builds of one test run at once. */
+function buildAsync(name, library) {
+  const out = join(work, 'out', name);
+  rmSync(out, { recursive: true, force: true });
+  const environment = { ...process.env, NO_COLOR: '1', FORCE_COLOR: '0' };
+  for (const key of ['SITE_URL', 'DOCS_LIBRARY', 'DOCS_CONTENT', 'DOCS_OUT', 'INIT_CWD']) delete environment[key];
+  return new Promise((done) => {
+    const child = spawn(process.execPath, [join(root, 'scripts', 'site.mjs'), 'build', library, '--out', out], {
+      cwd: root,
+      env: environment,
+      timeout: 180_000,
+    });
+    let output = '';
+    child.stdout.on('data', (chunk) => {
+      output += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      output += chunk;
+    });
+    child.on('close', (code) => done({ code: code ?? 1, output, out }));
+  });
+}
+
+describe('one checkout of the toolchain', () => {
+  it('builds two libraries at once', async () => {
+    const other = copyOfFixture('runs-other');
+    const config = join(other, 'docs', 'site', 'site.config.json');
+    writeFileSync(config, JSON.stringify({ ...JSON.parse(readFileSync(config, 'utf8')), title: 'NCode.Other' }));
+    const [first, second] = await Promise.all([buildAsync('runs-fixture', fixture), buildAsync('runs-other', other)]);
+    assert.equal(first.code, 0, first.output);
+    assert.equal(second.code, 0, second.output);
+    // Starlight joins the page title, from index.mdx, and the site title, and shows one alone only when they are equal.
+    assert.match(readFileSync(join(first.out, 'index.html'), 'utf8'), /<title>NCode\.Fixture<\/title>/);
+    assert.match(
+      readFileSync(join(second.out, 'index.html'), 'utf8'),
+      /<title>NCode\.Fixture \| NCode\.Other<\/title>/,
+    );
+  });
+
+  it('removes the folder of each run that ended', () => {
+    const left = readdirSync(runsDirectory, { withFileTypes: true }).filter((entry) => {
+      const folder = /^(\d+)-/.exec(entry.name);
+      return entry.isDirectory() && folder && !isRunning(Number(folder[1]));
+    });
+    assert.deepEqual(
+      left.map((entry) => entry.name),
+      [],
+    );
+  });
+
+  it('refuses a second build into the folder another command writes, and names it', () => {
+    const out = join(work, 'out', 'runs-locked');
+    const file = outputLock(out);
+    mkdirSync(runsDirectory, { recursive: true });
+    writeFileSync(file, JSON.stringify({ pid: process.pid, library: '/somewhere/Other', out }));
+    try {
+      const result = build('runs-locked');
+      assert.equal(result.code, 1, result.output);
+      assert.ok(
+        result.output.includes(
+          `Another command writes the site to ${out}: process ${process.pid} is building /somewhere/Other.`,
+        ),
+        result.output,
+      );
+      assert.doesNotMatch(result.output, /Mounted/);
+    } finally {
+      rmSync(file, { force: true });
+    }
+  });
+
+  it("builds into a folder beside the toolchain whose path starts with the toolchain's", () => {
+    const out = `${root.replace(/[\\/]+$/, '')}-test-output-${process.pid}`;
+    try {
+      const result = build('runs-beside', { args: ['--out', out] });
+      assert.equal(result.code, 0, result.output);
+      assert.ok(existsSync(join(out, 'index.html')), `${out} was not written`);
+    } finally {
+      rmSync(out, { recursive: true, force: true });
+    }
   });
 });

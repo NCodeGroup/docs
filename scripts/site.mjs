@@ -4,7 +4,7 @@
 
 // Builds, serves or previews one library's documentation site.
 //
-//   node scripts/site.mjs <build|dev|preview|prepare|check> <library folder> [options]
+//   node scripts/site.mjs <build|dev|preview|check> <library folder> [options]
 //
 //   --content <path>    the content folder inside the library (default docs/site)
 //   --site-url <url>    the URL the site is served at, base path included; replaces site.url of the
@@ -24,25 +24,12 @@
 // in the environment. Nothing is written to the library, and nothing of the library stays in this
 // repository.
 import { spawn } from 'node:child_process';
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  realpathSync,
-  rmSync,
-  statSync,
-  utimesSync,
-  watch,
-  writeFileSync,
-} from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync, utimesSync, watch } from 'node:fs';
+import { join, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import {
   CONFIG_FILE,
   listPages,
-  lockFile,
   mountPath,
   ownNotFoundPage,
   resolveLibrary,
@@ -50,13 +37,13 @@ import {
   siteBase,
   toolchainRoot,
 } from '../src/library.mjs';
-import { startRun } from '../src/runs.mjs';
+import { lockOutput, startRun } from '../src/runs.mjs';
 import { checkComponentTokens } from '../src/brand/tokens.mjs';
 import { resolveHeadingRules } from '../src/headings/required-headings.mjs';
 import { checkLayout, findBrowser, layoutMessage, sitePages, WIDTHS } from '../src/layout/check.mjs';
 import { readSnippets } from '../src/snippets/catalog.mjs';
 
-const COMMANDS = ['build', 'dev', 'preview', 'prepare', 'check'];
+const COMMANDS = ['build', 'dev', 'preview', 'check'];
 // The page mounted as 404.mdx when the library has none of its own.
 const DEFAULT_NOT_FOUND = join(toolchainRoot, 'src', 'defaults', '404.mdx');
 
@@ -67,27 +54,6 @@ function usage(problem) {
     `${problem}\n\nUsage: node scripts/site.mjs <${COMMANDS.join('|')}> <library folder> [--content <path>] [--site-url <url>] [--out <folder>] [--port <number>] [--browser <path>]`,
   );
   process.exit(2);
-}
-
-/**
- * Why Astro cannot build into the folder `out`, or undefined. Astro (getOutDirWithinCwd in
- * astro/dist/core/build/common.js, 7.4.11) takes the output folder for one inside its working
- * folder, the toolchain, when the folder's path starts with the toolchain's as text, and then
- * builds the prerendered pages in `<out>/.prerender`, where they cannot find the toolchain's
- * packages: `../docs-site` beside a toolchain at `../docs` fails with "Cannot find package".
- * Astro's working folder can be the toolchain's real path, which differs from the path this script
- * has where a symbolic link leads to the toolchain, so both are checked.
- */
-function outFolderProblem(out) {
-  for (const toolchain of new Set(
-    [toolchainRoot, realpathSync(toolchainRoot)].map((path) => path.replace(/[\\/]+$/, '')),
-  )) {
-    const rest = out.slice(toolchain.length);
-    if (out.startsWith(toolchain) && rest !== '' && !/^[\\/]/.test(rest)) {
-      return `The output folder ${out} is outside the toolchain, but its path starts with the toolchain's, ${toolchain}: Astro takes it for a folder inside the toolchain, and the build then cannot find the toolchain's packages. Name a folder whose path does not start with ${toolchain}.`;
-    }
-  }
-  return undefined;
 }
 
 /** Entries of a content folder that are never mounted. */
@@ -145,56 +111,6 @@ function sync(source, target, top = true, extras = []) {
 function mount(library, run) {
   const extras = ownNotFoundPage(library) ? [] : [['404.mdx', DEFAULT_NOT_FOUND]];
   return sync(library.contentDirectory, runMount(run), true, extras);
-}
-
-const isRunning = (pid) => {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    // EPERM: the process exists and belongs to someone else.
-    return error.code === 'EPERM';
-  }
-};
-
-/**
- * Takes this checkout for one library until the script ends. There is one mount, so a second build
- * started while a first one runs, or under a dev server, would mix two libraries' pages; it stops
- * here instead, and says who holds the checkout. A lock whose process is gone is taken over.
- */
-function lock(library) {
-  const mine = JSON.stringify({ pid: process.pid, library: library.root });
-  mkdirSync(dirname(lockFile), { recursive: true });
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      writeFileSync(lockFile, mine, { flag: 'wx' });
-      process.on('exit', () => {
-        try {
-          if (readFileSync(lockFile, 'utf8') === mine) rmSync(lockFile);
-        } catch {
-          // Already gone.
-        }
-      });
-      return;
-    } catch (error) {
-      if (error.code !== 'EEXIST') throw error;
-      let held;
-      try {
-        held = JSON.parse(readFileSync(lockFile, 'utf8'));
-      } catch {
-        held = undefined;
-      }
-      if (held && isRunning(held.pid)) {
-        console.error(
-          `This toolchain checkout is in use: process ${held.pid} is building or serving ${held.library}.\n` +
-            "One checkout builds one library at a time, because the library's content is mounted into it. Wait for that command, stop it, or use a second checkout.",
-        );
-        process.exit(1);
-      }
-      rmSync(lockFile, { force: true });
-    }
-  }
-  throw new Error(`Could not take ${lockFile}`);
 }
 
 function runAstro(args, environment, run) {
@@ -293,12 +209,8 @@ async function main() {
   const browser = parsed.values.browser ?? environment.DOCS_BROWSER;
   if (browser) environment.DOCS_BROWSER = /[\\/]/.test(browser) ? resolve(from, browser) : browser;
   if (environment.SITE_URL && !URL.canParse(environment.SITE_URL)) usage(`"${environment.SITE_URL}" is not a URL.`);
-  // dev and prepare build nothing, so they leave the output folder alone.
-  const outProblem =
-    environment.DOCS_OUT && (command === 'build' || command === 'preview')
-      ? outFolderProblem(environment.DOCS_OUT)
-      : undefined;
-  if (outProblem) usage(outProblem);
+  // dev builds nothing into the output folder, so it leaves it alone.
+  if (command === 'build' || command === 'preview') environment.DOCS_OUT ||= join(toolchainRoot, 'dist');
   const port = parsed.values.port ? ['--port', parsed.values.port] : [];
 
   let library;
@@ -322,12 +234,19 @@ async function main() {
     process.exit(1);
   }
   if (command === 'check') return checkBuiltSite(library, environment);
-  lock(library);
+  // Two commands that write one output folder conflict, so a build or preview takes it before it starts.
+  if (command !== 'dev') {
+    try {
+      lockOutput(environment.DOCS_OUT, library.root);
+    } catch (error) {
+      console.error(error.message);
+      process.exit(1);
+    }
+  }
   const run = startRun();
   environment.DOCS_RUN = run;
   mount(library, run);
   console.log(`Mounted ${library.contentPath}/ of ${library.root}`);
-  if (command === 'prepare') return 0;
 
   if (command === 'dev') {
     // The dev server follows the mount; this keeps the mount following the library. Astro itself

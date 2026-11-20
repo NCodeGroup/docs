@@ -110,16 +110,23 @@ export function lockOutput(out, library) {
     } catch (error) {
       if (error.code !== 'EEXIST') throw error;
       let held;
+      let released = false;
       for (let read = 0; read < 20 && !held; read++) {
         // The first command writes its lock just after it creates it, so an empty lock is read again before it
         // counts as unreadable.
         if (read) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
         try {
           held = JSON.parse(readFileSync(file, 'utf8'));
-        } catch {
+        } catch (readError) {
           held = undefined;
+          if (readError.code === 'ENOENT') {
+            released = true;
+            break;
+          }
         }
       }
+      // The command that held it ended while this one read it, so the folder is free.
+      if (released) continue;
       if (!held) {
         throw new Error(
           `Cannot read ${file}, the lock of ${out}.\n` +

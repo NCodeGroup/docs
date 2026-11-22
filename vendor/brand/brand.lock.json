@@ -1,17 +1,17 @@
 {
-  "version": "0.11.0",
+  "version": "0.12.0",
   "files": {
     "tokens/tokens.css": {
       "source": "tokens/tokens.css",
-      "sha256": "dfcd2bdc47b00668543207538c7b7b6284422d82978e3ec689b7975a3594ce65"
+      "sha256": "03fbc4d7b144752c1f1f5a68f80643486b01177d9833b5d2e7cd7beafba8eed1"
     },
     "css/fonts.css": {
       "source": "css/fonts.css",
-      "sha256": "edff8a23be2b246f2e88df4779be842713d7b67e0df64847d292290d9afa90d3"
+      "sha256": "8ca0fbce0106ab27c76894df6d2988ce67ae903dd6c288f6843b7fe4a28daec9"
     },
     "css/starlight.css": {
       "source": "css/starlight.css",
-      "sha256": "1948a9fd69dd9ee0ab652d59109c3096ae5717251fb86cd04896a7df0eeacff9"
+      "sha256": "53b13998ee20ea8e1fc5584c0df28409cdc2b8271a992ac91583f346895c3925"
     },
     "fonts/instrument-sans-latin-wdth-normal.woff2": {
       "source": "fonts/instrument-sans-latin-wdth-normal.woff2",
@@ -20,6 +20,14 @@
     "fonts/instrument-sans-latin-ext-wdth-normal.woff2": {
       "source": "fonts/instrument-sans-latin-ext-wdth-normal.woff2",
       "sha256": "f21fc6486d81d72d2f8c389ac41befccf199b9c02367ea8377368321cad3e779"
+    },
+    "fonts/instrument-sans-latin-wdth-italic.woff2": {
+      "source": "fonts/instrument-sans-latin-wdth-italic.woff2",
+      "sha256": "9519d501bfa0407e45c68bae27e014c85754413ea7b68ccd883471bc83c05d0f"
+    },
+    "fonts/instrument-sans-latin-ext-wdth-italic.woff2": {
+      "source": "fonts/instrument-sans-latin-ext-wdth-italic.woff2",
+      "sha256": "d8165a8b1a46021ad3296447cf8ca4e14df5e4f027c91748b06186eeed9ca5dd"
     },
     "fonts/martian-mono-latin-wdth-normal.woff2": {
       "source": "fonts/martian-mono-latin-wdth-normal.woff2",
@@ -39,7 +47,7 @@
     },
     "syntax/instrument-screen.json": {
       "source": "syntax/instrument-screen.json",
-      "sha256": "42a27dd0c5f4032c961ec15ae987b3552483eab766151ca65d7bd4071dc0c161"
+      "sha256": "41fddfd05bc24bf4d07a27997ac02170a9c09374287e8f84adb7b309915938be"
     },
     "logo/ncode/mark/ncode-mark-blue.svg": {
       "source": "logo/ncode/mark/ncode-mark-blue.svg",

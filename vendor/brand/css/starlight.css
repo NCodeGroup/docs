@@ -1,4 +1,4 @@
-/* NCode Brand 0.11.0: css/starlight.css, copied by build.mjs from src/css/starlight.css; edit that file. Apache-2.0. */
+/* NCode Brand 0.12.0: css/starlight.css, copied by build.mjs from src/css/starlight.css; edit that file. Apache-2.0. */
 /*
  * Instrument for Starlight: Starlight's custom properties, mapped onto NCode's tokens.
  *
@@ -38,7 +38,7 @@
   --sl-color-bg: var(--nc-color-page);
   --sl-color-bg-nav: var(--nc-color-page);
   --sl-color-bg-sidebar: var(--nc-color-page);
-  --sl-color-bg-inline-code: var(--nc-color-surface-sunken);
+  --sl-color-bg-inline-code: var(--nc-color-code-tint);
   --sl-color-bg-accent: var(--nc-color-primary-text);
   --sl-color-hairline-light: var(--nc-color-border);
   --sl-color-hairline: var(--nc-color-border);

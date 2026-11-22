@@ -116,11 +116,12 @@ pre {
   font-feature-settings: 'zero' 1;
 }
 
+/* A value in a sentence: the mono face on the brand's code tint, with no edge, so a paragraph that names many stays
+   text (brand's ADR-1016). */
 .sl-markdown-content code:not(:where(.not-content *, pre *)) {
   padding: 0.14em 0.38em;
-  border: var(--nc-border-hair) solid var(--nc-color-border);
   border-radius: var(--nc-radius-plate);
-  background: var(--nc-color-surface-sunken);
+  background: var(--nc-color-code-tint);
   color: var(--nc-color-text);
   font-size: 0.84em;
 }

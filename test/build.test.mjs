@@ -5,9 +5,18 @@
 // right: the samples are in the pages, no marker line is, and nothing links outside the base.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { describe, it } from 'node:test';
 import { readLastUpdated } from '../src/library.mjs';
 import { build, copyOfFixture, pages, root, siteAbsoluteUrls, work } from './helpers.mjs';
@@ -169,6 +178,28 @@ describe('the fixture under the base path /Fixture/', () => {
     assert.match(quickStart, /<title>Quick start \| NCode\.Fixture<\/title>/);
     assert.match(quickStart, /<link rel="canonical" href="https:\/\/ncodegroup\.github\.io\/Fixture\/quick-start\/"/);
     assert.match(readFileSync(join(result.out, 'index.html'), 'utf8'), /<title>NCode\.Fixture<\/title>/);
+  });
+
+  it("holds every file its stylesheets name, the brand's italic fonts among them", () => {
+    const named = [];
+    for (const file of readdirSync(result.out, { recursive: true }).filter((path) => path.endsWith('.css'))) {
+      const css = readFileSync(join(result.out, file), 'utf8');
+      for (const [, , url] of css.matchAll(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g)) {
+        if (/^(data:|#|https?:)/.test(url)) continue;
+        const path = url.replace(/[?#].*$/, '');
+        const target = path.startsWith('/Fixture/')
+          ? join(result.out, path.slice('/Fixture/'.length))
+          : join(result.out, dirname(file), path);
+        assert.ok(existsSync(target), `${file} names ${url}, which the build does not hold`);
+        named.push(path);
+      }
+    }
+    for (const font of ['instrument-sans-latin-wdth-italic.', 'instrument-sans-latin-ext-wdth-italic.']) {
+      assert.ok(
+        named.some((path) => path.includes(font)),
+        `no built stylesheet names ${font}woff2: ${named}`,
+      );
+    }
   });
 
   it('loads fonts and scripts from the site itself', () => {

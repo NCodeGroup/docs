@@ -253,17 +253,29 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
     });
   });
 
-  it("draws inline code on the brand's code tint, with no edge", async () => {
-    await page.goto(`${site.origin}${BASE}quick-start/`, { waitUntil: 'networkidle' });
-    const code = await page.evaluate(() => {
-      const probe = document.body.appendChild(document.createElement('span'));
-      probe.style.backgroundColor = 'var(--nc-color-code-tint)';
-      const tint = getComputedStyle(probe).backgroundColor;
-      probe.remove();
-      const style = getComputedStyle(document.querySelector('.sl-markdown-content p:not(.starlight-aside *) > code'));
-      return { tint: style.backgroundColor === tint, edge: style.borderTopStyle };
-    });
-    assert.deepEqual(code, { tint: true, edge: 'none' });
+  it("draws inline code on the brand's code tint, with no edge, in the light and the dark scheme", async () => {
+    const drawn = async (colorScheme) => {
+      const tab = await browser.newPage({ colorScheme });
+      await tab.goto(`${site.origin}${BASE}quick-start/`, { waitUntil: 'networkidle' });
+      const found = await tab.evaluate(() => {
+        const probe = document.body.appendChild(document.createElement('span'));
+        probe.style.backgroundColor = 'var(--nc-color-code-tint)';
+        const tint = getComputedStyle(probe).backgroundColor;
+        probe.remove();
+        const style = getComputedStyle(document.querySelector('.sl-markdown-content p:not(.starlight-aside *) > code'));
+        return { tint, background: style.backgroundColor, edge: style.borderTopStyle };
+      });
+      await tab.close();
+      return found;
+    };
+    const light = await drawn('light');
+    const dark = await drawn('dark');
+    for (const [scheme, found] of Object.entries({ light, dark })) {
+      // An undefined token computes to transparent on the code and on the probe alike, so equality alone would pass.
+      assert.notEqual(found.tint, 'rgba(0, 0, 0, 0)', `the brand defines no code tint in the ${scheme} scheme`);
+      assert.deepEqual({ background: found.background, edge: found.edge }, { background: found.tint, edge: 'none' });
+    }
+    assert.notEqual(dark.tint, light.tint, 'the dark scheme draws its own code tint');
   });
 
   it('asks no other origin for anything', () => {

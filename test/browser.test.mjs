@@ -253,6 +253,19 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
     });
   });
 
+  it("draws inline code on the brand's code tint, with no edge", async () => {
+    await page.goto(`${site.origin}${BASE}quick-start/`, { waitUntil: 'networkidle' });
+    const code = await page.evaluate(() => {
+      const probe = document.body.appendChild(document.createElement('span'));
+      probe.style.backgroundColor = 'var(--nc-color-code-tint)';
+      const tint = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      const style = getComputedStyle(document.querySelector('.sl-markdown-content p:not(.starlight-aside *) > code'));
+      return { tint: style.backgroundColor === tint, edge: style.borderTopStyle };
+    });
+    assert.deepEqual(code, { tint: true, edge: 'none' });
+  });
+
   it('asks no other origin for anything', () => {
     const elsewhere = requested.filter(
       (url) => !url.startsWith(site.origin) && !url.startsWith('data:') && !url.startsWith('blob:'),

@@ -32,7 +32,7 @@ The silver criteria that need a document point to these:
 | `input_validation`, `hardening` | [assurance-case.md](assurance-case.md), Input Validation and Secure Design Principles Applied |
 | Vulnerability response and credit | [SECURITY.md](../SECURITY.md) |
 | Coding standards and their enforcement | [CONTRIBUTING.md](../CONTRIBUTING.md), `.editorconfig`, `biome.json` |
-| Test policy (`test_policy_mandated`) | [CONTRIBUTING.md](../CONTRIBUTING.md), Make a Change, item 3 |
+| Test policy (`test_policy_mandated`) | [CONTRIBUTING.md](../CONTRIBUTING.md), which says that a change that adds or changes behavior adds or updates the automated tests that cover it |
 
 ## Where It Stands
 

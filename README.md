@@ -397,6 +397,9 @@ colour roles and its measures, and the Starlight properties `css/starlight.css` 
 or reads a step of a colour ramp or of the type scale, which a brand release may change, and the tests fail when either
 reads such a step or a custom property no vendored stylesheet defines
 ([ADR-1008](docs/decisions/1008-the-brand-is-vendored-from-an-attested-release-and-the-theme-restyles-only-starlights-markup.md)).
+The theme also keeps the sidebar, the page and the "On this page" panel together in the middle of a window wider
+than the three, as the brand's own documentation scene does, and gives a hero with no image one column
+([ADR-1020](docs/decisions/1020-the-sidebar-the-page-and-the-page-index-stand-together-in-the-middle-of-a-wide-window-and-a-hero-with-no-image-is-one-column.md)).
 
 ### Updating and releasing
 

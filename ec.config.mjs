@@ -40,7 +40,7 @@ export default defineEcConfig({
     codeFontSize: 'var(--sl-text-code)',
     // The line height of the brand's code role, written out: the role is a font shorthand, which cannot hand its
     // line height to Expressive Code. test/vendor.test.mjs fails when the two differ.
-    codeLineHeight: '1.7',
+    codeLineHeight: '1.6',
     codePaddingBlock: '0.875rem',
     codePaddingInline: '1.125rem',
     codeSelectionBackground: 'color-mix(in srgb, var(--nc-color-screen-lit) 40%, transparent)',

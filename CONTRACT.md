@@ -361,16 +361,16 @@ check loads; `npm run test` measures them again and fails when this table differ
 
 | Window | Content column |
 | --- | --- |
-| 1440 px | about 49rem (790 px), beside the "On this page" panel |
-| 1280 px | about 39rem (630 px), beside the panel |
-| 1024 px | about 38rem (614 px); the panel is a menu in the header |
+| 1440 px | about 51rem (818 px), beside the "On this page" panel |
+| 1280 px | about 41rem (658 px), beside the panel |
+| 1024 px | about 40rem (642 px); the panel is a menu in the header |
 | 390 px | about 21rem (332 px) |
 
-The column is never wider than 50rem (800 px), the width the brand gives a listing. A page reaches it in a window about
+The column is never wider than 52rem (832 px), the width the brand gives a listing. A page reaches it in a window about
 1450 px wide; in a wider one the sidebar, the page and the panel stay together in the middle of the window, and the
-rest is margin on both sides. The column is narrowest beside the panel in a window of 72rem, about 31rem (502 px).
+rest is margin on both sides. The column is narrowest beside the panel in a window of 72rem, about 33rem (530 px).
 Design a component for a column of about 36rem that still reads at 20rem. On a landing page that keeps the sidebar,
-the hero and a `CardGrid` take the width of the page, up to about 69rem; every other part of it keeps to the column.
+the hero and a `CardGrid` take the width of the page, up to about 70rem; every other part of it keeps to the column.
 Lay out data with more than three or four columns, or with long identifiers, as a card per entry with its fields
 labelled, not as a wide table. Never give an element a `min-width` wider than the column.
 

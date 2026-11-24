@@ -534,7 +534,6 @@ main {
   margin-top: var(--nc-space-4);
   color: var(--nc-color-text-secondary);
   font: var(--nc-type-lead);
-  font-size: var(--sl-text-lg);
   font-stretch: var(--nc-type-lead-stretch);
   letter-spacing: var(--nc-type-lead-tracking);
   text-wrap: pretty;

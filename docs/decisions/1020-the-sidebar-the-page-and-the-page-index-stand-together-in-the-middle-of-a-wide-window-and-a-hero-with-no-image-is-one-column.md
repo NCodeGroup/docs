@@ -60,11 +60,11 @@ interface's sizes.**
 
 ## Consequences
 
-- A window of 1440 px gives a page a content column of about 49rem and one of 1280 px about 39rem, beside the panel.
-  The column is narrowest in a window of 72rem, about 31rem. `CONTRACT.md` states these, and that a hero and a
-  `CardGrid` on a landing page are wider than the column.
-- A brand release that changes `--sl-sidebar-width`, `--sl-content-width` or `--sl-content-pad-x` moves the column:
-  the test fails until `CONTRACT.md`'s table is measured again.
+- The content column's width at each window width follows the vendored brand's `--sl-sidebar-width`,
+  `--sl-content-width` and `--sl-content-pad-x`. `CONTRACT.md` section 7 states it, with the column's widest and its
+  narrowest beside the panel, and that a hero and a `CardGrid` on a landing page are wider than the column.
+- A brand release that changes one of those properties moves the column: the test fails, and names each number,
+  until `CONTRACT.md` states what it measures.
 - A Starlight release that renames a class the frame's rules name leaves a page with Starlight's own layout. The
   tests on the frame's margins and on the hero fail then.
 

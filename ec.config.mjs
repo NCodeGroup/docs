@@ -38,8 +38,10 @@ export default defineEcConfig({
     codeForeground: token('on-screen-secondary'),
     codeFontFamily: 'var(--nc-font-mono)',
     codeFontSize: 'var(--sl-text-code)',
-    codeLineHeight: '1.6',
-    codePaddingBlock: '0.75rem',
+    // The line height of the brand's code role, written out: the role is a font shorthand, which cannot hand its
+    // line height to Expressive Code. test/vendor.test.mjs fails when the two differ.
+    codeLineHeight: '1.7',
+    codePaddingBlock: '0.875rem',
     codePaddingInline: '1.125rem',
     codeSelectionBackground: 'color-mix(in srgb, var(--nc-color-screen-lit) 40%, transparent)',
     uiFontFamily: 'var(--nc-font-mono)',

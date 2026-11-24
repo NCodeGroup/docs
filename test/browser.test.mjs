@@ -245,8 +245,8 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
       await tab.evaluate(() => document.fonts.ready);
       const found = await tab.evaluate(() => {
         const box = (selector) => document.querySelector(selector).getBoundingClientRect();
-        const root = getComputedStyle(document.documentElement);
-        const rem = Number.parseFloat(root.fontSize);
+        const style = getComputedStyle(document.documentElement);
+        const rem = Number.parseFloat(style.fontSize);
         const [brand, tools, search, selector, sheet, index, column] = [
           'header a.site-title',
           'header .right-group',
@@ -265,7 +265,7 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
           sheet: [Math.round(sheet.left), Math.round(sheet.right)],
           index: Math.round(index.left),
           column: Math.round(column.width),
-          content: Math.round(Number.parseFloat(root.getPropertyValue('--sl-content-width')) * rem),
+          content: Math.round(Number.parseFloat(style.getPropertyValue('--sl-content-width')) * rem),
         };
       });
       await tab.close();
@@ -305,43 +305,81 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
       rows,
       widest: numbers(/The column is never wider than (\d+)rem \((\d+) px\)/),
       narrowest: numbers(/narrowest beside the panel in a window of 72rem, about (\d+)rem \((\d+) px\)/),
-      frame: numbers(/A page reaches it in a window about\s+(\d+) px wide/),
+      reached: numbers(/A page reaches it in a window about\s+(\d+) px wide/),
     };
-    const measured = [];
-    let widest;
-    let narrowest;
-    let frame;
-    // 1152 px is 72rem, the narrowest window with the panel beside the page.
-    for (const window of [...WIDTHS, 1152]) {
-      const tab = await browser.newPage({ viewport: { width: window, height: 900 } });
-      await tab.goto(`${site.origin}${BASE}guides/derive-a-key/`, { waitUntil: 'networkidle' });
-      await tab.evaluate(() => document.fonts.ready);
-      const [column, content, parts] = await tab.evaluate(() => {
-        const root = getComputedStyle(document.documentElement);
-        // The frame is a sum of properties, so an element as wide as it gives its width.
-        const probe = document.body.appendChild(document.createElement('div'));
-        probe.style.width = 'var(--ncode-frame)';
-        const frame = probe.getBoundingClientRect().width;
-        probe.remove();
+
+    const tab = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    await tab.goto(`${site.origin}${BASE}guides/derive-a-key/`, { waitUntil: 'networkidle' });
+    await tab.evaluate(() => document.fonts.ready);
+    /** The content column in a window `width` px wide, and the widest the brand lets it be, in px. */
+    const column = async (width) => {
+      await tab.setViewportSize({ width, height: 900 });
+      return tab.evaluate(() => {
+        const style = getComputedStyle(document.documentElement);
         return [
           document.querySelector('.sl-markdown-content').getBoundingClientRect().width,
-          Number.parseFloat(root.getPropertyValue('--sl-content-width')) * Number.parseFloat(root.fontSize),
-          frame,
+          Number.parseFloat(style.getPropertyValue('--sl-content-width')) * Number.parseFloat(style.fontSize),
         ];
       });
-      await tab.close();
-      const row = [Math.round(column / 16), Math.round(column)];
-      if (WIDTHS.includes(window)) measured.push([window, ...row]);
-      else narrowest = row;
-      widest = [content / 16, content];
-      frame = [Math.round(parts / 10) * 10];
+    };
+    const about = (px) => [Math.round(px / 16), Math.round(px)];
+    const measured = [];
+    for (const window of WIDTHS) measured.push([window, ...about((await column(window))[0])]);
+    // 1152 px is 72rem, the narrowest window with the panel beside the page.
+    const [narrowest, content] = await column(1152);
+    // The narrowest window that gives the page its widest column, found by halving between one too narrow and one
+    // wide enough.
+    let [narrow, wide] = [1152, 2400];
+    assert.ok(narrowest < content && (await column(wide))[0] === content, 'a 2400 px window gives the widest column');
+    while (wide - narrow > 1) {
+      const middle = Math.floor((narrow + wide) / 2);
+      if ((await column(middle))[0] < content) narrow = middle;
+      else wide = middle;
     }
+    await tab.close();
+
     // One comparison, so a brand release that moves the column names every number to write.
     assert.deepEqual(
       stated,
-      { rows: measured, widest, narrowest, frame },
+      {
+        rows: measured,
+        widest: [content / 16, content],
+        narrowest: about(narrowest),
+        reached: [Math.round(wide / 10) * 10],
+      },
       'CONTRACT.md section 7 states the content column at each width the layout check loads, its widest and its narrowest',
     );
+  });
+
+  it("makes a sidebar entry and a link button as high as the brand's controls, and as a phone's in a phone's window", async () => {
+    const heights = async (width) => {
+      const tab = await browser.newPage({ viewport: { width, height: 900 } });
+      await tab.goto(`${site.origin}${BASE}`, { waitUntil: 'networkidle' });
+      const found = await tab.evaluate(() => {
+        // A control token is a length, so an element that high gives it in px.
+        const token = (name) => {
+          const probe = document.body.appendChild(document.createElement('div'));
+          probe.style.height = `var(--nc-control-${name})`;
+          const height = probe.getBoundingClientRect().height;
+          probe.remove();
+          return height;
+        };
+        const least = (selector) => Number.parseFloat(getComputedStyle(document.querySelector(selector)).minHeight);
+        return {
+          entry: least('.sidebar-content a'),
+          button: least('.sl-link-button'),
+          controls: [token('sm'), token('md'), token('lg')],
+        };
+      });
+      await tab.close();
+      return found;
+    };
+    const desk = await heights(1440);
+    const [small, medium, large] = desk.controls;
+    assert.ok(0 < small && small < medium && medium < large, `the brand's controls are ${desk.controls} px high`);
+    assert.deepEqual([desk.entry, desk.button], [small, medium]);
+    const held = await heights(390);
+    assert.deepEqual([held.entry, held.button], [large, large]);
   });
 
   it('lights the edge of a code listing that has more code past it', async () => {

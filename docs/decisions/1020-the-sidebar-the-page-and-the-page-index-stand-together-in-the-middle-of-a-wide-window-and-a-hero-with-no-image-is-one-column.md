@@ -8,9 +8,9 @@
 
 Starlight fixes the sidebar to the window's left edge, centres the content column in what is left, and gives the "On
 this page" panel half of the remainder (`PageFrame.astro` and `TwoColumnContent.astro` of `@astrojs/starlight` 0.43.1,
-read 2026-11-24). The theme starts the text at the sheet's left edge. Measured on NCode.PropertyBag's site in a window
-of 1905 by 1415 pixels (2026-11-24): the text column is the left third of the window, the sheet runs on for 400 px
-with nothing in them, and the panel's entries stand in an otherwise empty column of 550 px.
+read 2026-11-24). With that layout and the text at the sheet's left edge, in a window of 1905 by 1415 pixels
+(measured on NCode.PropertyBag's site, 2026-11-24) the text column is the left third of the window, the sheet runs
+on for 400 px with nothing in them, and the panel's entries stand in an otherwise empty column of 550 px.
 
 Starlight's hero is a grid of two columns, `7fr 4fr`, from 50rem up, whether or not the page has a hero image
 (`Hero.astro`, same version). A landing page with no image keeps 7/11 of its content column for its copy, about 490 px
@@ -39,10 +39,11 @@ interface's sizes.**
    to `--sl-content-width` by a rule of no specificity, so the brand's measure and a component's own width win.
 6. The sidebar and the page index are set at Starlight's `xs` step, which the brand maps to its dense interface size,
    with entries `--nc-control-sm` high. A table, a callout and a card's text are at the interface size. A link button
-   is `--nc-control-md` high, and `--nc-control-lg` in a window narrower than 40rem. A listing's line height is the
-   brand's `code` role's.
+   is `--nc-control-md` high, and `--nc-control-lg` in a window narrower than 40rem.
 7. `test/browser.test.mjs` measures the content column at each width the layout check loads and fails when the table
-   in `CONTRACT.md` section 7 differs, and checks the frame's margins, the hero and the landing page's widths.
+   in `CONTRACT.md` section 7 differs, and checks the frame's margins, the hero, the landing page's widths and the
+   heights of a sidebar entry and a link button. `test/vendor.test.mjs` holds the line height `ec.config.mjs` frames
+   a listing on to the brand's `code` role's, which a font shorthand cannot hand to Expressive Code.
 
 ## Options considered
 

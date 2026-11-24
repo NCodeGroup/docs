@@ -1,0 +1,103 @@
+---
+// The review checklist: every guide's "Checklist" section, from docs/site/_components/data/checklists.json, which
+// build/Update-ReviewChecklist.ps1 generates. Per guide, a heading that links to the guide and its items, each with
+// a link back to the guide's checklist.
+//
+// Without JavaScript the whole list shows and the "Copy as Markdown" button stays hidden. With JavaScript the button
+// shows and copies the same list as Markdown task items (## <title>, then - [ ] <item> lines), built at build time.
+// Printed, the button is hidden, each link's URL follows it, and a group stays on one page where it fits.
+// Usage: <ReviewChecklist />
+import checklists from '@site/components/data/checklists.json';
+import { inline, sitePath } from '@site/components/lib/evidence';
+
+type Group = { slug: string; title: string; items: string[] };
+const groups = checklists.groups as Group[];
+const markdown = groups
+  .map((group) => [`## ${group.title}`, ...group.items.map((item) => `- [ ] ${item}`)].join('\n'))
+  .join('\n\n');
+---
+
+<section class="review-checklist not-content" data-review-checklist aria-label="Review checklist">
+  <button type="button" class="review-checklist__copy" data-markdown={markdown} hidden>Copy as Markdown</button>
+  <p class="review-checklist__status" role="status" aria-live="polite"></p>
+  {groups.map((group) => (
+    <section class="review-checklist__group">
+      <h3 class="review-checklist__title"><a href={sitePath(`/${group.slug}/`)}>{group.title}</a></h3>
+      <ul class="review-checklist__items">
+        {group.items.map((item) => (
+          <li>
+            <span set:html={inline(item)} />
+            {' '}
+            <a class="review-checklist__guide" href={sitePath(`/${group.slug}/#checklist`)}>guide</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</section>
+
+<script>
+  // Shows the button and copies the Markdown stored on it. Without this script the button stays hidden.
+  for (const root of document.querySelectorAll<HTMLElement>('[data-review-checklist]')) {
+    const button = root.querySelector<HTMLButtonElement>('.review-checklist__copy');
+    const status = root.querySelector<HTMLElement>('.review-checklist__status');
+    if (!button || !status || !navigator.clipboard) continue;
+    button.hidden = false;
+    button.addEventListener('click', () => {
+      navigator.clipboard.writeText(button.dataset.markdown ?? '').then(
+        () => (status.textContent = 'Copied.'),
+        () => (status.textContent = 'The browser did not allow copying.'),
+      );
+    });
+  }
+</script>
+
+<style>
+  .review-checklist {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--nc-space-5);
+    margin: var(--nc-space-6) 0;
+    color: var(--nc-color-text);
+  }
+  .review-checklist__copy {
+    justify-self: start;
+    min-height: var(--nc-control-sm);
+    padding: 0 var(--nc-space-4);
+    border: var(--nc-border-hair) solid var(--nc-color-border-strong);
+    border-radius: var(--nc-radius-control);
+    background: var(--nc-color-control);
+    color: var(--nc-color-text);
+    font: inherit;
+    font-size: var(--sl-text-xs);
+    cursor: pointer;
+  }
+  .review-checklist__copy[hidden] { display: none; }
+  .review-checklist__copy:hover { background: var(--nc-color-control-hover); }
+  .review-checklist__copy:focus-visible { outline: var(--nc-focus-width) solid var(--nc-color-focus); outline-offset: var(--nc-focus-gap); }
+  .review-checklist__status { margin: 0; min-height: 1em; color: var(--nc-color-text-secondary); font-size: var(--sl-text-xs); }
+  .review-checklist__status:empty { display: none; }
+
+  .review-checklist__group {
+    padding: var(--nc-space-5);
+    border: var(--nc-border-hair) solid var(--nc-color-border);
+    border-radius: var(--nc-radius-panel);
+    background: var(--nc-color-surface);
+  }
+  .review-checklist__title { margin: 0 0 var(--nc-space-3); font-size: var(--sl-text-lg); line-height: 1.3; }
+  .review-checklist__title a { color: var(--nc-color-text); text-decoration-color: var(--nc-color-border-strong); text-underline-offset: 0.2em; }
+  .review-checklist__items { margin: 0; padding-inline-start: var(--nc-space-5); font-size: var(--sl-text-sm); line-height: 1.3; }
+  .review-checklist__items li { margin: 0 0 var(--nc-space-2); overflow-wrap: anywhere; }
+  .review-checklist :global(code) { font-family: var(--nc-font-mono); font-stretch: var(--nc-type-code-stretch); font-size: 0.88em; }
+  .review-checklist a { text-underline-offset: 0.2em; }
+  .review-checklist__guide { color: var(--nc-color-primary-text); font-size: var(--sl-text-xs); }
+  .review-checklist a:hover { color: var(--nc-color-primary-text); }
+  .review-checklist a:focus-visible { outline: var(--nc-focus-width) solid var(--nc-color-focus); outline-offset: var(--nc-focus-gap); }
+
+  @media print {
+    .review-checklist__copy,
+    .review-checklist__status { display: none; }
+    .review-checklist__group { break-inside: avoid; }
+    .review-checklist a::after { content: ' (' attr(href) ')'; font-size: var(--sl-text-xs); }
+  }
+</style>

@@ -5,15 +5,20 @@
 // page loads, the search finds a page, a missing URL gets the site's own 404 page, and the browser
 // asks no other origin for anything. In a phone's window no page scrolls sideways and a Markdown
 // table is a stack of labelled rows, from 40rem up a wide one fits the content column, and a code
-// listing that scrolls lights its edge and keeps its focus ring in view.
+// listing that scrolls lights its edge and keeps its focus ring in view. In a wide window the
+// selector, the page and the page index stand together in the middle, a hero with no picture is one
+// column, and the content column is as wide as CONTRACT.md says at each width the layout check loads.
 //
 // The browser is the headless Chromium that the locked playwright-core names. "npm run browser"
 // downloads it, once for each version of playwright-core. Where it is not installed the check is
 // skipped and says so; DOCS_REQUIRE_BROWSER=1 makes that a failure, as CI sets it.
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import { chromium } from 'playwright-core';
-import { build, serve } from './helpers.mjs';
+import { WIDTHS } from '../src/layout/check.mjs';
+import { build, root, serve } from './helpers.mjs';
 
 let browser;
 let missing;
@@ -188,6 +193,193 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
     };
     assert.deepEqual(await landing(1024), { sidebar: true, columns: 1 });
     assert.deepEqual(await landing(1440), { sidebar: true, columns: 2 });
+  });
+
+  it('keeps a hero with no picture one column, so its headline has the width of the page', async () => {
+    // The toolchain's own 404 page: a hero of a tagline and a key, in the wide layout.
+    const tab = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    await tab.goto(`${site.origin}${BASE}no-such-page/`, { waitUntil: 'networkidle' });
+    const found = await tab.evaluate(() => {
+      const hero = document.querySelector('.hero');
+      return {
+        picture: hero.querySelector(':scope > img, :scope > picture, :scope > .hero-html') !== null,
+        columns: getComputedStyle(hero).gridTemplateColumns.split(' ').length,
+        container: hero.parentElement.getBoundingClientRect().width >= 800,
+      };
+    });
+    await tab.close();
+    assert.deepEqual(found, { picture: false, columns: 1, container: true });
+  });
+
+  it('gives the hero and a card grid the width of a landing page, and everything else the content column', async () => {
+    const tab = await browser.newPage({ viewport: { width: 1920, height: 900 } });
+    await tab.goto(`${site.origin}${BASE}`, { waitUntil: 'networkidle' });
+    await tab.evaluate(() => document.fonts.ready);
+    const found = await tab.evaluate(() => {
+      const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const column =
+        Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sl-content-width')) * rem;
+      const width = (selector) => Math.round(document.querySelector(selector).getBoundingClientRect().width);
+      const widest = Math.max(
+        ...[...document.querySelectorAll('.sl-markdown-content > :not(.card-grid)')].map(
+          (part) => part.getBoundingClientRect().width,
+        ),
+      );
+      return { column, hero: width('.hero'), grid: width('.card-grid'), widest: Math.round(widest) };
+    });
+    await tab.close();
+    assert.ok(found.column > 0, 'the brand sets the content column');
+    assert.ok(found.hero > found.column, `the hero is ${found.hero} px wide in a column of ${found.column}`);
+    assert.ok(found.grid > found.column, `the card grid is ${found.grid} px wide in a column of ${found.column}`);
+    assert.ok(found.widest <= found.column, `a part of the page is ${found.widest} px wide, past ${found.column}`);
+    const stated = /take the width of the page, up to about (\d+)rem/.exec(
+      readFileSync(join(root, 'CONTRACT.md'), 'utf8'),
+    );
+    assert.equal(Number(stated?.[1]), Math.round(found.hero / 16), 'the width CONTRACT.md gives a landing page');
+  });
+
+  it('stands the selector, the page and the page index together in the middle of a wide window', async () => {
+    const frame = async (width) => {
+      const tab = await browser.newPage({ viewport: { width, height: 900 } });
+      await tab.goto(`${site.origin}${BASE}guides/derive-a-key/`, { waitUntil: 'networkidle' });
+      await tab.evaluate(() => document.fonts.ready);
+      const found = await tab.evaluate(() => {
+        const box = (selector) => document.querySelector(selector).getBoundingClientRect();
+        const style = getComputedStyle(document.documentElement);
+        const rem = Number.parseFloat(style.fontSize);
+        const [brand, tools, search, selector, sheet, index, column] = [
+          'header a.site-title',
+          'header .right-group',
+          'site-search > button[data-open-modal]',
+          '.sidebar-content',
+          'main',
+          'starlight-toc',
+          '.sl-markdown-content',
+        ].map(box);
+        return {
+          window: document.documentElement.clientWidth,
+          before: Math.round(brand.left),
+          after: Math.round(document.documentElement.clientWidth - tools.right),
+          search: Math.round(search.left),
+          selector: Math.round(selector.right),
+          sheet: [Math.round(sheet.left), Math.round(sheet.right)],
+          index: Math.round(index.left),
+          column: Math.round(column.width),
+          content: Math.round(Number.parseFloat(style.getPropertyValue('--sl-content-width')) * rem),
+        };
+      });
+      await tab.close();
+      return found;
+    };
+    const wide = await frame(2400);
+    assert.ok(wide.before > 200, `a 2400 px window leaves a margin, not ${wide.before} px`);
+    assert.ok(Math.abs(wide.before - wide.after) <= 1, `the margins differ: ${wide.before} and ${wide.after} px`);
+    // The three parts touch but for their gutters, and the sheet is as wide as a listing of full width.
+    assert.ok(
+      wide.sheet[0] - wide.selector <= 16,
+      `the sheet starts ${wide.sheet[0] - wide.selector} px after the selector`,
+    );
+    assert.ok(
+      wide.index - wide.sheet[1] <= 32,
+      `the page index starts ${wide.index - wide.sheet[1]} px after the sheet`,
+    );
+    assert.equal(wide.column, wide.content, 'the content column is as wide as the brand sets it');
+    assert.ok(Math.abs(wide.search - wide.sheet[0]) <= 1, 'the search field starts where the page does');
+
+    // A window the frame fills has no margin, and the page takes what the selector and the index leave.
+    const narrow = await frame(1280);
+    assert.equal(narrow.before, narrow.after);
+    assert.ok(narrow.before <= 24, `a 1280 px window has a margin of ${narrow.before} px`);
+    assert.ok(narrow.column < narrow.content);
+  });
+
+  it("gives a page's content column the widths CONTRACT.md states", async () => {
+    const contract = readFileSync(join(root, 'CONTRACT.md'), 'utf8');
+    // The table of section 7, each row as [window, rem, px], the widest column and the narrowest beside the panel as
+    // [rem, px], and the window, to the nearest 10 px, that the widest column is reached in.
+    const rows = [...contract.matchAll(/^\| (\d+) px \| about (\d+)rem \((\d+) px\)/gm)].map((row) =>
+      row.slice(1).map(Number),
+    );
+    const numbers = (pattern) => pattern.exec(contract)?.slice(1).map(Number);
+    const stated = {
+      rows,
+      widest: numbers(/The column is never wider than (\d+)rem \((\d+) px\)/),
+      narrowest: numbers(/narrowest beside the panel in a window of 72rem, about (\d+)rem \((\d+) px\)/),
+      reached: numbers(/A page reaches it in a window about\s+(\d+) px wide/),
+    };
+
+    const tab = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    await tab.goto(`${site.origin}${BASE}guides/derive-a-key/`, { waitUntil: 'networkidle' });
+    await tab.evaluate(() => document.fonts.ready);
+    /** The content column in a window `width` px wide, and the widest the brand lets it be, in px. */
+    const column = async (width) => {
+      await tab.setViewportSize({ width, height: 900 });
+      return tab.evaluate(() => {
+        const style = getComputedStyle(document.documentElement);
+        return [
+          document.querySelector('.sl-markdown-content').getBoundingClientRect().width,
+          Number.parseFloat(style.getPropertyValue('--sl-content-width')) * Number.parseFloat(style.fontSize),
+        ];
+      });
+    };
+    const about = (px) => [Math.round(px / 16), Math.round(px)];
+    const measured = [];
+    for (const window of WIDTHS) measured.push([window, ...about((await column(window))[0])]);
+    // 1152 px is 72rem, the narrowest window with the panel beside the page.
+    const [narrowest, content] = await column(1152);
+    // The narrowest window that gives the page its widest column, found by halving between one too narrow and one
+    // wide enough.
+    let [narrow, wide] = [1152, 2400];
+    assert.ok(narrowest < content && (await column(wide))[0] === content, 'a 2400 px window gives the widest column');
+    while (wide - narrow > 1) {
+      const middle = Math.floor((narrow + wide) / 2);
+      if ((await column(middle))[0] < content) narrow = middle;
+      else wide = middle;
+    }
+    await tab.close();
+
+    // One comparison, so a brand release that moves the column names every number to write.
+    assert.deepEqual(
+      stated,
+      {
+        rows: measured,
+        widest: [content / 16, content],
+        narrowest: about(narrowest),
+        reached: [Math.round(wide / 10) * 10],
+      },
+      'CONTRACT.md section 7 states the content column at each width the layout check loads, its widest and its narrowest',
+    );
+  });
+
+  it("makes a sidebar entry and a link button as high as the brand's controls, and as a phone's in a phone's window", async () => {
+    const heights = async (width) => {
+      const tab = await browser.newPage({ viewport: { width, height: 900 } });
+      await tab.goto(`${site.origin}${BASE}`, { waitUntil: 'networkidle' });
+      const found = await tab.evaluate(() => {
+        // A control token is a length, so an element that high gives it in px.
+        const token = (name) => {
+          const probe = document.body.appendChild(document.createElement('div'));
+          probe.style.height = `var(--nc-control-${name})`;
+          const height = probe.getBoundingClientRect().height;
+          probe.remove();
+          return height;
+        };
+        const least = (selector) => Number.parseFloat(getComputedStyle(document.querySelector(selector)).minHeight);
+        return {
+          entry: least('.sidebar-content a'),
+          button: least('.sl-link-button'),
+          controls: [token('sm'), token('md'), token('lg')],
+        };
+      });
+      await tab.close();
+      return found;
+    };
+    const desk = await heights(1440);
+    const [small, medium, large] = desk.controls;
+    assert.ok(0 < small && small < medium && medium < large, `the brand's controls are ${desk.controls} px high`);
+    assert.deepEqual([desk.entry, desk.button], [small, medium]);
+    const held = await heights(390);
+    assert.deepEqual([held.entry, held.button], [large, large]);
   });
 
   it('lights the edge of a code listing that has more code past it', async () => {

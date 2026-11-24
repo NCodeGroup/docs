@@ -1,4 +1,4 @@
-/* NCode Brand 0.12.0: css/starlight.css, copied by build.mjs from src/css/starlight.css; edit that file. Apache-2.0. */
+/* NCode Brand 0.13.0: css/starlight.css, copied by build.mjs from src/css/starlight.css; edit that file. Apache-2.0. */
 /*
  * Instrument for Starlight: Starlight's custom properties, mapped onto NCode's tokens.
  *
@@ -70,8 +70,9 @@
   --sl-color-red-high: var(--nc-color-danger-text);
 
   /* Two voices: names and reading in Instrument Sans, every value in Martian Mono. Up to lg each of Starlight's steps
-     takes the scale's step of its size; from xl on, the step of its name. On a phone the title is 36 pixels and a
-     section 28, as base.css sets a long-form page there; one line height, heading-long's, serves every heading. */
+     takes the scale's step of its size; from xl on, the step of its name. The title and a section take the steps of
+     title-long and heading-long at every width, as base.css sets a long-form page; a group takes subheading's, and
+     the two smallest headings stay beside the reading size. One line height, heading-long's, serves every heading. */
   --sl-font: var(--nc-font-sans);
   --sl-font-mono: var(--nc-font-mono);
   --sl-text-2xs: var(--nc-text-xs);
@@ -85,11 +86,12 @@
   --sl-text-4xl: var(--nc-text-4xl);
   --sl-text-5xl: var(--nc-text-5xl);
   --sl-text-6xl: var(--nc-text-6xl);
+  --sl-text-body: var(--nc-text-reading);
   --sl-text-h1: var(--nc-text-3xl);
   --sl-text-h2: var(--nc-text-2xl);
   --sl-text-h3: var(--nc-text-xl);
-  --sl-text-h4: var(--nc-text-lg);
-  --sl-text-h5: var(--nc-text-base);
+  --sl-text-h4: var(--nc-text-base);
+  --sl-text-h5: var(--nc-text-md);
   --sl-text-code: var(--nc-text-sm);
   --sl-line-height: var(--nc-leading-reading);
   --sl-line-height-headings: 1.18;
@@ -99,32 +101,23 @@
   --sl-shadow-md: var(--nc-elevation-raised);
   --sl-shadow-lg: var(--nc-elevation-overlay);
 
-  /* The header is part of the case, not a bar; the sidebar is a plate with its gutters. */
-  --sl-nav-height: 3.75rem;
+  /* The header is part of the case, not a bar; the sidebar is a plate with its gutters. The content panel is as wide
+     as a listing of 100 characters; running text keeps to the measure inside it. */
+  --sl-nav-height: 3.5rem;
   --sl-nav-pad-x: var(--nc-space-5);
-  --sl-nav-pad-y: var(--nc-space-4);
+  --sl-nav-pad-y: var(--nc-space-3);
   --sl-nav-gap: var(--nc-space-5);
-  --sl-sidebar-width: 17.75rem;
+  --sl-sidebar-width: 17rem;
   --sl-sidebar-pad-x: var(--nc-space-3);
-  --sl-content-width: 50rem;
+  --sl-content-width: 52rem;
   --sl-content-pad-x: var(--nc-bleed);
   --sl-menu-button-size: var(--nc-control-md);
-}
-
-/* Wider than 40rem, where base.css's phone rules (max-width: 40rem) end, a long-form page's title is title-long's
-   size, 44 pixels, and a section heading is heading-long's size, 28, the same as on a phone. */
-@media (width > 40rem) {
-  :root,
-  :root[data-theme='light'] {
-    --sl-text-h1: var(--nc-text-4xl);
-    --sl-text-h2: var(--nc-text-2xl);
-  }
 }
 
 /* From Starlight's own 50rem breakpoint on, the sheet takes more room. */
 @media (min-width: 50rem) {
   :root,
   :root[data-theme='light'] {
-    --sl-content-pad-x: 3.5rem;
+    --sl-content-pad-x: 3rem;
   }
 }

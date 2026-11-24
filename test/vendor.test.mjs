@@ -95,6 +95,14 @@ describe('the vendored brand', () => {
     );
   });
 
+  it("frames a listing on the line height of the brand's code role", () => {
+    // tokens.css states a role as a font shorthand: its weight, its size, a slash, its line height, its family.
+    const role = /--nc-type-code:[^;]*\/([\d.]+) /.exec(read('vendor/brand/tokens/tokens.css'))?.[1];
+    const framed = /codeLineHeight: '([\d.]+)'/.exec(read('ec.config.mjs'))?.[1];
+    assert.ok(role, 'tokens.css states the code role with a line height');
+    assert.equal(framed, role, "ec.config.mjs frames a listing on the code role's line height");
+  });
+
   it('reads no step of a colour ramp or of the type scale in the theme, the code blocks and the components', () => {
     assert.deepEqual(
       readers().flatMap((path) => primitiveReads(path, read(path))),

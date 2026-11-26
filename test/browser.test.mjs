@@ -192,7 +192,8 @@ describe('the built site in a browser', { skip: browser ? false : missing }, () 
           (candidate) => candidate.querySelector('th')?.textContent === 'Reason',
         );
         const box = table.closest('.ncode-table') ?? table;
-        // The build puts a <wbr> between the words of code in a cell, so a text node of it on two lines broke inside a word.
+        // The build puts a <wbr> between the words of code in a cell, so a text node of it on two lines broke inside
+        // a word.
         const lines = (node) => {
           const range = document.createRange();
           range.selectNodeContents(node);

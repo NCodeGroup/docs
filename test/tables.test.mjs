@@ -23,6 +23,14 @@ describe('the tables of a page', () => {
       '',
       '<table><thead><tr><th>Raw</th></tr></thead><tbody><tr><td>x</td></tr></tbody></table>',
       '',
+      '| Code | Kept `Head.Code` |',
+      '| --- | --- |',
+      '| `Rent_LengthLessThanZero` | `Vault.Rent(int, out Span)` |',
+      '| [`XMLHttpRequest`](/quick-start/) | `concepts/outages.mdx`, `Pool.Size:max` and `curby-q` |',
+      '| `.NET` and `--verbose` | `0123456789abcdef0123456789abcdef` |',
+      '',
+      'Outside a table `PulseNotFound` is whole.',
+      '',
     ].join('\n'),
   );
   writeFileSync(
@@ -58,6 +66,25 @@ describe('the tables of a page', () => {
       page('guides/tables'),
       /<td>a<\/td>\s*<td data-label="One two">b<\/td>\s*<td data-label="Three">c<\/td>/,
     );
+  });
+
+  it('breaks code in a body cell only between its words, and leaves other code whole', () => {
+    const html = page('guides/tables');
+    const code = (text) => new RegExp(`<code[^>]*>${text}</code>`);
+    for (const text of [
+      'Rent_<wbr>Length<wbr>Less<wbr>Than<wbr>Zero',
+      'Vault\\.<wbr>Rent\\(int, out Span\\)',
+      'XML<wbr>Http<wbr>Request',
+      'concepts/<wbr>outages\\.<wbr>mdx',
+      'Pool\\.<wbr>Size:<wbr>max',
+      'curby-<wbr>q',
+      '\\.NET',
+      '--verbose',
+      '0123456789abcdef0123<wbr>456789abcdef',
+      'Head\\.Code',
+      'PulseNotFound',
+    ])
+      assert.match(html, code(text));
   });
 
   it('leaves a table written as HTML as it is', () => {

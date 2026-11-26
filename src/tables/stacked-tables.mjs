@@ -10,11 +10,61 @@
 // table in a `div.ncode-table`. A table too wide for the content column even with its cells wrapped
 // scrolls sideways inside it, as a last resort that the layout check (src/layout/check.mjs) fails,
 // naming the table: a Markdown table must fit the column (ADR-1015).
+// Code in a body cell gets a <wbr> between its words, and src/styles/theme.css lets it break only there, so a
+// column of code is never squeezed narrower than its longest word, even beside a column of prose (ADR-1021).
 const STACKED = 'ncode-stacked';
 const WRAPPER = 'ncode-table';
+// Where code in a cell may break: after a `.`, `_`, `:`, `-` or `/` that follows a letter or digit, where a lowercase
+// letter or a digit meets a capital, and before the capital that starts a word after an acronym, as in `XML|Http`.
+const WORD_BREAK = /(?<=[\p{L}\p{N}][._:/-]+)(?=[^\s._:/-])|(?<=[\p{Ll}\p{N}])(?=\p{Lu})|(?<=\p{Lu})(?=\p{Lu}\p{Ll})/u;
+// A run with no break longer than this, such as a hash, is cut every LONGEST characters, so it cannot hold its
+// column wider than that.
+const LONGEST = 20;
 
 const childElements = (node, tagName) =>
   (node.children ?? []).filter((child) => child.type === 'element' && child.tagName === tagName);
+
+/** The words of a code span's text, between which a line may break; joined, they are the text. */
+function codeWords(text) {
+  const words = [];
+  for (const part of text.split(WORD_BREAK)) {
+    let start = 0;
+    let run = 0;
+    for (let index = 0; index < part.length; index++) {
+      if (/\s/.test(part[index])) {
+        run = 0;
+        continue;
+      }
+      run++;
+      if (run > LONGEST) {
+        words.push(part.slice(start, index));
+        start = index;
+        run = 1;
+      }
+    }
+    words.push(part.slice(start));
+  }
+  return words.filter(Boolean);
+}
+
+/** Puts a `<wbr>` between the words of each code span in `node`, a body cell, at any depth. */
+function breakCode(node, ctx) {
+  for (const child of node.children ?? []) {
+    if (child.type !== 'element') continue;
+    if (child.tagName !== 'code') {
+      breakCode(child, ctx);
+      continue;
+    }
+    const children = (child.children ?? []).flatMap((inner) => {
+      if (inner.type !== 'text') return [inner];
+      return codeWords(inner.value).flatMap((word, index) => [
+        ...(index > 0 ? [{ type: 'element', tagName: 'wbr', properties: {}, children: [] }] : []),
+        { type: 'text', value: word },
+      ]);
+    });
+    ctx.setField(child, 'children', children);
+  }
+}
 
 export function stackedTables() {
   return () => ({
@@ -31,6 +81,7 @@ export function stackedTables() {
           for (const row of childElements(body, 'tr')) {
             for (const [column, cell] of childElements(row, 'td').entries()) {
               if (labels[column]) ctx.setProperty(cell, 'dataLabel', labels[column]);
+              breakCode(cell, ctx);
             }
           }
         }

@@ -11,3 +11,14 @@ Each row is one test of the library: the member it calls, the input, what happen
 | `Rent_LengthZero_ReturnsAnEmptySpanThatIsStillSealed` | `Vault.Rent(int, out Span<byte>)` | `0` | Returns an empty span, sealed | An empty secret still needs its owner disposed |
 | `Wrap_CallerOwnedMemory_ZeroesItOnDisposeWithoutReturningItToThePool` | `Vault.Wrap(Span<byte>)` | `stackalloc byte[32]` | Zeroes the memory on dispose | The caller's memory never reaches the pool |
 | `Dispose_CalledTwice_ZeroesOnceAndDoesNotThrowObjectDisposedException` | `Vault.Dispose()` | A disposed vault | Does nothing | `using` and an explicit `Dispose` can both run |
+
+## Errors
+
+When a member cannot do what it is asked, it throws a `VaultException` whose `Reason` says why.
+
+| Reason | What it means |
+| --- | --- |
+| `Disposed` | The vault was disposed before this call, so its buffer is already zeroed and back in the pool; rent a new vault for the next secret instead of keeping the old one. |
+| `PoolExhausted` | Every pinned buffer of the pool is rented, so the vault cannot take one without allocating; dispose the vaults you no longer need, or give the pool more buffers when the process starts. |
+| `LengthOutOfRange` | The length asked for is negative or larger than the pool's largest buffer, so no buffer of the pool can hold it; ask for a length between zero and the size of that buffer. |
+| `NotPinned` | The memory given to `Wrap` can move, so the garbage collector could leave a copy of the secret behind; wrap memory on the stack, or memory the caller has pinned for as long as the vault lives. |

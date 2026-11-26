@@ -649,7 +649,9 @@ main:has(h1[data-numbered]) .sl-markdown-content > .sl-heading-wrapper.level-h2:
 .sl-markdown-content td:not(:where(.not-content *)) { height: 2.5rem; }
 .sl-markdown-content tbody tr:last-child td:not(:where(.not-content *)) { border-bottom: 0; }
 .sl-markdown-content tr:nth-child(2n):not(:where(.not-content *)) { background: none; }
-.sl-markdown-content td code:not(:where(.not-content *)) { overflow-wrap: anywhere; }
+/* Code in a body cell breaks only at the <wbr> src/tables/stacked-tables.mjs puts between its words, so automatic
+   layout never squeezes a column of code narrower than its longest word, even beside a column of prose (ADR-1021). */
+.sl-markdown-content td code:not(:where(.not-content *)) { overflow-wrap: break-word; }
 /* On a phone a table is a stack of rows, each cell under its column's name, which
    src/tables/stacked-tables.mjs copies from the head onto the cell. The head stays for screen readers. */
 @media (max-width: 40rem) {

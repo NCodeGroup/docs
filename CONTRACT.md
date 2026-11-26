@@ -341,10 +341,18 @@ head cell. Keep head cells short, since each is repeated on every row there; a c
 as a column of row names, shows its cells without a name. A table written as HTML, or one a library's component
 renders, is not stacked.
 
-A Markdown table must fit the content column. Its cells wrap, code in them included, so most tables do. One that still
-cannot fit, because it has too many columns or long words in them, scrolls sideways inside the column, so a published
-page stays readable, but the layout check (section 8) fails it: give it fewer columns, or lay its data out as a card
-per entry, as below. A table kept wide on purpose is a library's own component whose root is marked `data-scrolls`.
+A Markdown table must fit the content column. Its cells wrap, so most tables do. One that still cannot fit, because it
+has too many columns or long words in them, scrolls sideways inside the column, so a published page stays readable,
+but the layout check (section 8) fails it: give it fewer columns, or lay its data out as a card per entry, as below. A
+table kept wide on purpose is a library's own component whose root is marked `data-scrolls`.
+
+Code in a body cell of a Markdown table wraps only between its words. The build marks a break after a `.`, `_`, `:`,
+`-` or `/` that follows a letter or digit, where a lowercase letter or a digit meets a capital, as between `Pulse`,
+`Not` and `Found`, and before the word that follows an acronym, as between `XML` and `Http`. A run of more than 20
+characters with no such break, such as a hash, breaks every 20 characters. So a column of code is never narrower than
+its longest word: a name with no break in it, such as `Disposed`, keeps its line, a long one, such as a test name,
+breaks at its words, and one of several words beside a column of prose may break between them. Code in a head cell,
+in a table written as HTML or outside a table is not marked.
 
 A library's own component is an `.astro` file in `_components/`. It may import from the same four places, styles
 itself with the brand's public tokens, each prefixed `--nc-`: the colour roles, the type roles, the font families,

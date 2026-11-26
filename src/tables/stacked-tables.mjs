@@ -25,7 +25,7 @@ const childElements = (node, tagName) =>
   (node.children ?? []).filter((child) => child.type === 'element' && child.tagName === tagName);
 
 /** The words of a code span's text, between which a line may break; joined, they are the text. */
-export function codeWords(text) {
+function codeWords(text) {
   const words = [];
   for (const part of text.split(WORD_BREAK)) {
     let start = 0;
